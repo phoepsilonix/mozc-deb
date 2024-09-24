@@ -1,0 +1,7 @@
+# vim:syntax=apparmor
+# Profile abstraction for allowing mozc to run in including guest session
+# Author: Aron Xu <happyaron@ubuntu.com>
+
+# Requires apparmor 2.9
+
+  unix (bind, listen) type=stream addr="@tmp/.mozc.*",

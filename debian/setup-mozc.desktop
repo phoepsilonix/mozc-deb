@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Mozc Setup
+Name[ja]=Mozc の設定
+Comment=Set up Mozc engine
+Comment[ja]=Mozc エンジンを設定します
+Exec=/usr/lib/mozc/mozc_tool --mode=config_dialog
+Icon=/usr/share/icons/mozc/product_icon_32bpp-128.png
+Type=Application
+StartupNotify=true
+Categories=Settings;
