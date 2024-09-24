@@ -1,0 +1,190 @@
+Source: mozc
+Section: utils
+Priority: optional
+Maintainer: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-exec,
+ libibus-1.0-dev (>= 1.4.1) | libibus-dev (>= 1.4.1),
+ pkg-config,
+ libxcb-xfixes0-dev,
+ libgtk2.0-dev,
+ python3-dev,
+ python3-six,
+ gyp (>= 0.1~svn1729-2),
+ protobuf-compiler (>= 3.0.0),
+ libprotobuf-dev (>= 3.0.0),
+ qt6-base-dev,
+ libgwengui-qt5-dev,
+ libfcitx5core-dev,
+ libfcitx5-qt6-dev,
+ libfcitx5utils-dev,
+ fcitx5-modules-dev,
+ libfcitx5core-dev,
+ libfcitx5config-dev,
+ fcitx-libs-dev,
+ libabsl-dev,
+ gettext,
+ desktop-file-utils,
+ ninja-build
+Standards-Version: 4.6.0.1
+Homepage: https://github.com/google/mozc.git
+Vcs-Git: https://salsa.debian.org/debian/mozc.git
+Vcs-Browser: https://salsa.debian.org/debian/mozc
+
+Package: mozc-data
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: Mozc input method - data files
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ This package provides the essential data files.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: fcitx-mozc-data
+Architecture: all
+Depends: ${misc:Depends}, mozc-data
+Multi-Arch: foreign
+Conflicts: fcitx-mozc (<< 2.26.4220.100+dfsg)
+Description: Mozc input method - data files for fcitx
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ This package provides the image files for fcitx.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: ibus-mozc
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ mozc-data,
+ mozc-server (= ${binary:Version}),
+ ibus (>= 1.2)
+Recommends: mozc-utils-gui (= ${binary:Version})
+Description: Mozc engine for IBus - Client of the Mozc input method
+ IBus is an Intelligent Input Bus. It is a new input framework for Linux OS.
+ It provides full featured and user friendly input method user interface.
+ It also may help developers to develop input method easily.
+ .
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ ibus-mozc provides client part of the Mozc input method.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: fcitx-mozc
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ fcitx-bin,
+ fcitx-data,
+ fcitx-modules,
+ mozc-server (= ${binary:Version}),
+ fcitx-mozc-data
+Recommends:
+ fcitx,
+ mozc-utils-gui (= ${binary:Version})
+Multi-Arch: same
+Description: Mozc engine for fcitx - Client of the Mozc input method
+ Fcitx is a input method framework with extension support, which provides
+ an interface for entering characters of different scripts in applications
+ using a variety of mapping systems.
+ .
+ It offers a pleasant and modern experience, with intuitive graphical
+ configuration tools and customizable skins and mapping tables.
+ It is highly modularized and extensible, with GTK+ 2/3 and Qt4 IM Modules,
+ support for UIs based on Fbterm, pure Xlib, GTK+, or KDE, and
+ a developer-friendly API.
+ .
+ fcitx-mozc provides client part of the Mozc input method.
+
+Package: fcitx5-mozc
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ fcitx5,
+ mozc-server (= ${binary:Version}),
+ fcitx-mozc-data
+Recommends:
+ mozc-utils-gui (= ${binary:Version})
+Multi-Arch: same
+Description: Mozc engine for fcitx5 - Client of the Mozc input method
+ This is the mozc engine for fcitx version 5.
+ Fcitx is a input method framework with extension support, which provides
+ an interface for entering characters of different scripts in applications
+ using a variety of mapping systems.
+ .
+ It offers a pleasant and modern experience, with intuitive graphical
+ configuration tools and customizable skins and mapping tables.
+ It is highly modularized and extensible, with GTK+ 2/3 and Qt4 IM Modules,
+ support for UIs based on Fbterm, pure Xlib, GTK+, or KDE, and
+ a developer-friendly API.
+ .
+ fcitx5-mozc provides client part of the Mozc input method.
+
+Package: emacs-mozc
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends}, emacs | emacs23 | emacs24,
+ emacs-mozc-bin (= ${binary:Version})
+Conflicts: emacsen-common (<< 2.0.0)
+Description: Mozc for Emacs
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ This package provides the elisp files to run mozc with GNU Emacs.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: emacs-mozc-bin
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ mozc-server (= ${binary:Version})
+Description: Helper module for emacs-mozc
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ This package provides the helper module to the GNU Emacs.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: mozc-server
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends}
+Multi-Arch: foreign
+Description: Server of the Mozc input method
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ mozc-server provides GUI utilities of the Mozc input method.
+ .
+ This open-source project originates from Google Japanese Input.
+
+Package: mozc-utils-gui
+Architecture: i386 amd64 armel armhf arm64 riscv64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ mozc-data
+Recommends: mozc-server (= ${binary:Version})
+Suggests: ibus-qt5
+Description: GUI utilities of the Mozc input method
+ Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
+ such as Chromium OS, Windows, Mac and Linux.
+ .
+ mozc-server provides GUI uitilities of the Mozc input method.
+ This uses GUI and can set ibus-mozc and the user's dictionary.
+ .
+ This open-source project originates from Google Japanese Input.

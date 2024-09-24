@@ -1,0 +1,160 @@
+From d361c15b296705f579fbdeaf50a0af936f7492e4 Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Thu, 30 May 2024 10:45:11 +0900
+Subject: [PATCH 1/2] Remove obsolete //base:logging from unix/fcitx
+
+---
+ src/unix/fcitx/fcitx_key_event_handler.cc | 2 +-
+ src/unix/fcitx/fcitx_key_translator.cc    | 2 +-
+ src/unix/fcitx/fcitx_mozc.cc              | 2 +-
+ src/unix/fcitx/mozc_connection.cc         | 2 +-
+ src/unix/fcitx/mozc_response_parser.cc    | 2 +-
+ src/unix/fcitx/surrounding_text_util.cc   | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/unix/fcitx/fcitx_key_event_handler.cc b/src/unix/fcitx/fcitx_key_event_handler.cc
+index 61cbe92e9..2b07f5c9a 100644
+--- a/src/unix/fcitx/fcitx_key_event_handler.cc
++++ b/src/unix/fcitx/fcitx_key_event_handler.cc
+@@ -32,7 +32,7 @@
+ 
+ #include <map>
+ 
+-#include "base/logging.h"
++#include "absl/log/check.h"
+ #include "base/vlog.h"
+ #include "base/singleton.h"
+ 
+diff --git a/src/unix/fcitx/fcitx_key_translator.cc b/src/unix/fcitx/fcitx_key_translator.cc
+index 775adaca2..c8fdfebe4 100644
+--- a/src/unix/fcitx/fcitx_key_translator.cc
++++ b/src/unix/fcitx/fcitx_key_translator.cc
+@@ -34,7 +34,7 @@
+ #include <set>
+ #include <string>
+ 
+-#include "base/logging.h"
++#include "absl/log/check.h"
+ #include "base/vlog.h"
+ 
+ namespace mozc {
+diff --git a/src/unix/fcitx/fcitx_mozc.cc b/src/unix/fcitx/fcitx_mozc.cc
+index 351d2e124..6b4c15583 100644
+--- a/src/unix/fcitx/fcitx_mozc.cc
++++ b/src/unix/fcitx/fcitx_mozc.cc
+@@ -38,8 +38,8 @@
+ // Resolve macro naming conflict with absl.
+ #undef InvokeFunction
+ 
++#include "absl/log/check.h"
+ #include "base/const.h"
+-#include "base/logging.h"
+ #include "base/vlog.h"
+ #include "base/process.h"
+ #include "base/util.h"
+diff --git a/src/unix/fcitx/mozc_connection.cc b/src/unix/fcitx/mozc_connection.cc
+index 251650a5e..d63426aeb 100755
+--- a/src/unix/fcitx/mozc_connection.cc
++++ b/src/unix/fcitx/mozc_connection.cc
+@@ -32,7 +32,7 @@
+ 
+ #include <string>
+ 
+-#include "base/logging.h"
++#include "absl/log/check.h"
+ #include "base/vlog.h"
+ #include "base/util.h"
+ #include "client/client.h"
+diff --git a/src/unix/fcitx/mozc_response_parser.cc b/src/unix/fcitx/mozc_response_parser.cc
+index d11589e8a..e8710dc6b 100755
+--- a/src/unix/fcitx/mozc_response_parser.cc
++++ b/src/unix/fcitx/mozc_response_parser.cc
+@@ -33,7 +33,7 @@
+ #include <string>
+ #include <vector>
+ 
+-#include "base/logging.h"
++#include "absl/log/check.h"
+ #include "base/vlog.h"
+ #include "base/util.h"
+ #include "protocol/commands.pb.h"
+diff --git a/src/unix/fcitx/surrounding_text_util.cc b/src/unix/fcitx/surrounding_text_util.cc
+index a4dc7d29a..4cfbd8508 100644
+--- a/src/unix/fcitx/surrounding_text_util.cc
++++ b/src/unix/fcitx/surrounding_text_util.cc
+@@ -38,8 +38,8 @@
+ #undef InvokeFunction
+ #endif
+ 
++#include "absl/log/check.h"
+ #include "base/port.h"
+-#include "base/logging.h"
+ #include "base/vlog.h"
+ #include "base/util.h"
+ 
+
+From 2e512df0abdb1d413138c975ba0b83d64f48fca9 Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Wed, 28 Aug 2024 15:12:02 +0900
+Subject: [PATCH 2/2] Update BUILD
+
+This is a fix to enable fcitx-mozc to be built with bazel.
+---
+ src/unix/fcitx/BUILD | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/unix/fcitx/BUILD b/src/unix/fcitx/BUILD
+index 2f90b3e15..388ba3727 100644
+--- a/src/unix/fcitx/BUILD
++++ b/src/unix/fcitx/BUILD
+@@ -18,6 +18,7 @@ mozc_cc_library(
+         "//base:vlog",
+         "//client:client",
+         "//protocol:commands_cc_proto",
++	"@com_google_absl//absl/log:check",
+     ]
+ )
+ 
+@@ -42,6 +43,7 @@ mozc_cc_library(
+         "//base:vlog",
+         "//protocol:commands_cc_proto",
+         "//client:client_interface",
++	"@com_google_absl//absl/log:check",
+     ],
+ )
+ 
+@@ -56,12 +58,12 @@ mozc_cc_library(
+         "fcitx_key_translator.h",
+     ],
+     deps = [
+-        "//base:logging",
+         "//base:port",
++	"//base:singleton",
+         "//base:vlog",
+         "//protocol:config_cc_proto",
+         "//protocol:commands_cc_proto",
+-        "@fcitx//:fcitx",
++	"@com_google_absl//absl/log:check",
+     ],
+ )
+ 
+@@ -75,10 +77,9 @@ mozc_cc_library(
+     ],
+     deps = [
+         "//base:util",
+-        "//base:logging",
+         "//base:port",
+         "//base:vlog",
+-        "@fcitx//:fcitx",
++	"@com_google_absl//absl/log:check",
+     ],
+ )
+ 
+@@ -88,7 +89,6 @@ mozc_cc_binary(
+     deps = [
+         ":fcitx_mozc",
+         "//base:init_mozc",
+-        "@fcitx//:fcitx",
+     ],
+     local_defines = [
+         'LOCALEDIR=\\"/usr/share/locale\\"',

@@ -1,0 +1,5 @@
+src/bazel-bin/server/mozc_server usr/lib/mozc/
+src/bazel-bin/renderer/qt/mozc_renderer usr/lib/mozc/
+
+debian/mozc-server.apparmor etc/apparmor.d/abstractions/mozc-server
+debian/mozc-renderer.apparmor etc/apparmor.d/abstractions/mozc-server
