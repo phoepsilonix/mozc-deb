@@ -1,0 +1,108 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+#
+
+ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes), yes)
+    export DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+endif
+
+CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC
+CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC
+LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS) -Wl,--as-needed -Wl,--build-id=sha1
+BAZEL_LDFLAGS:=$(shell echo $(LDFLAGS)|xargs -n1 echo "--linkopt")
+BAZEL_CFLAGS:=$(shell echo $(shell dpkg-buildflags --get CFLAGS) -fPIE -gdwarf-4 -fPIC|xargs -n1 echo "--copt")
+BAZEL_CXXFLAGS:=$(shell echo $(shell dpkg-buildflags --get CXXFLAGS) -fPIE -gdwarf-4 -fPIC|xargs -n1 echo "--cxxopt")
+# clear XDG_CONFIG_DIRS for qtchooser
+unexport XDG_CONFIG_DIRS
+
+TARGET_STATIC=gui/tool:mozc_tool
+TARGETS=unix/ibus:ibus_mozc \
+	unix/emacs:mozc_emacs_helper \
+	server:mozc_server \
+	renderer/qt:mozc_renderer
+TARGET_FCITX=unix/fcitx:fcitx-mozc.so
+TARGET_FCITX5=unix/fcitx5:fcitx5-mozc.so
+
+# for architecture dependent variables and changelog vars
+vafilt = $(subst $(2)=,,$(filter $(2)=%,$(1)))
+CHANGELOG_VARS := $(shell dpkg-parsechangelog | \
+	sed -n 's/ /_/g;/^[^_]/s/^\([^:]*\):_\(.*\)/\1=\2/p')
+
+SOURCE_VERSION := $(call vafilt,$(CHANGELOG_VARS),Version)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build: build_dynamic_link build_static_link
+build_static_link:
+	cd src; \
+	bazel build $(TARGET_STATIC) --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+
+build_dynamic_link:
+	cd src ; \
+	bazel build $(TARGETS) $(TARGET_FCITX5) $(TARGET_FCITX) --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+
+	# fcitx5
+	for pofile in src/unix/fcitx5/po/*.po ; do \
+		filename=`basename $$pofile`; \
+		lang=`basename $$filename .po`; \
+		mofile=`echo $$pofile | sed -e "s/\.po/\.mo/g"`; \
+		msgfmt $$pofile -o $$mofile; \
+	done
+
+	msgfmt --xml -d src/unix/fcitx5/po/ \
+		--template src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in \
+		-o src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml
+	# fcitx
+	for pofile in src/unix/fcitx/po/*.po ; do \
+		filename=`basename $$pofile`; \
+		lang=`basename $$filename .po`; \
+		mofile=`echo $$pofile | sed -e "s/\.po/\.mo/g"`; \
+		msgfmt $$pofile -o $$mofile; \
+	done
+
+	# ibus-mozc
+	sed -i -e 's|/usr/libexec/ibus-engine-mozc|/usr/lib/ibus-mozc/ibus-engine-mozc|' \
+		-e 's|0\.0\.0\.0|$(SOURCE_VERSION)|g' \
+		src/bazel-bin/unix/ibus/mozc.xml
+
+override_dh_auto_test:
+	# cd src; python build_mozc.py runtests -c Debug
+
+override_dh_auto_clean:
+	-find src -name "*.pyc" | xargs rm -rf
+	-rm -rf src/chrome/skk/skk_util_all_test.target.mk
+	-rm -rf src/chrome/skk/skk_util_test.target.mk
+	cd src ; \
+	bazel clean
+
+	-rm -f src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml
+	dh_auto_clean
+
+override_dh_auto_install:
+	# mozc-utils-gui
+	desktop-file-install --dir=$(CURDIR)/debian/mozc-utils-gui/usr/share/applications \
+		$(CURDIR)/debian/setup-mozc.desktop
+	desktop-file-install --dir=$(CURDIR)/debian/mozc-utils-gui/usr/share/applications \
+		$(CURDIR)/debian/ibus-setup-mozc-jp.desktop
+
+override_dh_fixperms-arch:
+	chmod -x debian/emacs-mozc/usr/share/emacs/site-lisp/emacs-mozc/mozc.el
+	dh_fixperms
+
+override_dh_fixperms-indep:
+	chmod -x debian/mozc-data/usr/share/icons/mozc/*.png
+	dh_fixperms
+
+.PHONY: override_dh_installemacsen
+override_dh_installemacsen:
+	dh_installemacsen --priority=50
+
+override_dh_builddeb:
+	if dpkg-vendor --is ubuntu; then \
+		sed -i 's/^Recommends/Suggests/' debian/ibus-mozc/DEBIAN/control; \
+	fi
+	dh_builddeb

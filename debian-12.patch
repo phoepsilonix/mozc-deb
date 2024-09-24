@@ -1,0 +1,21 @@
+diff --git a/debian/patches/0001-Support-fcitx.patch b/debian/patches/0001-Support-fcitx.patch
+index f045a10..f385779 100644
+--- a/debian/patches/0001-Support-fcitx.patch
++++ b/debian/patches/0001-Support-fcitx.patch
+@@ -6366,14 +6366,14 @@ index 0000000..dfb7ece
+ +  toolMenu_.addAction(&aboutAction_);
+ +
+ +  toolAction_.setMenu(&toolMenu_);
+-+
+++/*
+ +  globalConfigReloadHandle_ =
+ +      instance_->watchEvent(EventType::GlobalConfigReloaded,
+ +                            EventWatcherPhase::Default, [this](Event &) {
+ +                              ResetClientPool();
+ +                              return true;
+ +                            });
+-+
+++*/
+ +  reloadConfig();
+ +}
+ +

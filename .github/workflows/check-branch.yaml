@@ -1,0 +1,119 @@
+name: Check Master Branch
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+env:
+  ORIGINAL_REPO: "google/mozc"
+
+jobs:
+  sync-master:
+    runs-on: ubuntu-latest
+    outputs:
+      mozc_commit: ${{ steps.sync_mozc.outputs.mozc_commit }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Sync master branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: sync_mozc
+        run: |
+          echo "Fetching from original repository..."
+          git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
+
+          echo "Resetting local master to FETCH_HEAD..."
+          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          DEB_COMMIT=$(cat last_commit.txt)
+          echo $MOZC_COMMIT
+          echo $DEB_COMMIT
+          if [[ "$MOZC_COMMIT" == "$DEB_COMMIT" ]]; then
+            echo "No changes detected. Exiting."
+            exit 0
+          fi
+          echo $MOZC_COMMIT > last_commit.txt
+          git commit -m "last commit is $MOZC_COMMIT" last_commit.txt
+          echo "mozc_commit=$MOZC_COMMIT" >> $GITHUB_OUTPUT
+
+          echo "Pushing changes to origin..."
+          git push origin main
+
+          TAG=commit-$MOZC_COMMIT
+          git tag $TAG
+          git push origin $TAG
+          echo "mozc_tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Trigger release workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: new-tag-created
+          client-payload: |-
+            {
+              "repo": {
+                "name": "${{ github.repository }}",
+                "branch": "main",
+                "tag": "${{ steps.sync_mozc.outputs.mozc_tag }}"
+              }
+            }
+          repository: ${{ github.repository }}
+
+#  build_deb:
+#    needs: sync-master
+#    strategy:
+#      matrix:
+#        os: [debian-bookworm, ubuntu-lunar, ubuntu-mantic, ubuntu-noble, debian-bookworm-with-jp-dict, ubuntu-lunar-with-jp-dict, ubuntu-mantic-with-jp-dict, ubuntu-noble-with-jp-dict]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+
+#      - name: Configure Git
+#        run: |
+#          git config user.name github-actions
+#          git config user.email github-actions@github.com
+
+#      - name: tag
+#        id: tag
+#        shell: bash
+#        run: |
+#          BRANCH=${{ matrix.os }}
+#          BRANCH=${BRANCH#*-};
+#          BRANCH=${BRANCH%-with-jp-dict}
+#          if [[ "${{ matrix.os }}" =~ "-with-jp-dict" ]]; then
+#            TAG=with-commit-${BRANCH#*-}-"${{ needs.sync-master.outputs.mozc_commit }}"
+#            echo "tag=$TAG" >> $GITHUB_OUTPUT
+#          else
+#            TAG=commit-${BRANCH#*-}-"${{ needs.sync-master.outputs.mozc_commit }}"
+#            echo "tag=$TAG" >> $GITHUB_OUTPUT
+#          fi
+#          git switch ${{ matrix.os }}
+#          git tag $TAG
+#          git push origin $TAG
+#      - name: Trigger release workflow
+#        uses: peter-evans/repository-dispatch@v3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          event-type: new-tag-created
+#          client-payload: |-
+#            {
+#              "repo": {
+#                "name": "${{ github.repository }}",
+#                "branch": "${{ matrix.os }}",
+#                "tag": "${{ steps.tag.outputs.tag }}"
+#              }
+#            }
+#          repository: ${{ github.repository }}

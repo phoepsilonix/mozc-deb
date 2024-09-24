@@ -1,0 +1,287 @@
+permissions:
+  contents: write
+  actions: write
+
+name: Release
+
+on:
+  create:
+    tags:
+      - 'v*'
+      - 'commit-*'
+  repository_dispatch:
+    types: [new-tag-created]
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-23.04, ubuntu-23.10, ubuntu-24.04, debian-12, ubuntu-23.04-with-jp-dict, ubuntu-23.10-with-jp-dict, ubuntu-24.04-with-jp-dict, debian-12-with-jp-dict]
+        include:
+          - os: debian-12
+            container: debian:bookworm
+          - os: ubuntu-23.04
+            container: ubuntu:lunar
+          - os: ubuntu-23.10
+            container: ubuntu:mantic
+          - os: ubuntu-24.04
+            container: ubuntu:noble
+          - os: debian-12-with-jp-dict
+            container: debian:bookworm
+          - os: ubuntu-23.04-with-jp-dict
+            container: ubuntu:lunar
+          - os: ubuntu-23.10-with-jp-dict
+            container: ubuntu:mantic
+          - os: ubuntu-24.04-with-jp-dict
+            container: ubuntu:noble
+
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.container }}
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+        RUSTC_WRAPPER: "sccache"
+        # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment
+
+    name: Release-${{ matrix.os }}
+    steps:
+      - name: Debug event
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Event payload: ${{ toJson(github.event.client_payload) }}"
+      - name: install apt-utils and wget and git (Linux)
+        id: startup
+        shell: bash
+        run: |
+          echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
+          apt-get update
+          if [[ "${{ matrix.os }}" =~ "debian-12" ]]; then
+            apt-get install -y sudo apt-utils wget git
+          else
+            apt-get install -y sudo apt-utils wget software-properties-common
+            sudo add-apt-repository ppa:apt-fast/stable
+            sudo apt-get update
+            sudo apt-get -y install apt-fast git
+          fi
+      - uses: actions/checkout@v4
+        with:
+          set-safe-directory: 'true'
+      - name: debian-12 and ubuntu-23.04 patch
+        shell: bash
+        run: |
+           if [[ "${{ matrix.os }}" =~ "debian-12" || "${{ matrix.os }}" =~ "ubuntu-23.04" ]]; then
+             apt-get install patch
+             patch -p1 -i debian-12.patch
+           fi
+      - name: check
+        run: |
+          export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - name: Setup non-root user
+        run: |
+          sudo useradd -m -u 1001 nonroot
+          sudo mkdir -p /github/workspace
+          sudo chown -R nonroot:nonroot /github/workspace
+          sudo -u nonroot whoami
+          sudo -u nonroot id
+          whoami
+          id
+      - name: Setup Mozc source
+        run: |
+          git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
+          cd source
+          git submodule update --init
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - name: Setup variables
+        id: variables
+        shell: bash
+        env:
+          GUTHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF##*/}
+          if [[ $TAG == "main" ]];then
+            echo "Running release for branch: ${{ github.event.client_payload.repo.branch }}"
+            echo "Tag: ${{ github.event.client_payload.repo.tag }}"
+            TAG="${{ github.event.client_payload.repo.tag }}"
+          fi
+          if [[ "$TAG" =~ ^commit- ]]; then
+            cd source
+            COMMIT=$(git log -1 ${TAG#commit-} --pretty=%h)
+            git checkout $COMMIT
+            echo $TAG
+            cd ..
+            #git tag $TAG -d
+            #git push origin $TAG -d
+            cd source
+            tag=$(git describe --tags --always ${COMMIT})
+            base_tag="${tag%%-*}"
+            if [[ "$tag" =~ "-" ]];then
+              after_tag="${tag#*-}"
+              echo $after_tag
+              TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+            else
+              after_tag=""
+              TAG=${base_tag}"-${{ matrix.os }}"
+            fi
+            echo $TAG
+            echo $base_tag
+            echo $after_tag
+            TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+            echo $TAG
+            cd ..
+            git tag $TAG
+            git push origin $TAG
+            echo "tag_name=" $TAG
+            echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
+          else
+            echo $TAG
+            tag=$TAG
+            base_tag="${tag%%-*}"
+            after_tag="${tag#*-${{ matrix.os }}}"
+            TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+            git tag $TAG
+            git push origin $TAG
+            cd source
+            COMMIT=$(git log -1 --pretty=%H $base_tag$after_tag)
+            echo $COMMIT
+            git checkout $COMMIT
+            echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
+          fi
+      - name: check variables
+        run: |
+          echo "${{ steps.variables.outputs.tag_name }}"
+          echo "${{ steps.variables.outputs.tag_commit }}"
+      - name: install build tools (Linux)
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" =~ "debian-12" ]]; then
+            sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/debian.sources
+          elif [[ "${{ matrix.os }}" =~ "ubuntu-24.04" ]]; then
+            sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources
+          else
+            sudo sed 's/^.*deb-src /deb-src /' -i /etc/apt/sources.list
+          fi
+          sudo apt-get update
+          sudo apt-get build-dep -y mozc
+          sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
+      - name: Mount bazel cache
+        uses: actions/cache@v4
+        with:
+          path: "/home/runner/.cache/bazel"
+          key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+      - name: Install bazel
+        run: |
+          sudo apt-get install apt-transport-https curl gnupg -y
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get update
+          sudo apt-get install -y bazel
+          bazel --version
+
+      - name: Run sccache-cache
+        if: ${{ contains(matrix.os, '-with-jp-dict') }}
+        uses: mozilla-actions/sccache-action@v0.0.4
+        with:
+          version: "v0.8.2"
+      - name: Mount rustup cache
+        if: ${{ contains(matrix.os, '-with-jp-dict') }}
+        uses: actions/cache@v4
+        with:
+          path: "/home/runner/.rustup"
+          key: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          restore-keys: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+      - name: Install Rust for -with-jp-dict
+        if: ${{ contains(matrix.os, '-with-jp-dict') }}
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "Running Rust program for ${{ matrix.os }}"
+      - name: Added SudachiDict for -with-jp-dict
+        if: ${{ contains(matrix.os, '-with-jp-dict') }}
+        run: |
+          git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/mozcdict-ext.git
+          cd mozcdict-ext/sudachi
+          . "$HOME/.cargo/env"
+          _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/notcore_lex.zip"
+          unzip small_lex.zip
+          unzip core_lex.zip
+          unzip notcore_lex.zip
+          cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
+          rm *lex.csv
+          rustup update stable
+          rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep musl && TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1) || TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1)
+          cargo build --release --target $TARGET
+          ./target/$TARGET/release/dict-to-mozc -s -i ../../source/src/data/dictionary_oss/id.def -f sudachi.csv > ./all-dict.txt
+          awk -f dup.awk all-dict.txt > finish-dict.txt
+          cat finish-dict.txt >> ../../source/src/data/dictionary_oss/dictionary00.txt
+          rm all-dict.txt finish-dict.txt
+
+      - name: Install mold linker
+        uses: rui314/setup-mold@staging
+        with:
+          mold-version: 2.34.0
+          make-default: true
+      - name: Build
+        shell: bash
+        run: |
+          export PATH=$HOME/bin:$PATH
+          cp -a debian source/
+          cd source
+          sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sudo chown -R nonroot:nonroot .
+          sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
+          cd ..
+          mkdir -p release
+          mv *deb mozc_* release/
+
+      - name: Generate release note
+        id: release_note
+        shell: bash
+        run: |
+          cd source
+          NOTE=$(git log -1)
+          {
+          echo "release_note<<EOF"
+            if [[ "${{ matrix.os }}" =~ "-with-jp-dict" ]]; then
+              echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
+              echo
+            fi
+          echo "${NOTE}"
+          echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "${{ steps.variables.outputs.tag_name }}"
+          name: "${{ steps.variables.outputs.tag_name }}"
+          artifacts: 'release/*'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: "${{ steps.release_note.outputs.release_note }}"
+  
+  tag-clear:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - name: tag deletion
+        shell: bash
+        run: |
+          TAG=${GITHUB_REF##*/}
+          if [[ "$TAG" == "main" ]];then
+            TAG="${{ github.event.client_payload.repo.tag }}"
+          fi
+          git push origin $TAG -d || true

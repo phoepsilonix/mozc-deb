@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Launch Xwayland on startup of wayland session
+Comment=This ensures that ibus-x11, needed for ibus-mozc, is started
+Type=Application
+Exec=sh -c 'if [ "$XDG_SESSION_TYPE" = "wayland" ]; then xrefresh; fi'
+TryExec=xrefresh
+OnlyShowIn=GNOME;
+NoDisplay=true
