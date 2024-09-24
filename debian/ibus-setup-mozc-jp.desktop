@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Mozc Setup
+Exec=/usr/lib/mozc/mozc_tool --mode=config_dialog
+Type=Application
+StartupNotify=true
+NoDisplay=true

@@ -1,0 +1,6 @@
+# vim:syntax=apparmor
+# AppArmor policy for mozc_renderer
+
+  owner @{HOME}/.config/mozc/* r,
+  owner @{HOME}/.config/mozc/mozc_renderer.log w,
+
