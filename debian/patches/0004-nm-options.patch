@@ -1,0 +1,13 @@
+diff --git a/src/third_party/gyp/pylib/gyp/generator/ninja.py b/src/third_party/gyp/pylib/gyp/generator/ninja.py
+index 3bcfe352..d54c75d0 100644
+--- a/src/third_party/gyp/pylib/gyp/generator/ninja.py
++++ b/src/third_party/gyp/pylib/gyp/generator/ninja.py
+@@ -2141,7 +2141,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
+               '$ld -shared $ldflags -o $lib -Wl,-soname=$soname %(suffix)s',
+             'extract_toc':
+               ('{ $readelf -d $lib | grep SONAME ; '
+-               '$nm -gD -f p $lib | cut -f1-2 -d\' \'; }')})
++               '$nm -gD -f posix $lib | cut -f1-2 -d\' \'; }')})
+ 
+     master_ninja.rule(
+       'solink',

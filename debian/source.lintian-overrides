@@ -1,0 +1,5 @@
+mozc source: source-is-missing src/chrome/nacl/inputview/inputview.js line length is 337 characters (>256)
+mozc source: source-is-missing src/chrome/nacl/inputview/config/jp.js line length is 896 characters (>512)
+mozc source: source-is-missing src/chrome/nacl/inputview/config/us.js line length is 792 characters (>512)
+mozc source: source-is-missing src/chrome/nacl/inputview/inputview_layouts/101kbd.js line length is 749 characters (>512)
+mozc source: source-is-missing src/chrome/nacl/inputview/inputview_layouts/compactkbd.js line length is 425 characters (>256)

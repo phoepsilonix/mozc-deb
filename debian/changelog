@@ -1,0 +1,837 @@
+mozc (2.30.5595.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Mon, 23 Sep 2024 14:33:55 +0900
+
+mozc (2.30.5544.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 1 Aug 2024 17:29:55 +0900
+
+mozc (2.30.5520.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Wed, 10 Jul 2024 01:10:55 +0900
+
+mozc (2.30.5490.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Sun, 16 Jun 2024 15:48:46 +0900
+
+mozc (2.30.5448.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Apr 2024 07:34:30 +0000
+
+mozc (2.30.5432.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Mar 2024 13:19:00 +0900
+
+mozc (2.29.5400.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Mar 2024 13:19:00 +0900
+
+mozc (2.29.5374.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Jan 2024 16:33:00 +0900
+
+mozc (2.29.5346.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Jan 2024 16:33:00 +0900
+
+mozc (2.29.5291.102+dfsg-2.2build1) unstable; urgency=medium
+
+  * git src.
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Nov 2023 17:33:08 +0900
+
+mozc (2.28.4715.102+dfsg-2.2build1) lunar; urgency=medium
+
+  * Rebuild against new libprotobuf32.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Wed, 04 Jan 2023 17:33:08 +0100
+
+mozc (2.28.4715.102+dfsg-2.2) unstable; urgency=medium
+
+  * Non-maintainer upload
+
+  [ Nobuhiro Iwamatsu ]
+  * Really fix the build failure on armel (closes: #1024898):
+    - Update d/patches/0006-Update-gyp-using-absl.patch (add -latomic)
+    - d/patches/0009-protobuf.gyp-Add-latomic-to-link_settings.patch
+
+  [ Gunnar Hjalmarsson ]
+  * Revert "Stop building on armel for now"
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Sat, 10 Dec 2022 11:44:49 +0100
+
+mozc (2.28.4715.102+dfsg-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * Upload to unstable
+    - Reverses the switch to GTK 3, which closes: #1023525 and causes
+      a need to reopen bug #967641.
+  * Stop building on armel for now (closes: #1024829, #1024898)
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Fri, 09 Dec 2022 01:08:02 +0100
+
+mozc (2.28.4715.102+dfsg-2.1~exp1) experimental; urgency=medium
+
+  * Non-maintainer upload
+  * Reverse the switch from GTK 2 to GTK 3 for now
+    - Build-dep on libgtk2.0-dev instead of libgtk-3-dev
+    - Disable d/p/0008-renderer-Convert-Gtk2-to-Gtk3.patch
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Wed, 30 Nov 2022 21:50:18 +0100
+
+mozc (2.28.4715.102+dfsg-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 25 Sep 2022 17:03:34 +0900
+
+mozc (2.28.4715.102+dfsg-1) experimental; urgency=medium
+
+  * New upstream release. (Closes: #100201, #967641)
+  * Update d/control.
+    - Use libgtk-3-dev instead of libgtk2.0-dev in B-D. (Closes: #967641)
+    - Bumped Standards-Version to 4.6.0.1.
+  * Convert renderer Gtk2 to Gtk3.
+    Add debian/patches/0008-renderer-Convert-Gtk2-to-Gtk3.patch.
+  * Update d/rules.
+    - Remove white space.
+  * Update d/copyright.
+    - Update copyright year.
+  * Update d/changelog.
+    - Remove white space.
+  * Update d/uim-mozc.install.
+    - Use DEB_HOST_MULTIARCH instead of DEB_BUILD_MULTIARCH.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 29 May 2022 11:14:00 +0900
+
+mozc (2.26.4220.100+dfsg-5.2) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * Install missing icon symlink for fcitx5-mozc
+    - Closes: #1009254, LP: #1968454
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Sun, 10 Apr 2022 15:04:16 +0200
+
+mozc (2.26.4220.100+dfsg-5.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * Add autostart file to launch Xwayland on startup of wayland session
+    - Proved to be useful on Ubuntu 21.10 (LP: #1946969)
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Sat, 16 Oct 2021 21:11:28 +0200
+
+mozc (2.26.4220.100+dfsg-5) unstable; urgency=medium
+
+  * Use 'command -v' instead of which (Closes: #992724).
+    - Updae d/patches/0003-Change-compiler-from-clang-to-gcc.patch
+    - Add d/patches/0009-common.gypi-Use-command-v-instead-of-which.patch
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Mon, 23 Aug 2021 09:59:51 +0900
+
+mozc (2.26.4220.100+dfsg-4.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * Drop handwriting (zinnia) dependencies (closes: #985758)
+  * Build also on the riscv64 arch (closes: #992035, LP: #1939275)
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Sat, 21 Aug 2021 21:01:35 +0200
+
+mozc (2.26.4220.100+dfsg-4) unstable; urgency=medium
+
+  * Fix typo in Exec of d/ibus-mozc-gnome-initial-setup.desktop.
+  * Cleanup d/ibus-mozc-gnome-initial-setup.sh. Thanks to YOSHINO Yoshihito.
+  * Update d/control.
+    * Drop unnecessary packages from fcitx5-mozc.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 28 Feb 2021 21:38:42 +0900
+
+mozc (2.26.4220.100+dfsg-3) unstable; urgency=medium
+
+  * Add autostart file to ibus-mozc. (Closes: #983623)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 28 Feb 2021 10:26:30 +0900
+
+mozc (2.26.4220.100+dfsg-2) unstable; urgency=medium
+
+  * Add d/salsa-ci.yml.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 06 Jan 2021 19:27:11 +0900
+
+mozc (2.26.4220.100+dfsg-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #975491)
+  * Update d/control.
+    * Bump debhelper-compat to 13.
+    * Add libfcitx5utils-dev, libfcitx5config-dev and fcitx5-modules-dev
+      to B-D.
+    * Add libabsl-dev, python3-six and dh-exec to B-D.
+    * Add fcitx5-mozc package. This provides support for fcitx5.
+    * Add fcitx-mozc-data package.
+  * Update d/patches.
+    * Update filename.
+    * Add fcitx5 binding. (Closes: #974894)
+      Take the patch from https://github.com/fcitx/mozc.
+    * Drop some patches.
+      * Change-from-python-to-python3.patch
+      * Change-from-python-to-python3.patch
+      * Change-from-python2-code-to-python3.patch
+      * Fix-build-with-gcc8.patch
+      * fcitx-mozc-updates.patch
+      * protobuf_generated_classes_no_inheritance.patch
+    * Update 0001-Update-uim-mozc-to-c979f127acaeb7b35d3344e8b1e40848e.patch
+      * Fix build with latest mozc.
+    * Update 0002-Support-fcitx.patch
+      * Fix build of Utf8SubString for fcitx.
+      * Fix build of Utf8SubString for fcitx5.
+    * Add 0007-Update-src-base-absl.gyp.patch
+      This add support build with libabsl shared library.
+    * Add 0008-Use-std-extent-instead-of-std-size.patch
+      This fix building without C++17.
+  * Update d/gbp.conf
+    * Set DEP14 to dist, and set debian/sid to debian-branch.
+  * Remove d/uim-mozc.lintian-overrides and d/fcitx-mozc.lintian-overrides.
+  * Add d/upstream/metadata.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 27 Dec 2020 22:01:58 +0900
+
+mozc (2.23.2815.102+dfsg-10) unstable; urgency=medium
+
+  * Fix FTBFS with Protobuf 3.12.3 (Closes: #963244)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 11 Jul 2020 06:11:37 +0900
+
+mozc (2.23.2815.102+dfsg-9) unstable; urgency=medium
+
+  * Change to debhelper 12.
+  * Bump Standards-Version to 4.5.0.
+  * Add patches/Change-from-python-to-python3.patch
+  * Use patches/Change-from-python2-code-to-python3.patch instead of
+    patches/Support-python3.patch
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 24 May 2020 06:48:53 +0900
+
+mozc (2.23.2815.102+dfsg-8) unstable; urgency=medium
+
+  [Gunnar Hjalmarsson]
+  * Add extra desktop file for gnome-control-center.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Mon, 20 Jan 2020 21:59:46 +0900
+
+mozc (2.23.2815.102+dfsg-7) unstable; urgency=medium
+
+  * Update d/rules.
+    Fix DSO missing for libatomic on armel.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 25 Jul 2019 19:44:59 +0900
+
+mozc (2.23.2815.102+dfsg-6) unstable; urgency=medium
+
+  * Add d/patches/Add-support-verbose-build.patch
+    Enable verbose build on ninja.
+  * Build mozc_tool with static library of libprotobuf.
+    mozc uses protobuf library. The protbuf library can not handle dlopen well
+    by design, there is a problem with this (See #721791).
+    This problem is also reported to Upstream, but since protbuf is assumed
+    to be used as static link, it has not been fixed yet.
+      - https://github.com/protocolbuffers/protobuf/issues/1941
+      - https://github.com/protocolbuffers/protobuf/issues/4126
+    This fix separates the build targets, and problematic mozc_tools provide
+    libprotobuf with static link. If this issue is fixed upstream, mozc_tool
+    will be provided again via dynamic link.
+    (Closes: #700307, #774370)
+  * Migrate from python2 to python3.
+    Add d/patches/Support-python3.patch
+  * Update d/copyright.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 24 Jul 2019 20:00:08 +0900
+
+mozc (2.23.2815.102+dfsg-5) unstable; urgency=medium
+
+  * Update debian/rules.
+    ibus-mozc: Change mozc-utils-gui from Recommend to Suggest for Ubuntu only.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 16 Jul 2019 18:03:23 +0900
+
+mozc (2.23.2815.102+dfsg-4) unstable; urgency=medium
+
+  * Add d/patches/add_support_new_japanese_era.patch.
+    This adds Japan's new era 令和 (Reiwa) support. (Closes: #927030)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 14 Apr 2019 06:25:53 +0900
+
+mozc (2.23.2815.102+dfsg-3) unstable; urgency=medium
+
+  * Update .desktop file.
+    Use 128x128 image. (LP: #1765948)
+  * Bump Standards-Version to 4.2.1.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 01 Dec 2018 07:40:07 +0900
+
+mozc (2.23.2815.102+dfsg-2) unstable; urgency=medium
+
+  * Fix build with gcc8 (Closes: #897814)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 24 Jul 2018 16:58:04 +0900
+
+mozc (2.23.2815.102+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 4.1.3.
+  * Update patches/uim-mozc.patch.
+  * Add patches/fcitx-mozc-updates.patch.
+  * Update Vcs-Git and Vcs-Browser to salsa.
+  * Update copyright.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 03 Apr 2018 08:04:52 +0900
+
+mozc (2.20.2673.102+dfsg-2) unstable; urgency=medium
+
+  * Update debian/control.
+    - Remove uim-utils from Depends of uim-mozc. (Closes: #875758)
+    - Update Standards-Version to 4.1.0.
+  * Add apparmor profile for mozc-server. (Closes: #818527)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 26 Sep 2017 00:13:44 +0900
+
+mozc (2.20.2673.102+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add support arm64. (Closes: #864261)
+  * Update Standards-Version to 4.0.0.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 10 Aug 2017 08:18:05 +0900
+
+mozc (2.19.2623.102+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update to Qt5.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 16 Nov 2016 06:24:50 +0900
+
+mozc (2.18.2595.102+dfsg-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #815790)
+  * Update patches/gcc.patch
+  * Update patches/uim-mozc.patch to latest version
+  * Update patches/fcitx-mozc.patch to latest version
+  * Update Standards-Version to 3.9.8
+  * Update debian/copyright
+    Update URL of mozc project and macuim.
+  * Add debian/source.lintian-overrides
+  * Use a secure transport for the Vcs-Git and Vcs-Browser URL.
+  * Add tegaki-zinnia-japanese to Depends of mozc-utils-gui. (Closes: 800472)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 24 Aug 2016 06:45:33 +0900
+
+mozc (2.17.2116.102+gitfd0f5b34+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add support parallel building. (Closes: #795709)
+  * Remove libss-dev from Build-Depends. (Closes: #759135)
+  * Bump Standards-Version to 3.9.6.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 12 Sep 2015 13:59:18 +0900
+
+mozc (1.15.1857.102-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove fix_build_mo_of_fcitx.
+  * Update fcitx-mozc.patch.
+  * Update uim to r334.
+  * Update debian/rules.
+    - Remove line of build_tools.
+    - Remove obj directory from path.
+  * Update debian/control.
+    - Update Standards-Version to 3.9.5.
+    - Add ninja-build to Build-Depends.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 06 Aug 2014 03:45:16 +0900
+
+mozc (1.13.1651.102-2) unstable; urgency=medium
+
+  * Add emacs-mozc.emacsen-compat.
+  * Add emacsen-common (<< 2.0.0) to Conflicts of emacs-mozc.
+  * Add version to libprotobuf-dev. (Closes: #737521, #737207, #737266)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 07 Feb 2014 16:39:00 +0900
+
+mozc (1.13.1651.102-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add emacs-mozc.postinst and emacs-mozc.prerm.
+    Fix initialize with mozc#731977 by emacs. (Closes: #731977)
+  * Update fcitx patch.
+  * Update debian/control.
+    - Bump Standards-Version to 3.9.5.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 17 Jan 2014 08:37:10 +0900
+
+mozc (1.12.1599.102-1) unstable; urgency=low
+
+  * New upstream release.
+  * Update fcitx-mozc.patch to 1.12.1599.102.1.
+  * Update uim-mozc.patch to r330.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 06 Nov 2013 06:51:00 +0900
+
+mozc (1.11.1522.102-2) unstable; urgency=low
+
+  * Update debian/control.
+    - Add mozc-utils-gui to Recommends of uim-mozc.
+    - Add desktop-file-utils to Build-Depends.
+  * Update debian/rules.
+    - Install ibus-setup-mozc.desktop by mozc-utils-gui.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 24 Oct 2013 16:22:14 +0900
+
+mozc (1.11.1522.102-1) unstable; urgency=low
+
+  * New upstream release. (Closes: #722653, #716919)
+  * Update debian/control.
+    - Drop support kFreeBSD.
+  * Update patches/fcitx-mozc.patch.
+  * Update patches/uim-mozc.patch to r327.
+  * Add patches/fix_build_mo_of_fcitx.
+  * Update debian/rules.
+    - Add "unexport XDG_CONFIG_DIRS" for qtchooser.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 13 Sep 2013 23:30:25 +0900
+
+mozc (1.6.1187.102-1) unstable; urgency=low
+
+  * Upload to unstable.
+  * Fix build with gcc-4.8. (Closes: #701325)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 30 May 2013 12:52:59 +0900
+
+mozc (1.6.1187.102-1~exp3) experimental; urgency=low
+
+  * Update debian/rules.
+    - Add and fix install path of mo file for fcitx-mozc. (Closes: #704833)
+    - Remove '--channel_dev=0' option from build option. (Closes: #704831)
+  * Update debian/control.
+    Add mozc-data to tegaki-zinnia-japanese to Depends and add
+    mozc-utils-gui to Recommends. (Closes: #704832)
+  * Update patches/uim-mozc.patch (macuim r323).
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 14 Apr 2013 07:42:04 +0900
+
+mozc (1.6.1187.102-1~exp2) experimental; urgency=low
+
+  * Update debian/uim-mozc.postinst.
+    Move installed-modules.scm and loader.scm from /etc/uim to /var/lib/uim
+    in uim package. uim-mozc.postinst need to change path from /etc/uim to
+    /var/lib/uim.
+  * Update debian/control.
+    - Dump Standards-Version to 3.9.4.
+    - Dump version of uim-utils to 1:1.8.1-3.
+    - Change Build-depends from libcurl4-openssl-dev to libssl-dev.
+      (Closes: #697118)
+    - Remove libgtest-dev from Build-depends.
+    - Add libgtk2.0-dev to Build-depends.
+    - Add filed of Vcs-Git and Vcs-Browser.
+  * Update debian/copyright.
+    Remove copyright of base/scoped_ptr.h, because copyright was changed
+    to BSD-3-Clause. (Closes: #697122)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Mon, 07 Jan 2013 13:48:39 +0900
+
+mozc (1.6.1187.102-1~exp1) experimental; urgency=low
+
+  * New upstream release.
+  * Update supporting kfreebsd patch.
+  * Drop supporting scim-mozc. Upstream does not support scim from this
+    version.
+  * Update debian/rules.
+    Remove supporting scim-mozc.
+  * Update debian/control.
+    - Remove section of scim-mozc.
+    - Add emacs24 to Depends of emacs-mozc. (Closes: #682040)
+    - Bumped version of libibus-dev and libibus-1.0-dev to 1.4.1.
+    - Add armel and armhf to Architecture list.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 06 Sep 2012 08:02:31 +0900
+
+mozc (1.5.1090.102-5) unstable; urgency=low
+
+  * Fix connect error to server if it is root.
+    Add patches/fix-root-issue-at-uim.patch.
+  * Update debian/rules.
+    Fix install path of mo file for fcitx-mozc.
+  * Update debian/control.
+    Add mozc-data to tegaki-zinnia-japanese to Depends and add
+    mozc-utils-gui to Recommends.
+  * Remove debian/fcitx-mozc.install.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 17 Apr 2013 08:12:28 +0900
+
+mozc (1.5.1090.102-4) unstable; urgency=low
+
+  * Update debian/uim-mozc.postinst.
+    Move installed-modules.scm and loader.scm from /etc/uim to /var/lib/uim
+    in uim package. uim-mozc.postinst need to change path from /etc/uim to
+    /var/lib/uim.
+  * Update debian/control.
+    Dump version of uim-utils to 1:1.8.1-3.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 26 Sep 2012 07:59:54 +0900
+
+mozc (1.5.1090.102-3) unstable; urgency=low
+
+  * Update debian/rules.
+    - Enable hardening.
+  * Fix linking library of scim.
+    Add patches/scim-libs.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 20 Jul 2012 05:13:19 +0900
+
+mozc (1.5.1090.102-2) unstable; urgency=high
+
+  * Fix FTBFS on kFreeBSD. (Closes: #678707)
+    Disable renderer.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 28 Jun 2012 06:12:46 +0900
+
+mozc (1.5.1090.102-1) unstable; urgency=high
+
+  * Update debian/control.
+    - Update debhelper to 9.
+    - Add fcitx to Recommends of fcitx-mozc. (Closes: #673249)
+    - Support multiarch for uim-mozc. (Closes: 676996)
+  * Update debian/rules.
+    - Add hardening options.
+    - Remove --enable_gtk_renderer option.
+  * Update patch of fcitx framework. (Closes: #676724)
+  * Update README.Debian. (Closes: #675939)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Mon, 11 Jun 2012 18:10:56 +0900
+
+mozc (1.5.1053.102-3) unstable; urgency=low
+
+  * Fix FTBFS with building binary only.
+    Split override_dh_fixperms to override_dh_fixperms-indeps and arch.
+  * Update dh_clean target. Delete cache files.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Mon, 14 May 2012 08:24:04 +0900
+
+mozc (1.5.1053.102-2) unstable; urgency=low
+
+  * Update debian/copyright to DEP5.
+  * Add DEP-3 header to debian/patches/*
+  * Remove unnecessary patches.
+    patches/add_file_to_gypfile_check.patch
+    patches/bug107_request_surrounding_text.patch
+    patches/emacs_fix.patch
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 11 May 2012 07:58:58 +0900
+
+mozc (1.5.1053.102-1) unstable; urgency=low
+
+  * New upstream release (r114) (Closes: #670685, #667287).
+  * Update patches/support-kfreebsd.patch.
+  * Update patches/uim-mozc.patch (macuim r317).
+  * Add support fcitx framework (Closes: #669090).
+  * Split image data to mozc-data package.
+  * Add gettext to Build-Depends.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 04 May 2012 06:44:18 +0900
+
+mozc (1.4.1033.102-2) unstable; urgency=low
+
+  * Fix FTBFS on kFreeBSD.
+    Update patch/support-kfreebsd.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 30 Mar 2012 03:57:06 +0900
+
+mozc (1.4.1033.102-1) unstable; urgency=low
+
+  * New upstream release (r109).
+  * Update patches/support-kfreebsd.patch.
+  * Update patches/uim-mozc.patch.
+  * Remove unnecessary patches.
+    - patches/add_tegaki_ui_scim_mozc.patch
+    - patches/add_tegaki_ui_ibus_mozc.patch
+  * Add patches/emacs_fix.patch (Upstream#146). Fix work on emacs.
+  * Enable gtk_renderer.
+    Installed /usr/lib/mozc/mozc_renderer to mozc-server package.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 28 Mar 2012 12:34:56 +0900
+
+mozc (1.4.1003.102-2) unstable; urgency=low
+
+  * Fix FTBFS on kFreeBSD.
+    Update patch/support-kfreebsd.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 11 Mar 2012 07:51:41 +0900
+
+mozc (1.4.1003.102-1) unstable; urgency=low
+
+  * New upstream release (r101).
+  * Update patches/support-kfreebsd.patch.
+  * Remove patches. Fixed in upstream.
+    - patches/bug107_request_surrounding_text.patch,
+    - patches/add_file_to_gypfile_check.patch
+    - patches/bug117_fix_ftbfs_ibus1.4.0.patch
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 11 Mar 2012 07:51:37 +0900
+
+mozc (1.3.975.102-2) unstable; urgency=low
+
+  * Update Standards-Version to 3.9.3.
+  * Fix FTBFS with ibus 1.4.0 (Closes: #662586)
+  * Update debian/README.Debian. (Closes: #652886)
+    Remove section of license.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 06 Mar 2012 08:54:20 +0900
+
+mozc (1.3.975.102-1) unstable; urgency=low
+
+  * New upstream release (r94).
+  * Update patches/support-kfreebsd.patch.
+  * Update uim-mozc patch to r304.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 27 Jan 2012 17:30:19 +0900
+
+mozc (1.3.931.102-1) unstable; urgency=low
+
+  * New upstream release (r87).
+  * Update patches/support-kfreebsd.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 21 Dec 2011 21:22:08 +0900
+
+mozc (1.3.911.102-1) unstable; urgency=high
+
+  * New upstream release (r83).
+  * Update patches/support-kfreebsd.patch.
+  * Update patches/add_tegaki_ui_ibus_mozc.patch.
+  * Update uim-mozc patch to r290
+  * Apply patch of bug repot 207.
+    debian/patches/bug107_request_surrounding_text.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 17 Dec 2011 00:53:17 +0900
+
+mozc (1.2.855.102+main-1~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 06 Dec 2011 01:24:36 +0900
+
+mozc (1.2.855.102+main-1) unstable; urgency=high
+
+  * Re-upload to main section. (Closes: #650071)
+    Source code is not changed. This is correction for the bug of dak.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 30 Nov 2011 01:20:53 +0900
+
+mozc (1.2.855.102-3) unstable; urgency=low
+
+  * Change Build-Depends from libibus-1.0-dev (>= 1.2) to
+    libibus-1.0-dev (>= 1.2) | libibus-dev (>= 1.2).
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sun, 13 Nov 2011 21:51:58 +0900
+
+mozc (1.2.855.102-2) unstable; urgency=low
+
+  * Uploaded to main after careful review.
+    http://lists.debian.org/debian-legal/2011/09/msg00010.html
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Thu, 10 Nov 2011 12:39:56 +0900
+
+mozc (1.2.855.102-1) unstable; urgency=low
+
+  * New upstream release (r73).
+  * Update patches/support-kfreebsd.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 04 Oct 2011 21:00:48 +0900
+
+mozc (1.2.831.102-1) unstable; urgency=low
+
+  * New upstream release (r72).
+  * Fix typo in synopsis and long description. (Closes: #640448)
+    Thanks for Vincent Blut.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 09 Sep 2011 02:35:00 +0900
+
+mozc (1.2.809.102-1) unstable; urgency=low
+
+  * New upstream release (r71).
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 31 Aug 2011 02:42:18 +0900
+
+mozc (1.1.773.102-1) unstable; urgency=low
+
+  * New upstream release (r58).
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 22 Jul 2011 08:19:04 +0900
+
+mozc (1.1.758.102-1) unstable; urgency=low
+
+  * New upstream release (r57) (Closes: #633007).
+  * Remove mozc-el-issue76.patch. Applied to upstream.
+  * Update patches/support-kfreebsd.patch.
+    Support build with libzinnia.
+  * Update debian/rules.
+    Add path of build directory.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 06 Jul 2011 23:01:42 +0900
+
+mozc (1.1.717.102-1) unstable; urgency=low
+
+  * New upstream release (r56).
+  * Update debian/control.
+    Bumped standards-version to 3.9.2.
+  * Update debian/rules.
+    Add --channel_dev option (Closes: #619882).
+  * Update debian/patches/support_kfreebsd.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 31 May 2011 08:25:29 +0900
+
+mozc (1.1.690.102-1) unstable; urgency=low
+
+  * New upstream release (r55).
+  * Update debian/control.
+    - Add libzinnia-dev to Build-Depends
+    - Add tegaki-zinnia-japanese to Depends of scim and ibus
+  * Update patches.
+    - Update patches/mozc-el-issue76.patch
+    - Update patches/support-kfreebsd.patch
+    - Add patch UI of tegaki I/F for ibus-mozc
+    - Add patch UI of tegaki I/F for mozc-scim
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 23 Apr 2011 04:14:54 +0900
+
+mozc (1.1.626.102-2) unstable; urgency=low
+
+  * Fix invalid syntax in startup file for emacs-mozc (Closes: #619512).
+    Thanks to ISHIKAWA Mutsumi.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 25 Mar 2011 03:35:01 +0900
+
+mozc (1.1.626.102-1) unstable; urgency=low
+
+  * New upstream release (r52).
+  * Update and add some patches.
+    - Update patch of uim-mozc (r222).
+    - Update patch of kfreebsd.
+    - Drop mozc-el-pseudo-cursor.patch.
+    - Add mozc-el-issue76.patch.
+      pick from issue 76.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Tue, 15 Mar 2011 01:06:41 +0900
+
+mozc (1.0.558.102-1) unstable; urgency=low
+
+  * New upstream release (r51).
+  * Update debian/control.
+    - Move ibus-qt4 from Depends to Suggents in mozc-utils-gui.
+  * Update and add some patches.
+    - Update patch of support kfreebsd.
+    - Drop r47-r48.patch, emacs_mozc_isuue48.patch and
+	  mozc-el-not-suggest-in-minibuffer-fixed.patch.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 22 Dec 2010 12:39:20 +0900
+
+mozc (0.13.499.102-1) unstable; urgency=low
+
+  * New upstream release (r48).
+  * Update debian/control.
+    - Add support emacs.
+      New package emacs-mozc and emacs-mozc-bin.
+    - Move mozc-utils-gui from Depends to Recommends.
+    - Add ibus-qt4 to Depends of mozc-utils-gui (Closes: #590584).
+  * Update debian/rules.
+    - Add target of emacs-mozc.
+    - Clean up for install function.
+  * Add debian/emacsen-*.
+  * Update and add some patches.
+    - Update patch of uim-mozc (r204).
+    - Update patch of support kfreebsd.
+    - Add patch of mozc r48.
+    - Add patch of iuuse 48, 50, 51 from mozc BTS.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 16 Oct 2010 02:24:31 +0900
+
+mozc (0.12.434.102-2) unstable; urgency=low
+
+  * Update debian/control.
+    Add XS-Autobuild: yes.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 10 Sep 2010 12:45:17 +0900
+
+mozc (0.12.434.102-1) unstable; urgency=high
+
+  * New upstream release (r38).
+    - Move section from main to non-free (Closes: #591731).
+    - Update debian/copyright.
+    - Remove mozc images.
+    - Drop patches/ibus_mozc_issue18.patch.
+  * Update debian/control.
+    - Change section from utils to non-free/utils.
+    - Bumped standards-version to 3.9.1.
+    - Fix package description (Closes: #590523).
+    - Fix depends of uim-mozc (Closes: #591442).
+    - Add support architecture.
+      Support i386, amd64, k-i and k-a only.
+  * Update debian/rules.
+    - Update install path of mozc icon and image data.
+    - Add target of kfreebsd.
+  * Update kfreebsd support patch.
+  * Add README.debian.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Fri, 20 Aug 2010 4:25:12 +0900
+
+mozc (0.12.410.102-2) unstable; urgency=low
+
+  * Update debian/rules and debian/control.
+    - Set 1 to run jobs.
+  * Add support uim-mozc (Closes: #588975).
+  * Change new mozc images.
+  * Update patch of kFreeBSD (Closes: #589274).
+  * Add debian/uim-mozc.lintian-overrides.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Sat, 24 Jul 2010 05:40:10 +0900
+
+mozc (0.12.410.102-1) unstable; urgency=low
+
+  * New upstream release (Closes: #588971).
+    - Add mozc-server, mozc-utils-gui and scim-mozc packages.
+  * Update debian/rules.
+    Add --gypdir option to build_mozc.py.
+  * Update debian/control.
+    - Bumped standards-version to 3.9.0.
+    - Update description.
+  * Add mozc icon (Closes: #588972).
+  * Add patch which revises issue 18.
+    ibus_mozc_issue18.patch
+  * kFreeBSD build support.
+    support_kfreebsd.patch
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 14 Jul 2010 03:26:47 +0900
+
+mozc (0.11~svn13-1) unstable; urgency=low
+
+  * Initial release (Closes: #581158)
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org>  Wed, 12 May 2010 05:34:49 +0900

@@ -1,0 +1,20 @@
+mozc source package infomation
+
+- about patch system 
+  The source package uses quilt to manage all modifications to the upstream
+  source. Changes are stored in the source package as diffs in debian/patches
+  and applied during the build.
+
+  See /usr/share/doc/quilt/README.source for a detailed explanation.
+
+- Remove source code
+  mozc debian source package deletes some source codes. 
+
+  The deleted source code is the following directories. 
+    * ./third_party/gyp
+
+  These have already become Debian pakcage and are not necessary.
+    * gyp
+        http://packages.qa.debian.org/g/gyp.html
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org> Wed, 14 Jul 2010 21:22:51 +0900
