@@ -1,0 +1,185 @@
+name: Release
+
+on:
+  create:
+    tags:
+      - 'v*'
+      - 'with-commit-*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+        RUSTC_WRAPPER: "sccache"
+        # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment
+    steps:
+      - name: install apt-utils and wget and git (Linux)
+        id: startup
+        run: |
+          echo "container_name=debian-bookworm" >> $GITHUB_OUTPUT
+          apt-get update
+          apt-get install -y sudo apt-utils wget git
+      - uses: actions/checkout@v4
+        with:
+          set-safe-directory: 'true'
+      - name: check
+        run: |
+          export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+          git config --global --add safe.directory $PWD
+          git remote -v
+      - name: Setup non-root user
+        run: |
+          sudo useradd -m -u 1001 nonroot
+          sudo mkdir -p /github/workspace
+          sudo chown -R nonroot:nonroot /github/workspace
+          sudo -u nonroot whoami
+          sudo -u nonroot id
+          whoami
+          id
+      - name: Setup Mozc source
+        run: |
+          git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
+          cd source
+          git submodule update --init
+      - name: Setup variables
+        id: variables
+        shell: bash
+        run: |
+          TAG=${GITHUB_REF##*/}
+          if [[ "$TAG" =~ ^with-commit- ]]; then
+            cd source
+            COMMIT=$(git log -1 ${TAG#with-commit-bookworm-} --pretty=%h)
+            git checkout $COMMIT
+            echo $TAG
+            cd ..
+            git tag $TAG -d
+            git push origin $TAG -d
+            cd source
+            tag=$(git describe --tags --always ${COMMIT})
+            base_tag="${tag%%-*}"
+            after_tag="${tag#*-}"
+            echo $base_tag
+            echo $after_tag
+            TAG=${base_tag}"-debian-bookworm-with-jp-dict-"${after_tag}
+            cd ..
+            git tag $TAG
+            git push origin $TAG
+            echo "tag_name=" $TAG
+            echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
+          else
+            echo $TAG
+            tag=$TAG
+            base_tag="${tag%%-*}"
+            after_tag="${tag#*-debian-bookworm-with-jp-dict}"
+            cd source
+            COMMIT=$(git log -1 --pretty=%H $base_tag$after_tag)
+            echo $COMMIT
+            git checkout $COMMIT
+            echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
+          fi
+      - name: check variables
+        run: |
+          echo "${{ steps.variables.outputs.tag_name }}"
+          echo "${{ steps.variables.outputs.tag_commit }}"
+      - name: install build tools (Linux)
+        run: |
+          sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/debian.sources
+          sudo apt-get update
+          sudo apt-get build-dep -y mozc
+          sudo apt-get install -y build-essential mold dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
+      - name: Mount bazel cache
+        uses: actions/cache@v4
+        with:
+          path: "/home/runner/.cache/bazel"
+          key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+      - name: rust install
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+          sh rustup-init.sh -y
+      - name: Mount rustup cache
+        uses: actions/cache@v4
+        with:
+          path: "/home/runner/.rustup"
+          key: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          restore-keys: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.4
+        with:
+          version: "v0.8.0"
+      - name: Install bazel
+        run: |
+          sudo apt-get install apt-transport-https curl gnupg -y
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get update
+          sudo apt-get install -y bazel
+          #curl -LO https://github.com/bazelbuild/bazel/releases/download/7.3.1/bazel-7.3.1-installer-linux-x86_64.sh
+          #bash bazel-7.3.1-installer-linux-x86_64.sh --user
+          #export PATH=$HOME/bin:$PATH
+          #sudo rm -rf ~/.cache/bazel/*
+          bazel --version
+      - name: Install mold linker
+        uses: rui314/setup-mold@staging
+        with:
+          mold-version: 2.33.0
+          make-default: false
+      - name: added dictionary
+        run: |
+          git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/mozcdict-ext.git
+          cd mozcdict-ext/sudachi
+          . "$HOME/.cargo/env"
+          _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
+          curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/notcore_lex.zip"
+          #curl -LO "https://github.com/neologd/mecab-ipadic-neologd/raw/master/seed/mecab-user-dict-seed.20200910.csv.xz"
+          unzip small_lex.zip
+          unzip core_lex.zip
+          unzip notcore_lex.zip
+          cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
+          rm *lex.csv
+          #xz -d mecab-user-dict-seed.20200910.csv.xz
+          rustup update stable
+          rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep musl && TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1) || TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1)
+          cargo build --release --target $TARGET
+          ./target/$TARGET/release/dict-to-mozc -s -i ../../source/src/data/dictionary_oss/id.def -f sudachi.csv > ./all-dict.txt
+          #./target/$TARGET/release/dict-to-mozc -n -i ../../source/src/data/dictionary_oss/id.def -f mecab-user-dict-seed.20200910.csv >> ./all-dict.txt
+          awk -f dup.awk all-dict.txt > finish-dict.txt
+          cat finish-dict.txt >> ../../source/src/data/dictionary_oss/dictionary00.txt
+          rm all-dict.txt finish-dict.txt
+      - name: Build
+        shell: bash
+        run: |
+          export PATH=$HOME/bin:$PATH
+          cp -a debian source/
+          cd source
+          sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sudo chown -R nonroot:nonroot .
+          sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
+          cd ..
+          mkdir -p release
+          mv *deb mozc_* release/
+      - name: Generate release note
+        id: release_note
+        run: |
+          {
+          echo "release_note<<EOF"
+          echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
+          echo "EOF"
+          } >> $GITHUB_OUTPUT
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "${{ steps.variables.outputs.tag_name }}"
+          name: "${{ steps.variables.outputs.tag_name }}"
+          artifacts: 'release/*'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: "${{ steps.release_note.outputs.release_note }}"

@@ -1,0 +1,18 @@
+#! /usr/bin/dh-exec --with-scripts=subst-multiarch,install-rename
+# module
+src/bazel-bin/unix/fcitx5/fcitx5-mozc.so usr/lib/${DEB_HOST_MULTIARCH}/fcitx5/
+# config file
+src/unix/fcitx5/mozc-addon.conf => usr/share/fcitx5/addon/mozc.conf
+src/unix/fcitx5/mozc.conf usr/share/fcitx5/inputmethod/
+# mo
+src/unix/fcitx5/po/ca.mo => usr/share/locale/ca/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/da.mo => usr/share/locale/da/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/de.mo => usr/share/locale/de/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/he.mo => usr/share/locale/he/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/ja.mo => usr/share/locale/ja/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/ko.mo => usr/share/locale/ko/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/ru.mo => usr/share/locale/ru/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/zh_CN.mo => usr/share/locale/zh_CN/LC_MESSAGES/fcitx5-mozc.mo
+src/unix/fcitx5/po/zh_TW.mo => usr/share/locale/zh_TW/LC_MESSAGES/fcitx5-mozc.mo
+# meta info
+src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml usr/share/metainfo/
