@@ -1,0 +1,15 @@
+#!/usr/bin/dh-exec --with-scripts=subst-multiarch,install-rename
+# module
+src/bazel-bin/unix/fcitx/fcitx-mozc.so usr/lib/${DEB_HOST_MULTIARCH}/fcitx/
+# mo
+src/unix/fcitx/po/ca.mo => usr/share/locale/ca/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/da.mo => usr/share/locale/da/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/de.mo => usr/share/locale/de/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/ja.mo => usr/share/locale/ja/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/ko.mo => usr/share/locale/ko/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/ru.mo => usr/share/locale/ru/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/zh_CN.mo => usr/share/locale/zh_CN/LC_MESSAGES/fcitx-mozc.mo
+src/unix/fcitx/po/zh_TW.mo => usr/share/locale/zh_TW/LC_MESSAGES/fcitx-mozc.mo
+# config files
+src/unix/fcitx/fcitx-mozc.conf usr/share/fcitx/addon/
+src/unix/fcitx/mozc.conf usr/share/fcitx/inputmethod/
