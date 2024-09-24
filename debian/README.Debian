@@ -1,0 +1,11 @@
+- About Mozc/Debian
+
+-- emacs-mozc
+(require 'mozc)
+(set-language-environment "Japanese")
+(setq default-input-method "japanese-mozc")
+
+Having the above settings, just type C-\ which is bound to
+`toggle-input-method' by default.
+
+-- Mon, 18 Jun 2012 12:39:51 +0900 Nobuhiro Iwamatsu <iwamatsu@debian.org>

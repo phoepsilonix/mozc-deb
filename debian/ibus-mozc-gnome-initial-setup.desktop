@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=ibus-mozc GNOME Initial Setup
+Type=Application
+Exec=/usr/share/ibus-mozc/ibus-mozc-gnome-initial-setup.sh
+OnlyShowIn=GNOME;
+NoDisplay=true
+AutostartCondition=unless-exists ibus-mozc-gnome-initial-setup-done

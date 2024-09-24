@@ -1,0 +1,11 @@
+#!/usr/bin/dh-exec --with-scripts=install-rename
+# module
+src/bazel-bin/unix/ibus/ibus_mozc => usr/lib/ibus-mozc/ibus-engine-mozc
+# config files
+src/bazel-bin/unix/ibus/mozc.xml usr/share/ibus/component/
+
+# autostart
+#
+debian/ibus-mozc-gnome-initial-setup.sh usr/share/ibus-mozc/
+debian/ibus-mozc-gnome-initial-setup.desktop /etc/xdg/autostart/
+debian/ibus-mozc-launch-xwayland.desktop /etc/xdg/autostart/

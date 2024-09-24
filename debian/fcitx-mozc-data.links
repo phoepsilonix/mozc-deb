@@ -1,0 +1,34 @@
+usr/share/icons/mozc/ime_product_icon_opensource-32.png usr/share/fcitx/mozc/icon/mozc.png
+usr/share/icons/mozc/product_icon_32bpp-128.png usr/share/icons/hicolor/128x128/apps/org.fcitx.Fcitx5.fcitx_mozc.png
+usr/share/icons/mozc/ime_product_icon_opensource-32.png usr/share/icons/hicolor/32x32/apps/org.fcitx.Fcitx5.fcitx_mozc.png
+usr/share/icons/mozc/product_icon_32bpp-128.png usr/share/icons/hicolor/128x128/apps/fcitx_mozc.png
+usr/share/icons/mozc/ime_product_icon_opensource-32.png usr/share/icons/hicolor/32x32/apps/fcitx_mozc.png
+ 
+usr/share/icons/mozc/ui-tool.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_tool.png
+usr/share/icons/mozc/ui-properties.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_properties.png
+usr/share/icons/mozc/ui-dictionary.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_dictionary.png
+usr/share/icons/mozc/ui-direct.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_direct.png
+usr/share/icons/mozc/ui-hiragana.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_hiragana.png
+usr/share/icons/mozc/ui-katakana_half.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_half.png
+usr/share/icons/mozc/ui-katakana_full.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_full.png
+usr/share/icons/mozc/ui-alpha_half.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_half.png
+usr/share/icons/mozc/ui-alpha_full.png usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_full.png
+# usr/share/icons/mozc/ime_product_icon_opensource-32.png /usr/share/fcitx/mozc/icon/mozc.png
+usr/share/icons/mozc/ui-tool.png usr/share/fcitx/mozc/icon/mozc-tool.png
+usr/share/icons/mozc/ui-properties.png usr/share/fcitx/mozc/icon/mozc-properties.png
+usr/share/icons/mozc/ui-dictionary.png usr/share/fcitx/mozc/icon/mozc-dictionary.png
+usr/share/icons/mozc/ui-direct.png usr/share/fcitx/mozc/icon/mozc-direct.png
+usr/share/icons/mozc/ui-hiragana.png usr/share/fcitx/mozc/icon/mozc-hiragana.png
+usr/share/icons/mozc/ui-katakana_half.png usr/share/fcitx/mozc/icon/mozc-katakana_half.png
+usr/share/icons/mozc/ui-katakana_full.png usr/share/fcitx/mozc/icon/mozc-katakana_full.png
+usr/share/icons/mozc/ui-alpha_half.png usr/share/fcitx/mozc/icon/mozc-alpha_half.png
+usr/share/icons/mozc/ui-alpha_full.png usr/share/fcitx/mozc/icon/mozc-alpha_full.png
+usr/share/icons/mozc/ui-tool.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_tool.png
+usr/share/icons/mozc/ui-properties.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_properties.png
+usr/share/icons/mozc/ui-dictionary.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_dictionary.png
+usr/share/icons/mozc/ui-direct.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_direct.png
+usr/share/icons/mozc/ui-hiragana.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_hiragana.png
+usr/share/icons/mozc/ui-katakana_half.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_katakana_half.png
+usr/share/icons/mozc/ui-katakana_full.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_katakana_full.png
+usr/share/icons/mozc/ui-alpha_half.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_alpha_half.png
+usr/share/icons/mozc/ui-alpha_full.png usr/share/icons/hicolor/48x48/apps/fcitx_mozc_alpha_full.png
