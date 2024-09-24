@@ -65,10 +65,16 @@ jobs:
             cd source
             tag=$(git describe --tags --always ${COMMIT})
             base_tag="${tag%%-*}"
-            after_tag="${tag#*-}"
             echo $base_tag
-            echo $after_tag
-            TAG=${base_tag}"-ubuntu-noble-"${after_tag}
+            if [[ "$tag" =~ "-" ]];then
+              after_tag="${tag#*-}"
+              echo $after_tag
+              TAG=${base_tag}"-ubuntu-noble-"${after_tag}
+            else
+              after_tag=""
+              TAG=${base_tag}"-ubuntu-noble"
+            fi
+            echo $TAG
             cd ..
             git tag $TAG
             git push origin $TAG
