@@ -141,12 +141,21 @@ jobs:
           cd ..
           mkdir -p release
           mv *deb mozc_* release/
+      - name: Generate release note
+        id: release_note
+        run: |
+          cd source
+          NOTE=$(git log -1)
+          {
+          echo "release_note<<EOF"
+          echo "${NOTE}"
+          echo "EOF"
+          } >> $GITHUB_OUTPUT
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
           tag: "${{ steps.variables.outputs.tag_name }}"
           name: "${{ steps.variables.outputs.tag_name }}"
-          omitBody: true
           artifacts: 'release/*'
           token: ${{ secrets.GITHUB_TOKEN }}
-
+          body: "${{ steps.release_note.outputs.release_note }}"
