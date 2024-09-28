@@ -49,6 +49,7 @@ jobs:
           git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
           cd source
           git submodule update --init
+          git config --global --add safe.directory $PWD
       - name: Setup variables
         id: variables
         shell: bash
@@ -97,14 +98,10 @@ jobs:
         run: |
           echo "${{ steps.variables.outputs.tag_name }}"
           echo "${{ steps.variables.outputs.tag_commit }}"
-      - name: install build tools
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: build-essential mold dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
-          version: 1.0
       - name: install build dependency
         run: |
           sudo apt-get update
+          sudo apt-get install -y build-essential mold dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
           sudo apt-get build-dep -y mozc
       - name: Mount bazel cache
         uses: actions/cache@v4
