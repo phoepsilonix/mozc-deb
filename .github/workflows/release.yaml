@@ -45,6 +45,7 @@ jobs:
           git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
           cd source
           git submodule update --init
+          git config --global --add safe.directory $PWD
       - name: Setup variables
         id: variables
         shell: bash
