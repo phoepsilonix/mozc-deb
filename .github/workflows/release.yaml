@@ -16,7 +16,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [ubuntu-23.04, ubuntu-23.10, ubuntu-24.04, debian-12, ubuntu-23.04-with-jp-dict, ubuntu-23.10-with-jp-dict, ubuntu-24.04-with-jp-dict, debian-12-with-jp-dict]
+        os: [debian-12, ubuntu-23.04, ubuntu-23.10, ubuntu-24.04]
         include:
           - os: debian-12
             container: debian:bookworm
@@ -25,14 +25,6 @@ jobs:
           - os: ubuntu-23.10
             container: ubuntu:mantic
           - os: ubuntu-24.04
-            container: ubuntu:noble
-          - os: debian-12-with-jp-dict
-            container: debian:bookworm
-          - os: ubuntu-23.04-with-jp-dict
-            container: ubuntu:lunar
-          - os: ubuntu-23.10-with-jp-dict
-            container: ubuntu:mantic
-          - os: ubuntu-24.04-with-jp-dict
             container: ubuntu:noble
 
     runs-on: ubuntu-latest
@@ -55,7 +47,7 @@ jobs:
         run: |
           echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
           apt-get update
-          if [[ "${{ matrix.os }}" =~ "debian-12" ]]; then
+          if [[ "${{ matrix.os }}" == "debian-12" ]]; then
             apt-get install -y sudo apt-utils wget git
           else
             apt-get install -y sudo apt-utils wget software-properties-common
@@ -69,7 +61,7 @@ jobs:
       - name: debian-12 and ubuntu-23.04 patch
         shell: bash
         run: |
-           if [[ "${{ matrix.os }}" =~ "debian-12" || "${{ matrix.os }}" =~ "ubuntu-23.04" ]]; then
+           if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
              apt-get install patch
              patch -p1 -i debian-12.patch
            fi
@@ -91,12 +83,12 @@ jobs:
           git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
           cd source
           git submodule update --init
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-      - name: Setup variables
+          git config --global --add safe.directory $PWD
+      - name: Setup Variables
         id: variables
         shell: bash
         env:
-          GUTHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG=${GITHUB_REF##*/}
           if [[ $TAG == "main" ]];then
@@ -119,20 +111,29 @@ jobs:
               after_tag="${tag#*-}"
               echo $after_tag
               TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+              TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             else
               after_tag=""
               TAG=${base_tag}"-${{ matrix.os }}"
+              TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             fi
             echo $TAG
+            echo $TAG2
             echo $base_tag
             echo $after_tag
             TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+            TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             echo $TAG
+            echo $TAG2
             cd ..
             git tag $TAG
+            git tag $TAG2
             git push origin $TAG
+            git push origin $TAG2
             echo "tag_name=" $TAG
+            echo "tag_name_2=" $TAG2
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
           else
             echo $TAG
@@ -140,25 +141,30 @@ jobs:
             base_tag="${tag%%-*}"
             after_tag="${tag#*-${{ matrix.os }}}"
             TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
+            TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             git tag $TAG
+            git tag $TAG2
             git push origin $TAG
+            git push origin $TAG2
             cd source
             COMMIT=$(git log -1 --pretty=%H $base_tag$after_tag)
             echo $COMMIT
             git checkout $COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
           fi
       - name: check variables
         run: |
           echo "${{ steps.variables.outputs.tag_name }}"
+          echo "${{ steps.variables.outputs.tag_name_2 }}"
           echo "${{ steps.variables.outputs.tag_commit }}"
       - name: install build tools (Linux)
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" =~ "debian-12" ]]; then
+          if [[ "${{ matrix.os }}" == "debian-12" ]]; then
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/debian.sources
-          elif [[ "${{ matrix.os }}" =~ "ubuntu-24.04" ]]; then
+          elif [[ "${{ matrix.os }}" == "ubuntu-24.04" ]]; then
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources
           else
             sudo sed 's/^.*deb-src /deb-src /' -i /etc/apt/sources.list
@@ -166,6 +172,11 @@ jobs:
           sudo apt-get update
           sudo apt-get build-dep -y mozc
           sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
+      - name: Install mold linker
+        uses: rui314/setup-mold@staging
+        with:
+          mold-version: 2.34.0
+          make-default: true
       - name: Mount bazel cache
         uses: actions/cache@v4
         with:
@@ -181,26 +192,54 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bazel
           bazel --version
+      - name: Build
+        shell: bash
+        run: |
+          export PATH=$HOME/bin:$PATH
+          cp -a debian source/
+          cd source
+          sed 's/bazel clean/bazel --version/' debian/rules -i
+          sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sudo chown -R nonroot:nonroot .
+          sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
+          cd ..
+          mkdir -p release
+          mv *deb mozc_* release/
+      - name: Generate release note
+        id: release_note
+        shell: bash
+        run: |
+          cd source
+          NOTE=$(git log -1)
+          {
+          echo "release_note<<EOF"
+          echo "${NOTE}"
+          echo "EOF"
+          } >> $GITHUB_OUTPUT
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "${{ steps.variables.outputs.tag_name }}"
+          name: "${{ steps.variables.outputs.tag_name }}"
+          artifacts: 'release/*'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: "${{ steps.release_note.outputs.release_note }}"
 
       - name: Run sccache-cache
-        if: ${{ contains(matrix.os, '-with-jp-dict') }}
         uses: mozilla-actions/sccache-action@v0.0.4
         with:
           version: "v0.8.2"
       - name: Mount rustup cache
-        if: ${{ contains(matrix.os, '-with-jp-dict') }}
         uses: actions/cache@v4
         with:
           path: "/home/runner/.rustup"
           key: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
           restore-keys: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
       - name: Install Rust for -with-jp-dict
-        if: ${{ contains(matrix.os, '-with-jp-dict') }}
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           echo "Running Rust program for ${{ matrix.os }}"
       - name: Added SudachiDict for -with-jp-dict
-        if: ${{ contains(matrix.os, '-with-jp-dict') }}
         run: |
           git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/mozcdict-ext.git
           cd mozcdict-ext/sudachi
@@ -221,50 +260,43 @@ jobs:
           awk -f dup.awk all-dict.txt > finish-dict.txt
           cat finish-dict.txt >> ../../source/src/data/dictionary_oss/dictionary00.txt
           rm all-dict.txt finish-dict.txt
-
-      - name: Install mold linker
-        uses: rui314/setup-mold@staging
-        with:
-          mold-version: 2.34.0
-          make-default: true
       - name: Build
         shell: bash
         run: |
+          rm -rf *deb mozc_*
           export PATH=$HOME/bin:$PATH
-          cp -a debian source/
+          #cp -a debian source/
           cd source
-          sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
-          sudo chown -R nonroot:nonroot .
+          #sed 's/bazel clean/bazel --version/' debian/rules -i
+          #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          #sudo chown -R nonroot:nonroot .
           sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
-          mkdir -p release
-          mv *deb mozc_* release/
-
+          mkdir -p release_2
+          mv *deb mozc_* release_2/
       - name: Generate release note
-        id: release_note
+        id: release_note_2
         shell: bash
         run: |
           cd source
           NOTE=$(git log -1)
           {
           echo "release_note<<EOF"
-            if [[ "${{ matrix.os }}" =~ "-with-jp-dict" ]]; then
-              echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
-              echo
-            fi
+          echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
+          echo
           echo "${NOTE}"
           echo "EOF"
           } >> $GITHUB_OUTPUT
-
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: "${{ steps.variables.outputs.tag_name }}"
-          name: "${{ steps.variables.outputs.tag_name }}"
-          artifacts: 'release/*'
+          tag: "${{ steps.variables.outputs.tag_name_2 }}"
+          name: "${{ steps.variables.outputs.tag_name_2 }}"
+          artifacts: 'release_2/*'
           token: ${{ secrets.GITHUB_TOKEN }}
-          body: "${{ steps.release_note.outputs.release_note }}"
-  
+          body: "${{ steps.release_note_2.outputs.release_note }}"
+
+
   tag-clear:
     runs-on: ubuntu-latest
     needs: release
@@ -285,3 +317,15 @@ jobs:
             TAG="${{ github.event.client_payload.repo.tag }}"
           fi
           git push origin $TAG -d || true
+      - name: gh release delete
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --tags
+          OLD_RELEASES=$(git tag --points-at HEAD^)
+          if [[ "echo ${OLD_RELEASES}|grep -Eo "\-([^-]*)-g[^-]*$")" != "" ]];then
+            echo ${OLD_RELEASES}
+            echo ${OLD_RELEASES} | grep -Eo "\-([^-]*)-g[^-]*$")" | xargs -n1 gh release delete --cleanup-tag -y || true
+          fi
