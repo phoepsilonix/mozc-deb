@@ -1,10 +1,12 @@
+permissions:
+  contents: write
+  actions: write
+
 name: Release
 
 on:
-  create:
-    tags:
-      - 'v*'
-      - 'with-commit-*'
+  repository_dispatch:
+    types: [new-tag-created]
 
 jobs:
   release:
