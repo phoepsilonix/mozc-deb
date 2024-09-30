@@ -221,7 +221,8 @@ jobs:
           if [[ "$OLD_COMMIT" == "$NEW_COMMIT" ]]; then
             NOTE=$(git log -1)
           else
-            NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+            #NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+            NOTE=$(git log -1)
           fi
           {
           echo "release_note<<EOF"
@@ -299,7 +300,8 @@ jobs:
           if [[ "$OLD_COMMIT" == "$NEW_COMMIT" ]]; then
             NOTE=$(git log -1)
           else
-            NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+           #NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+            NOTE=$(git log -1)
           fi
           {
           echo "release_note<<EOF"
