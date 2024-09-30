@@ -1,4 +1,4 @@
-# Build deb packages of Mozc at debian or Ubuntu
+# Build deb packages of Mozc for debian or Ubuntu
 ## Bazel install
 ```sh
 wget https://github.com/bazelbuild/bazel/releases/download/7.3.1/bazel-7.3.1-installer-linux-x86_64.sh
@@ -8,8 +8,14 @@ export PATH="$PATH:$HOME/bin"
 bazel --version
 ```
 
+## mozc-deb
+```sh
+git clone --filter=tree:0 https://github.com/phoepsilonix/mozc-deb.git
+cd mozc-deb
+```
+
 ## Dependencies
-### Ubuntu:mantic
+### Ubuntu:mantic(23.10)
 ```sh
 apt-get update
 apt-get install -y sudo apt-utils wget
@@ -22,7 +28,7 @@ sudo apt-get install -y build-essential dpkg-dev make git qt6ct qt6-base-dev lib
 git checkout ubuntu-mantic
 ```
 
-### Ubuntu:noble
+### Ubuntu:noble(24.04)
 ```sh
 apt-get update
 apt-get install -y sudo apt-utils wget
@@ -34,7 +40,7 @@ sudo apt-get install -y build-essential dpkg-dev make git qt6ct qt6-base-dev lib
 ```sh
 git checkout ubuntu-noble
 ```
-### Debian
+### Debian:bookworm(12)
 ```sh
 apt-get update
 apt-get install sudo apt-utils wget
