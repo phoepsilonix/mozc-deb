@@ -2,11 +2,11 @@ name: Check Master Branch
 
 on:
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '* */4 * * *'
   workflow_dispatch:
 
 env:
-  ORIGINAL_REPO: "google/mozc"
+  ORIGINAL_REPO: "phoepsilonix/mozc"
 
 jobs:
   sync-master:
@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           fetch-depth: 0
 
@@ -26,20 +28,21 @@ jobs:
           git config user.email github-actions@github.com
 
       - name: Sync master branch
+        id: sync_mozc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: sync_mozc
         run: |
           echo "Fetching from original repository..."
           git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
 
-          echo "Resetting local master to FETCH_HEAD..."
-          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          echo "Resetting local master to FETCH_HEAD^..."
+          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD^)
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
           if [[ "$MOZC_COMMIT" == "$DEB_COMMIT" ]]; then
             echo "No changes detected. Exiting."
+            echo "should_exit=true" >> $GITHUB_OUTPUT
             exit 0
           fi
           echo $MOZC_COMMIT > last_commit.txt
@@ -55,6 +58,7 @@ jobs:
           echo "mozc_tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Trigger release workflow
+        if: ${{ steps.sync_mozc.outputs.should_exit != 'true' }}
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

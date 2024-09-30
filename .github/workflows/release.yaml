@@ -325,6 +325,9 @@ jobs:
         run: |
           git fetch --tags
           OLD_RELEASES=$(git tag --points-at HEAD^)
+          [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^)
+          [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^)
+          [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^^)
           if [[ "$(echo ${OLD_RELEASES}|grep -Eo "\-([^-]*)-g[^-]*$")" != "" ]];then
             echo ${OLD_RELEASES}
             echo ${OLD_RELEASES} | grep -E "\-([^-]*)-g[^-]*$" | xargs -n1 gh release delete --cleanup-tag -y || true
