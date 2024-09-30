@@ -26,6 +26,18 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git config --global push.gpgSign if-asked
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_REPO_SSH_KEY }}
+
+      - name: Import bot's GPG key for signing commits
+        id: import-gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
 
       - name: Sync master branch
         id: sync_mozc
@@ -35,8 +47,8 @@ jobs:
           echo "Fetching from original repository..."
           git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
 
-          echo "Resetting local master to FETCH_HEAD^..."
-          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD^)
+          echo "Resetting local master to FETCH_HEAD..."
+          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT

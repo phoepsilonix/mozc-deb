@@ -57,6 +57,7 @@ jobs:
           fi
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           set-safe-directory: 'true'
       - name: debian-12 and ubuntu-23.04 patch
         shell: bash
@@ -84,12 +85,14 @@ jobs:
           cd source
           git submodule update --init
           git config --global --add safe.directory $PWD
+
       - name: Setup Variables
         id: variables
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global push.gpgSign if-asked
           TAG=${GITHUB_REF##*/}
           if [[ $TAG == "main" ]];then
             echo "Running release for branch: ${{ github.event.client_payload.repo.branch }}"
@@ -209,8 +212,17 @@ jobs:
         id: release_note
         shell: bash
         run: |
+          git checkout main
+          git checkout HEAD~ -- last_commit.txt
+          OLD_COMMIT=$(cat last_commit.txt)
+          git checkout HEAD -- last_commit.txt
+          NEW_COMMIT=$(cat last_commit.txt)
           cd source
-          NOTE=$(git log -1)
+          if [[ "$OLD_COMMIT" == "$NEW_COMMIT" ]]; then
+            NOTE=$(git log -1)
+          else
+            NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+          fi
           {
           echo "release_note<<EOF"
           echo "${NOTE}"
@@ -278,8 +290,17 @@ jobs:
         id: release_note_2
         shell: bash
         run: |
+          git checkout main
+          git checkout HEAD~ -- last_commit.txt
+          OLD_COMMIT=$(cat last_commit.txt)
+          git checkout HEAD -- last_commit.txt
+          NEW_COMMIT=$(cat last_commit.txt)
           cd source
-          NOTE=$(git log -1)
+          if [[ "$OLD_COMMIT" == "$NEW_COMMIT" ]]; then
+            NOTE=$(git log -1)
+          else
+            NOTE=$(git log $OLD_COMMIT~..$NEW_COMMIT)
+          fi
           {
           echo "release_note<<EOF"
           echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
