@@ -179,7 +179,6 @@ Depends:
  ${shlibs:Depends},
  mozc-data
 Recommends: mozc-server (= ${binary:Version})
-Suggests: ibus-qt5
 Description: GUI utilities of the Mozc input method
  Mozc is a Japanese Input Method Editor (IME) designed for multi-platform
  such as Chromium OS, Windows, Mac and Linux.
