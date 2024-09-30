@@ -1,72 +1,72 @@
 mozc (2.30.5595.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
-  * git src.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Mon, 23 Sep 2024 14:33:55 +0900
 
 mozc (2.30.5544.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
-  * git src.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 1 Aug 2024 17:29:55 +0900
 
 mozc (2.30.5520.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
-  * git src.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Wed, 10 Jul 2024 01:10:55 +0900
 
 mozc (2.30.5490.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
-  * git src.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
- -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Sun, 16 Jun 2024 15:48:46 +0900
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Sun, 16 Jun 2024 15:29:55 +0900
 
-mozc (2.30.5448.102+dfsg-2.2build1) unstable; urgency=medium
+mozc (2.30.5448.102+dfsg-2.2build1) UNRELEASED; urgency=medium
 
-  * git src.
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Apr 2024 07:34:30 +0000
 
-mozc (2.30.5432.102+dfsg-2.2build1) unstable; urgency=medium
+mozc (2.30.5432.102+dfsg-2.2build1) UNRELEASED; urgency=medium
 
-  * git src.
-
- -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Mar 2024 13:19:00 +0900
-
-mozc (2.29.5400.102+dfsg-2.2build1) unstable; urgency=medium
-
-  * git src.
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Mar 2024 13:19:00 +0900
 
-mozc (2.29.5374.102+dfsg-2.2build1) unstable; urgency=medium
+mozc (2.29.5400.102+dfsg-2.2build1) UNRELEASED; urgency=medium
 
-  * git src.
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Mar 2024 13:19:00 +0900
+
+mozc (2.29.5374.102+dfsg-2.2build1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Jan 2024 16:33:00 +0900
 
-mozc (2.29.5346.102+dfsg-2.2build1) unstable; urgency=medium
+mozc (2.29.5346.102+dfsg-2.2build1) UNRELEASED; urgency=medium
 
-  * git src.
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Thu, 25 Jan 2024 16:33:00 +0900
 
-mozc (2.29.5291.102+dfsg-2.2build1) unstable; urgency=medium
+mozc (2.29.5291.102+dfsg-2.2build1) UNRELEASED; urgency=medium
 
-  * git src.
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 08 Nov 2023 17:33:08 +0900
-
-mozc (2.28.4715.102+dfsg-2.2build1) lunar; urgency=medium
-
-  * Rebuild against new libprotobuf32.
-
- -- Gianfranco Costamagna <locutusofborg@debian.org>  Wed, 04 Jan 2023 17:33:08 +0100
 
 mozc (2.28.4715.102+dfsg-2.2) unstable; urgency=medium
 
