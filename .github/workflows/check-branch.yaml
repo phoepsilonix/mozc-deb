@@ -2,7 +2,7 @@ name: Check Master Branch
 
 on:
   schedule:
-    - cron: '* */4 * * *'
+    - cron: '0 03-23/6 * * *'
   workflow_dispatch:
 
 env:
@@ -24,8 +24,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "Masato TOYOSHIMA"
+          git config user.email phoepsilonix@phoepsilonix.love
           git config --global push.gpgSign if-asked
 
       - uses: webfactory/ssh-agent@v0.9.0
@@ -39,16 +39,14 @@ jobs:
           gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
 
-      - name: Sync master branch
+      - name: Mozc commit check
         id: sync_mozc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Fetching from original repository..."
-          git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
+          echo "Fetch api of head commits from original repository..."
 
-          echo "Resetting local master to FETCH_HEAD..."
-          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          MOZC_COMMIT=$(curl https://api.github.com/repos/$ORIGINAL_REPO/commits/HEAD|jq -r ".sha")
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
@@ -57,17 +55,64 @@ jobs:
             echo "should_exit=true" >> $GITHUB_OUTPUT
             exit 0
           fi
+
+      - name: Mozc Version Check
+        id: check_mozc
+        if: ${{ steps.sync_mozc.outputs.should_exit != 'true' }}
+        run: |
+          echo "Changes detected."
+          echo
+          echo "Fetching from original repository..."
+          git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
+          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          DEB_COMMIT=$(cat last_commit.txt)
+          echo $MOZC_COMMIT
+          echo $DEB_COMMIT
           echo $MOZC_COMMIT > last_commit.txt
           git commit -m "last commit is $MOZC_COMMIT" last_commit.txt
           echo "mozc_commit=$MOZC_COMMIT" >> $GITHUB_OUTPUT
 
+          # MOZC_VERSION CHECK
+          echo "Mozc version(tag) check"
+          MOZC_TAG_1="v""$(head -n1 debian/changelog|grep -Eo "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")"
+          echo "Resetting local master to FETCH_HEAD..."
+          git checkout FETCH_HEAD
+          source <(grep = src/data/version/mozc_version_template.bzl| tr -d ' ')
+          MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$((REVISION+2))")
+          echo "$MOZC_TAG_1"
+          echo "$MOZC_TAG_2"
+          if [[ "$MOZC_TAG_1" != "$MOZC_TAG_2" ]];then
+            OSS_COMMIT=$(git log -G "BUILD_OSS [^ ]* $BUILD_OSS" -1 --pretty=%H)
+            [[ -z "$OSS_COMMIT" ]] && OSS_COMMIT=$(git log -G "$BUILD_OSS" -1 --pretty=%H)
+            if [[ -z "$OSS_COMMIT" ]]; then
+              echo "is BUILD_OSS updated? But COMMIT LOG is Nothing?"
+              OSS_COMMIT=$(git log -1 --pretty=%H)
+            fi
+            git checkout main
+            git checkout -- changelog
+            sed "s/MOZC_VER/${MOZC_TAG_2}/" changelog > changelog.tmp1
+            UPDATE_DATE=$(LC_ALL=C date -R)
+            sed "s/UPDATE_DATE/${UPDATE_DATE}/" -i changelog.tmp1
+            cat changelog.tmp1 debian/changelog > changelog.tmp
+            mv changelog.tmp debian/changelog
+            rm -f changelog.tmp1
+            #git checkout -- changelog
+            git commit -m "chagelog: $MOZC_TAG_2 at $UPDATE_DATE" debian/changelog
+          fi
+
           echo "Pushing changes to origin..."
-          git push origin main
+          git checkout main
+          git push origin main --force
 
           TAG=commit-$MOZC_COMMIT
           git tag $TAG
-          git push origin $TAG
+          git push origin $TAG --force
           echo "mozc_tag=$TAG" >> $GITHUB_OUTPUT
+
+          if [[ "$MOZC_TAG_1" != "$MOZC_TAG_2" ]];then
+            git tag $MOZC_TAG_2 $OSS_COMMIT
+            git push origin $MOZC_TAG_2 --force
+          fi
 
       - name: Trigger release workflow
         if: ${{ steps.sync_mozc.outputs.should_exit != 'true' }}
@@ -80,12 +125,12 @@ jobs:
               "repo": {
                 "name": "${{ github.repository }}",
                 "branch": "main",
-                "tag": "${{ steps.sync_mozc.outputs.mozc_tag }}"
+                "tag": "${{ steps.check_mozc.outputs.mozc_tag }}"
               }
             }
           repository: ${{ github.repository }}
 
-#  build_deb:
+          #  build_deb
 #    needs: sync-master
 #    strategy:
 #      matrix:

@@ -330,8 +330,8 @@ jobs:
           fetch-depth: 0
       - name: Configure Git
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "Masato TOYOSHIMA"
+          git config user.email phoepsilonix@phoepsilonix.love
       - name: tag deletion
         shell: bash
         run: |
