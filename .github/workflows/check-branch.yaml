@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "Fetch api of head commits from original repository..."
 
-          MOZC_COMMIT=$(curl https://api.github.com/repos/$ORIGINAL_REPO/commits/HEAD|jq -r ".sha")
+          MOZC_COMMIT=$(curl -s https://api.github.com/repos/$ORIGINAL_REPO/commits/master|jq -r ".sha")
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
