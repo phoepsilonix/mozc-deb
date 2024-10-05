@@ -93,6 +93,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global push.gpgSign if-asked
+          cd source
+          SHA512SUMS=$(find src -type f -print0 | sort -z | xargs -0 sha512sum | sha512sum | cut -d' ' -f1)
+          echo "mozc_checksum=$SHA512SUMS" >> $GITHUB_OUTPUT
+          cd ..
           TAG=${GITHUB_REF##*/}
           if [[ $TAG == "main" ]];then
             echo "Running release for branch: ${{ github.event.client_payload.repo.branch }}"
@@ -157,11 +161,14 @@ jobs:
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
           fi
+
       - name: check variables
         run: |
           echo "${{ steps.variables.outputs.tag_name }}"
           echo "${{ steps.variables.outputs.tag_name_2 }}"
           echo "${{ steps.variables.outputs.tag_commit }}"
+          echo "${{ steps.variables.outputs.mozc_checksum }}"
+
       - name: install build tools (Linux)
         shell: bash
         run: |
@@ -184,8 +191,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "/home/runner/.cache/bazel"
-          key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
-          restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.mozc_checksum }}
+          restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.mozc_checksum }}
       - name: Install bazel
         run: |
           sudo apt-get install apt-transport-https curl gnupg -y
