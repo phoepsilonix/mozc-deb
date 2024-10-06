@@ -1,10 +1,23 @@
 # Build deb packages of Mozc for debian or Ubuntu
 ## Bazel install
 ```sh
-wget https://github.com/bazelbuild/bazel/releases/download/7.3.1/bazel-7.3.1-installer-linux-x86_64.sh
-bash bazel-7.3.1-installer-linux-x86_64.sh --user
+wget https://github.com/bazelbuild/bazel/releases/download/7.3.2/bazel-7.3.2-installer-linux-x86_64.sh
+bash bazel-7.3.2-installer-linux-x86_64.sh --user
 source ~/.bazel/bin/bazel-complete.bash
 export PATH="$PATH:$HOME/bin"
+bazel --version
+```
+or
+```sh
+sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/7.3.2/bazel-7.3.2-linux-x86_64
+sudo chmod +x /usr/local/bin/bazel
+bazel --version
+```
+or
+bazelisk(wrapper)
+```sh
+sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+sudo chmod +x /usr/local/bin/bazel
 bazel --version
 ```
 
