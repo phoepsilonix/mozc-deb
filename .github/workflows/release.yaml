@@ -72,7 +72,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
         run: |
-          sudo useradd -m -u 1001 nonroot
+          sudo useradd -m nonroot
           sudo mkdir -p /github/workspace
           sudo chown -R nonroot:nonroot /github/workspace
           sudo -u nonroot whoami
@@ -185,12 +185,12 @@ jobs:
       - name: Install mold linker
         uses: rui314/setup-mold@staging
         with:
-          mold-version: 2.34.0
+          mold-version: 2.34.1
           make-default: true
       - name: Mount bazel cache
         uses: actions/cache@v4
         with:
-          path: "/home/runner/.cache/bazel"
+          path: "/github/workspace/.cache/bazel"
           key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.mozc_checksum }}
           restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.mozc_checksum }}
       - name: Install bazel
@@ -252,7 +252,7 @@ jobs:
       - name: Mount rustup cache
         uses: actions/cache@v4
         with:
-          path: "/home/runner/.rustup"
+          path: "/github/workspace/.rustup"
           key: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
           restore-keys: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
       - name: Install Rust for -with-jp-dict
