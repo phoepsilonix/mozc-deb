@@ -72,7 +72,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
         run: |
-          sudo useradd -m nonroot
+          sudo useradd -m -d /github/workspace/ -s /usr/bin/bash nonroot
           sudo mkdir -p /github/workspace
           sudo chown -R nonroot:nonroot /github/workspace
           sudo -u nonroot whoami
