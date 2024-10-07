@@ -246,11 +246,11 @@ index 0000000..978dc8e
 +
 +mv unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in{.new,}
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index f3522d8..577917e 100644
+index 8da2297..9327f44 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
-@@ -148,6 +148,18 @@ pkg_config_repository(
-     packages = ["glib-2.0", "gobject-2.0", "ibus-1.0"],
+@@ -127,6 +127,18 @@ pkg_config_repository(
+     ],
  )
  
 +# Fcitx
@@ -269,11 +269,11 @@ index f3522d8..577917e 100644
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/WORKSPACE.bazel b/src/WORKSPACE.bazel
-index 9492906..03eef04 100644
+index 3dfed4f..b907089 100644
 --- a/src/WORKSPACE.bazel
 +++ b/src/WORKSPACE.bazel
-@@ -189,6 +189,18 @@ pkg_config_repository(
-   packages = ["glib-2.0", "gobject-2.0", "ibus-1.0"],
+@@ -198,6 +198,18 @@ pkg_config_repository(
+     ],
  )
  
 +# Fcitx
