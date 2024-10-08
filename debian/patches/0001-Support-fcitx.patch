@@ -246,7 +246,7 @@ index 0000000..978dc8e
 +
 +mv unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in{.new,}
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index 8da2297..9327f44 100644
+index 4c3ae30..576944c 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
 @@ -127,6 +127,18 @@ pkg_config_repository(
