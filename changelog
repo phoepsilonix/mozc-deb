@@ -4,3 +4,4 @@ mozc (MOZC_VER+dfsg-2.2build1.1) UNRELEASED; urgency=medium
   * bazel build with github.com/google/mozc.git and patches of fcitx5
 
  -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  UPDATE_DATE
+

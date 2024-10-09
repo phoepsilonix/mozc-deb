@@ -32,18 +32,19 @@ CHANGELOG_VARS := $(shell dpkg-parsechangelog | \
 SOURCE_VERSION := $(call vafilt,$(CHANGELOG_VARS),Version)
 
 %:
-	dh $@
+	dh $@ --with=git
 
 override_dh_auto_configure:
+	git submodule update --init
 
 override_dh_auto_build: build_dynamic_link build_static_link
 build_static_link:
 	cd src; \
-	bazel build $(TARGET_STATIC) --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+		bazel build $(TARGET_STATIC) --registry=https://bcr.bazel.build --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
 
 build_dynamic_link:
 	cd src ; \
-	bazel build $(TARGETS) $(TARGET_FCITX5) $(TARGET_FCITX) --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+	bazel build $(TARGETS) $(TARGET_FCITX5) $(TARGET_FCITX) --registry=https://bcr.bazel.build --config oss_linux --config release_build $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
 
 	# fcitx5
 	for pofile in src/unix/fcitx5/po/*.po ; do \
@@ -81,6 +82,7 @@ override_dh_auto_clean:
 
 	-rm -f src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml
 	dh_auto_clean
+        git clean -fdx
 
 override_dh_auto_install:
 	# mozc-utils-gui
