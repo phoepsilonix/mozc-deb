@@ -91,8 +91,8 @@ jobs:
             fi
             git checkout main
             git checkout -- changelog
-            sed "s/MOZC_VER/${MOZC_TAG_2}/" changelog > changelog.tmp1
-            UPDATE_DATE=$(LC_ALL=C date -R)
+            sed "s/MOZC_VER/${MOZC_TAG_2#v*}/" changelog > changelog.tmp1
+            UPDATE_DATE=$(TZ="Asia/Tokyo" LC_ALL=C date -R)
             sed "s/UPDATE_DATE/${UPDATE_DATE}/" -i changelog.tmp1
             cat changelog.tmp1 debian/changelog > changelog.tmp
             mv changelog.tmp debian/changelog
@@ -121,8 +121,10 @@ jobs:
           echo "mozc_tag=$TAG" >> $GITHUB_OUTPUT
 
           if [[ "$MOZC_TAG_1" != "$MOZC_TAG_2" ]];then
-            git tag $MOZC_TAG_2 $OSS_COMMIT
-            git push origin $MOZC_TAG_2 --force
+            echo $MOZC_TAG_2
+            echo $OSS_COMMIT
+            git tag $MOZC_TAG_2 HEAD ||true
+            git push origin $MOZC_TAG_2 --force||true
           fi
 
       - name: Trigger release workflow
@@ -140,52 +142,3 @@ jobs:
               }
             }
           repository: ${{ github.repository }}
-
-          #  build_deb
-#    needs: sync-master
-#    strategy:
-#      matrix:
-#        os: [debian-bookworm, ubuntu-lunar, ubuntu-mantic, ubuntu-noble, debian-bookworm-with-jp-dict, ubuntu-lunar-with-jp-dict, ubuntu-mantic-with-jp-dict, ubuntu-noble-with-jp-dict]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0
-
-#      - name: Configure Git
-#        run: |
-#          git config user.name github-actions
-#          git config user.email github-actions@github.com
-
-#      - name: tag
-#        id: tag
-#        shell: bash
-#        run: |
-#          BRANCH=${{ matrix.os }}
-#          BRANCH=${BRANCH#*-};
-#          BRANCH=${BRANCH%-with-jp-dict}
-#          if [[ "${{ matrix.os }}" =~ "-with-jp-dict" ]]; then
-#            TAG=with-commit-${BRANCH#*-}-"${{ needs.sync-master.outputs.mozc_commit }}"
-#            echo "tag=$TAG" >> $GITHUB_OUTPUT
-#          else
-#            TAG=commit-${BRANCH#*-}-"${{ needs.sync-master.outputs.mozc_commit }}"
-#            echo "tag=$TAG" >> $GITHUB_OUTPUT
-#          fi
-#          git switch ${{ matrix.os }}
-#          git tag $TAG
-#          git push origin $TAG
-#      - name: Trigger release workflow
-#        uses: peter-evans/repository-dispatch@v3
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          event-type: new-tag-created
-#          client-payload: |-
-#            {
-#              "repo": {
-#                "name": "${{ github.repository }}",
-#                "branch": "${{ matrix.os }}",
-#                "tag": "${{ steps.tag.outputs.tag }}"
-#              }
-#            }
-#          repository: ${{ github.repository }}
