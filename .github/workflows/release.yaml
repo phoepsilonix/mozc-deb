@@ -267,7 +267,7 @@ jobs:
         run: |
           git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/dict-to-mozc.git
           cd dict-to-mozc
-          _dict_to_mozc_commit=e5579de8302d2928a2e04dd03c575f001cebc5dd
+          _dict_to_mozc_commit=2650c4837e7d7ca15f68da5fab70f1f4c05a3e7c
           git checkout $_dict_to_mozc_commit
           . "$HOME/.cargo/env"
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
