@@ -265,26 +265,47 @@ jobs:
           echo "Running Rust program for ${{ matrix.os }}"
       - name: Added SudachiDict for -with-jp-dict
         run: |
+          srcdir=$PWD/source/
           git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/dict-to-mozc.git
           cd dict-to-mozc
-          _dict_to_mozc_commit=e5579de8302d2928a2e04dd03c575f001cebc5dd
+          _dict_to_mozc_commit=a78381248ae539db22f62ca0af6c10b9035e5dab
           git checkout $_dict_to_mozc_commit
           . "$HOME/.cargo/env"
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/notcore_lex.zip"
-          unzip small_lex.zip
-          unzip core_lex.zip
-          unzip notcore_lex.zip
-          cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
-          rm *lex.csv
-          rustup update stable
+          unzip -o small_lex.zip
+          unzip -o core_lex.zip
+          unzip -o notcore_lex.zip
+          # すだちを優先
+          echo '1. Build the rust program(mozcdict-ext), it may take some time...'
           rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep -v musl && TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1) || TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1)
+          unset RUSTC
           cargo build --release --target $TARGET
-          ./target/$TARGET/release/dict-to-mozc -s -i ../source/src/data/dictionary_oss/id.def -f sudachi.csv > ./all-dict.txt
-          cat all-dict.txt >> ../source/src/data/dictionary_oss/dictionary00.txt
-          rm all-dict.txt
+          echo '2. Convert SudachiDict to Mozc System Dictionary format. It may take some time...'
+          cat "${srcdir}"/src/data/dictionary_oss/dictionary*.txt > all-dict.txt
+          cat small_lex.csv core_lex.csv notcore_lex.csv > all.csv
+          cp ${srcdir}/src/data/dictionary_oss/id.def ./
+          ./target/$TARGET/release/dict-to-mozc -s -i ./id.def -f all.csv >> all-dict.txt
+          echo '3. Convert Mecab-unidic-neologd to Mozc System Dictionary format. It may take some time...'
+          curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
+          xz -d mecab-unidic-user-dict-seed.20200910.csv.xz
+          ./target/$TARGET/release/dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
+          echo '4. Convert Mecab-ipadic-neologd to Mozc System Dictionary format. It may take some time...'
+          curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
+          xz -d mecab-user-dict-seed.20200910.csv.xz
+          ./target/$TARGET/release/dict-to-mozc -n -P 12 -N 10 -i ./id.def -f ${srcdir}/mecab-user-dict-seed.20200910.csv >> all-dict.txt
+          echo '5. Duplicate data will be removed.'
+          # 読み、品詞ID、右品詞ID、表記による重複チェック
+          awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$2,$3,$5]++) {print $0}}' all-dict.txt|sort > finish-dict.txt
+          echo '6. Finally, add the SudachiDict dictionary to the Mozc source.'
+          mkdir -p tmp
+          cd tmp
+          ROWS=$(echo $(($(wc -l ../finish-dict.txt |cut -f1 -d" ")/10+1)))
+          split -d -l $ROWS --additional-suffix=.txt ../finish-dict.txt dictionary
+          cp -af ./dictionary*.txt "$srcdir/src/data/dictionary_oss/"
+          sync
       - name: Build
         shell: bash
         run: |
@@ -292,6 +313,7 @@ jobs:
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
           cd source
+          patch -p1 -i ../dict-license.patch
           #sed 's/bazel clean/bazel --version/' debian/rules -i
           #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
           #sudo chown -R nonroot:nonroot .
