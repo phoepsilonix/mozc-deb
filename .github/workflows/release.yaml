@@ -144,6 +144,7 @@ jobs:
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
+            echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
           else
             echo $TAG
             tag=$TAG
@@ -164,6 +165,7 @@ jobs:
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
+            echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
           fi
 
       - name: check variables
@@ -171,6 +173,7 @@ jobs:
           echo "${{ steps.variables.outputs.tag_name }}"
           echo "${{ steps.variables.outputs.tag_name_2 }}"
           echo "${{ steps.variables.outputs.tag_commit }}"
+          echo "${{ steps.variables.outputs.base_tag }}"
           #echo "${{ steps.variables.outputs.mozc_checksum }}"
 
       - name: install build tools (Linux)
@@ -191,21 +194,25 @@ jobs:
         with:
           mold-version: 2.34.1
           make-default: true
-      - name: Mount bazel cache
-        uses: actions/cache@v4
-        with:
-          path: "/github/workspace/.cache/bazel"
-          key: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
-          restore-keys: bazel-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+
       - name: Install bazel
         run: |
-          sudo apt-get install apt-transport-https curl gnupg -y
-          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
-          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-          sudo apt-get update
-          sudo apt-get install -y bazel
-          bazel --version
+          mkdir -p /usr/local/bin
+          curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+          chmod +x /usr/local/bin/bazel
+          sudo mkdir -p /github/workspace/.cache
+          sudo chown -R nonroot:nonroot /github/workspace/.cache
+          sudo -u nonroot bazel --version
+
+      - name: Bazel Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /github/workspace/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-${{ steps.startup.outputs.container_name }}-
+
       - name: Build
         shell: bash
         run: |
