@@ -339,7 +339,11 @@ jobs:
           fi
           {
           echo "release_note<<EOF"
-          echo "Added [SudachiDict](https://github.com/WorksApplications/SudachiDict) to the system dictionary."
+          echo "Add Japanese dictionaries for improved tokenization"
+          echo
+          echo "- [SudachiDict: Lexicon for Sudachi tokenizer](https://github.com/WorksApplications/SudachiDict)"
+          echo "- [Neologism dictionary for UniDic-MeCab](https://github.com/neologd/mecab-unidic-neologd/)"
+          echo "- [Neologism dictionary for IPAdic-MeCab](https://github.com/neologd/mecab-ipadic-neologd/)"
           echo
           echo "${NOTE}"
           echo "EOF"
