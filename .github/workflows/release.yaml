@@ -74,6 +74,9 @@ jobs:
         run: |
           sudo useradd -m -d /github/workspace/ -s /usr/bin/bash nonroot
           sudo mkdir -p /github/workspace
+          sudo mkdir -p /github/workspace/.cache
+          sudo mkdir -p /github/workspace/.rustup
+          sudo mkdir -p /github/workspace/.cargo
           sudo chown -R nonroot:nonroot /github/workspace
           sudo -u nonroot whoami
           sudo -u nonroot id
@@ -200,8 +203,6 @@ jobs:
           mkdir -p /usr/local/bin
           curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
           chmod +x /usr/local/bin/bazel
-          sudo mkdir -p /github/workspace/.cache
-          sudo chown -R nonroot:nonroot /github/workspace/.cache
           sudo -u nonroot bazel --version
 
       - name: Bazel Cache
@@ -209,9 +210,9 @@ jobs:
         with:
           path: |
             /github/workspace/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
+          key: ${{ matrix.os }}-bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
           restore-keys: |
-            ${{ runner.os }}-bazel-${{ steps.startup.outputs.container_name }}-
+            ${{ matrix.os }}-bazel-${{ steps.startup.outputs.container_name }}-
 
       - name: Build
         shell: bash
@@ -263,12 +264,14 @@ jobs:
       - name: Mount rustup cache
         uses: actions/cache@v4
         with:
-          path: "/github/workspace/.rustup"
-          key: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
-          restore-keys: rustup-${{ runner.os }}-mozc-${{ steps.startup.outputs.container_name }}
+          path: |
+            /github/workspace/.rustup
+            /github/workspace/.cargo
+          key: rustup-${{ matrix.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
+          restore-keys: rustup-${{ matrix.os }}-mozc-${{ steps.startup.outputs.container_name }}-
       - name: Install Rust for -with-jp-dict
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo -u nonroot sh -s -- -y
           echo "Running Rust program for ${{ matrix.os }}"
       - name: Added SudachiDict for -with-jp-dict
         run: |
@@ -287,9 +290,9 @@ jobs:
           unzip -o notcore_lex.zip
           # すだちを優先
           echo '1. Build the rust program(mozcdict-ext), it may take some time...'
-          rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep -v musl && TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1) || TARGET=$(rustup target list --installed | grep $(rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1)
+          sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep -v musl && TARGET=$(sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1) || TARGET=$(sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1)
           unset RUSTC
-          cargo build --release --target $TARGET
+          sudo -u nonroot cargo build --release --target $TARGET
           echo '2. Convert SudachiDict to Mozc System Dictionary format. It may take some time...'
           cat "${srcdir}"/src/data/dictionary_oss/dictionary*.txt > all-dict.txt
           cat small_lex.csv core_lex.csv notcore_lex.csv > all.csv
