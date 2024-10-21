@@ -306,10 +306,10 @@ index f3f55e9..c38a2b6 100755
  
 diff --git a/src/unix/fcitx/BUILD b/src/unix/fcitx/BUILD
 new file mode 100644
-index 0000000..2f90b3e
+index 0000000..e542359
 --- /dev/null
 +++ b/src/unix/fcitx/BUILD
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,98 @@
 +load(
 +    "//:build_defs.bzl",
 +    "mozc_cc_binary",
@@ -368,8 +368,8 @@ index 0000000..2f90b3e
 +        "fcitx_key_translator.h",
 +    ],
 +    deps = [
-+        "//base:logging",
 +        "//base:port",
++        "//base:singleton",
 +        "//base:vlog",
 +        "//protocol:config_cc_proto",
 +        "//protocol:commands_cc_proto",
@@ -387,7 +387,6 @@ index 0000000..2f90b3e
 +    ],
 +    deps = [
 +        "//base:util",
-+        "//base:logging",
 +        "//base:port",
 +        "//base:vlog",
 +        "@fcitx//:fcitx",
@@ -825,7 +824,7 @@ index 0000000..7fedaa0
 +}
 diff --git a/src/unix/fcitx/fcitx_key_event_handler.cc b/src/unix/fcitx/fcitx_key_event_handler.cc
 new file mode 100644
-index 0000000..61cbe92
+index 0000000..2b07f5c
 --- /dev/null
 +++ b/src/unix/fcitx/fcitx_key_event_handler.cc
 @@ -0,0 +1,244 @@
@@ -863,7 +862,7 @@ index 0000000..61cbe92
 +
 +#include <map>
 +
-+#include "base/logging.h"
++#include "absl/log/check.h"
 +#include "base/vlog.h"
 +#include "base/singleton.h"
 +
@@ -1160,7 +1159,7 @@ index 0000000..d11a440
 +#endif  // MOZC_UNIX_FCITX_KEY_EVENT_HANDLER_H_
 diff --git a/src/unix/fcitx/fcitx_key_translator.cc b/src/unix/fcitx/fcitx_key_translator.cc
 new file mode 100644
-index 0000000..775adac
+index 0000000..c8fdfeb
 --- /dev/null
 +++ b/src/unix/fcitx/fcitx_key_translator.cc
 @@ -0,0 +1,421 @@
@@ -1200,7 +1199,7 @@ index 0000000..775adac
 +#include <set>
 +#include <string>
 +
-+#include "base/logging.h"
++#include "absl/log/check.h"
 +#include "base/vlog.h"
 +
 +namespace mozc {
@@ -1686,7 +1685,7 @@ index 0000000..ca90895
 +#endif  // MOZC_UNIX_FCITX_FCITX_KEY_TRANSLATOR_H_
 diff --git a/src/unix/fcitx/fcitx_mozc.cc b/src/unix/fcitx/fcitx_mozc.cc
 new file mode 100644
-index 0000000..351d2e1
+index 0000000..6b4c155
 --- /dev/null
 +++ b/src/unix/fcitx/fcitx_mozc.cc
 @@ -0,0 +1,553 @@
@@ -1730,8 +1729,8 @@ index 0000000..351d2e1
 +// Resolve macro naming conflict with absl.
 +#undef InvokeFunction
 +
++#include "absl/log/check.h"
 +#include "base/const.h"
-+#include "base/logging.h"
 +#include "base/vlog.h"
 +#include "base/process.h"
 +#include "base/util.h"
@@ -2456,7 +2455,7 @@ index 0000000..ad19230
 +Parent=fcitx-mozc
 diff --git a/src/unix/fcitx/mozc_connection.cc b/src/unix/fcitx/mozc_connection.cc
 new file mode 100755
-index 0000000..251650a
+index 0000000..d63426a
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_connection.cc
 @@ -0,0 +1,209 @@
@@ -2494,7 +2493,7 @@ index 0000000..251650a
 +
 +#include <string>
 +
-+#include "base/logging.h"
++#include "absl/log/check.h"
 +#include "base/vlog.h"
 +#include "base/util.h"
 +#include "client/client.h"
@@ -2829,7 +2828,7 @@ index 0000000..7417575
 +#endif  // MOZC_UNIX_SCIM_MOZC_CONNECTION_H_
 diff --git a/src/unix/fcitx/mozc_response_parser.cc b/src/unix/fcitx/mozc_response_parser.cc
 new file mode 100755
-index 0000000..d11589e
+index 0000000..e0ada89
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_response_parser.cc
 @@ -0,0 +1,448 @@
@@ -2868,7 +2867,7 @@ index 0000000..d11589e
 +#include <string>
 +#include <vector>
 +
-+#include "base/logging.h"
++#include "absl/log/check.h"
 +#include "base/vlog.h"
 +#include "base/util.h"
 +#include "protocol/commands.pb.h"
@@ -3038,7 +3037,7 @@ index 0000000..d11589e
 +
 +    // Then show the candidate window.
 +    if (response.has_candidates()) {
-+        const mozc::commands::Candidates &candidates = response.candidates();
++        const mozc::commands::CandidateWindow &candidates = response.candidates();
 +        ParseCandidates(candidates, fcitx_mozc);
 +    }
 +
@@ -3077,7 +3076,7 @@ index 0000000..d11589e
 +}
 +
 +void MozcResponseParser::ParseCandidates(
-+    const mozc::commands::Candidates &candidates, FcitxMozc *fcitx_mozc) const {
++    const mozc::commands::CandidateWindow &candidates, FcitxMozc *fcitx_mozc) const {
 +    const commands::Footer &footer = candidates.footer();
 +    bool hasPrev = false;
 +    bool hasNext = false;
@@ -3122,7 +3121,7 @@ index 0000000..d11589e
 +    FcitxCandidateWordReset(candList);
 +    FcitxCandidateWordSetPageSize(candList, 9);
 +    if (candidates.has_direction() &&
-+        candidates.direction() == commands::Candidates::HORIZONTAL) {
++        candidates.direction() == commands::CandidateWindow::HORIZONTAL) {
 +        FcitxCandidateWordSetLayoutHint(candList, CLH_Horizontal);
 +    } else {
 +        FcitxCandidateWordSetLayoutHint(candList, CLH_Vertical);
@@ -3149,7 +3148,7 @@ index 0000000..d11589e
 +        focused_index = candidates.focused_index();
 +    }
 +    for (int i = 0; i < candidates.candidate_size(); ++i) {
-+        const commands::Candidates::Candidate& candidate = candidates.candidate(i);
++        const commands::CandidateWindow::Candidate& candidate = candidates.candidate(i);
 +        const uint32_t index = candidate.index();
 +        FcitxMessageType type;
 +        if (focused_index != -1 && index == focused_index) {
@@ -3283,7 +3282,7 @@ index 0000000..d11589e
 +}  // namespace mozc
 diff --git a/src/unix/fcitx/mozc_response_parser.h b/src/unix/fcitx/mozc_response_parser.h
 new file mode 100755
-index 0000000..9e51056
+index 0000000..dd66f00
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_response_parser.h
 @@ -0,0 +1,97 @@
@@ -3328,7 +3327,7 @@ index 0000000..9e51056
 +namespace commands
 +{
 +
-+class Candidates;
++class CandidateWindow;
 +class Input;
 +class Output;
 +class Preedit;
@@ -3370,7 +3369,7 @@ index 0000000..9e51056
 +    void ExecuteCallback(const mozc::commands::Output& response, FcitxMozc* fcitx_mozc) const;
 +    void ParseResult ( const mozc::commands::Result &result,
 +                       FcitxMozc *fcitx_mozc ) const;
-+    void ParseCandidates ( const mozc::commands::Candidates &candidates,
++    void ParseCandidates ( const mozc::commands::CandidateWindow &candidates,
 +                           FcitxMozc *fcitx_mozc ) const;
 +    void ParsePreedit ( const mozc::commands::Preedit &preedit,
 +                        uint32_t position,
@@ -4224,7 +4223,7 @@ index 0000000..2c83dfe
 +msgstr "按下 Ctrl+Alt+H 顯示用法。"
 diff --git a/src/unix/fcitx/surrounding_text_util.cc b/src/unix/fcitx/surrounding_text_util.cc
 new file mode 100644
-index 0000000..a4dc7d2
+index 0000000..4cfbd85
 --- /dev/null
 +++ b/src/unix/fcitx/surrounding_text_util.cc
 @@ -0,0 +1,244 @@
@@ -4268,8 +4267,8 @@ index 0000000..a4dc7d2
 +#undef InvokeFunction
 +#endif
 +
++#include "absl/log/check.h"
 +#include "base/port.h"
-+#include "base/logging.h"
 +#include "base/vlog.h"
 +#include "base/util.h"
 +
@@ -4569,10 +4568,10 @@ index 0000000..ce54291
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
 diff --git a/src/unix/fcitx5/BUILD b/src/unix/fcitx5/BUILD
 new file mode 100644
-index 0000000..4d96a8a
+index 0000000..deaa8c2
 --- /dev/null
 +++ b/src/unix/fcitx5/BUILD
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,125 @@
 +load(
 +    "//:build_defs.bzl",
 +    "mozc_cc_binary",
@@ -4602,6 +4601,7 @@ index 0000000..4d96a8a
 +    hdrs = ["mozc_client_pool.h"],
 +    deps = [
 +        ":mozc_connection",
++        "//client:client_interface",
 +        "@fcitx5//:fcitx5",
 +    ]
 +)
@@ -4640,6 +4640,7 @@ index 0000000..4d96a8a
 +        "//base:run_level",
 +        "//base:util",
 +        "//base:vlog",
++        "//protocol:candidates_cc_proto",
 +        "//protocol:commands_cc_proto",
 +        "//client:client_interface",
 +        "@fcitx5//:fcitx5",
@@ -6760,7 +6761,7 @@ index 0000000..7ba6e79
 +FCITX_ADDON_FACTORY(fcitx::MozcEngineFactory)
 diff --git a/src/unix/fcitx5/mozc_response_parser.cc b/src/unix/fcitx5/mozc_response_parser.cc
 new file mode 100644
-index 0000000..0fe9cc0
+index 0000000..9e9dc0e
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.cc
 @@ -0,0 +1,497 @@
@@ -6863,7 +6864,7 @@ index 0000000..0fe9cc0
 +class MozcCandidateList final : public CandidateList,
 +                                public PageableCandidateList {
 + public:
-+  MozcCandidateList(const mozc::commands::Candidates &candidates,
++  MozcCandidateList(const mozc::commands::CandidateWindow &candidates,
 +                    InputContext *ic, MozcEngine *engine, bool use_annotation)
 +      : ic_(ic), engine_(engine) {
 +    auto *state = engine_->mozcState(ic);
@@ -6911,7 +6912,7 @@ index 0000000..0fe9cc0
 +    labels_.reserve(candidates.candidate_size());
 +
 +    for (int i = 0; i < candidates.candidate_size(); ++i) {
-+      const mozc::commands::Candidates::Candidate &candidate =
++      const mozc::commands::CandidateWindow::Candidate &candidate =
 +          candidates.candidate(i);
 +      const uint32_t index = candidate.index();
 +
@@ -7159,7 +7160,7 @@ index 0000000..0fe9cc0
 +
 +  // Then show the candidate window.
 +  if (response.has_candidates()) {
-+    const mozc::commands::Candidates &candidates = response.candidates();
++    const mozc::commands::CandidateWindow &candidates = response.candidates();
 +    ParseCandidates(candidates, ic);
 +  }
 +
@@ -7189,7 +7190,7 @@ index 0000000..0fe9cc0
 +}
 +
 +void MozcResponseParser::ParseCandidates(
-+    const mozc::commands::Candidates &candidates, InputContext *ic) const {
++    const mozc::commands::CandidateWindow &candidates, InputContext *ic) const {
 +  auto *mozc_state = engine_->mozcState(ic);
 +  const mozc::commands::Footer &footer = candidates.footer();
 +  if (candidates.has_footer()) {
@@ -7263,10 +7264,10 @@ index 0000000..0fe9cc0
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_response_parser.h b/src/unix/fcitx5/mozc_response_parser.h
 new file mode 100644
-index 0000000..2deca50
+index 0000000..c788f4d
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.h
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,78 @@
 +// Copyright 2010-2012, Google Inc.
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
@@ -7302,19 +7303,8 @@ index 0000000..2deca50
 +
 +#include <cstdint>
 +
-+#include "base/port.h"
-+
-+namespace mozc {
-+namespace commands {
-+
-+class Candidates;
-+class Input;
-+class Output;
-+class Preedit;
-+class Result;
-+
-+}  // namespace commands
-+}  // namespace mozc
++#include "protocol/candidates.pb.h"
++#include "protocol/commands.pb.h"
 +
 +namespace fcitx {
 +
@@ -7345,7 +7335,7 @@ index 0000000..2deca50
 +                       InputContext *ic) const;
 +  void ParseResult(const mozc::commands::Result &result,
 +                   InputContext *ic) const;
-+  void ParseCandidates(const mozc::commands::Candidates &candidates,
++  void ParseCandidates(const mozc::commands::CandidateWindow &candidates,
 +                       InputContext *ic) const;
 +  void ParsePreedit(const mozc::commands::Preedit &preedit, uint32_t position,
 +                    InputContext *ic) const;
