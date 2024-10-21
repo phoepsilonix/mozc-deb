@@ -48,10 +48,17 @@ jobs:
         shell: bash
         run: |
           echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
-          apt-get update
           if [[ "${{ matrix.os }}" == "debian-12" ]]; then
+            apt-get update
             apt-get install -y sudo apt-utils wget git
+          elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y apt-utils wget software-properties-common
+            sudo add-apt-repository ppa:apt-fast/stable
+            sudo apt-get update
+            sudo apt-get -y install apt-fast git
           else
+            apt-get update
             apt-get install -y sudo apt-utils wget software-properties-common
             sudo add-apt-repository ppa:apt-fast/stable
             sudo apt-get update
@@ -195,6 +202,9 @@ jobs:
           sudo apt-get update
           sudo apt-get build-dep -y mozc
           sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
+          if [[ "${{ matrix.os }}" == "Rhino" ]]; then
+            sudo apt-get install -y python3-six
+          fi
       - name: Install mold linker
         uses: rui314/setup-mold@staging
         with:
@@ -203,9 +213,9 @@ jobs:
 
       - name: Install bazel
         run: |
-          mkdir -p /usr/local/bin
-          curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
-          chmod +x /usr/local/bin/bazel
+          sudo mkdir -p /usr/local/bin
+          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazel
           sudo -u nonroot bazel --version
 
       - name: Bazel Cache
