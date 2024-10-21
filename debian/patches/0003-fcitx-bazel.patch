@@ -1,33 +1,51 @@
-From 675fde7bffcf0351cba23efe8c98ab23d6ecff0a Mon Sep 17 00:00:00 2001
+From 979858cc01f14202d7dec9b9ce845e48ce198fcb Mon Sep 17 00:00:00 2001
 From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
 Date: Tue, 22 Oct 2024 05:43:29 +0900
 Subject: [PATCH] This is a fix to enable fcitx-mozc to be built with bazel.
 
 ---
- src/unix/fcitx/BUILD | 3 ---
- 1 file changed, 3 deletions(-)
+ src/unix/fcitx/BUILD | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/src/unix/fcitx/BUILD b/src/unix/fcitx/BUILD
-index e5423596c..578b1b5b4 100644
+index e5423596c..f4d82c71b 100644
 --- a/src/unix/fcitx/BUILD
 +++ b/src/unix/fcitx/BUILD
-@@ -61,7 +61,6 @@ mozc_cc_library(
+@@ -18,6 +18,7 @@ mozc_cc_library(
+         "//base:vlog",
+         "//client:client",
+         "//protocol:commands_cc_proto",
++        "@com_google_absl//absl/log:check",
+     ]
+ )
+ 
+@@ -42,6 +43,7 @@ mozc_cc_library(
+         "//base:vlog",
+         "//protocol:commands_cc_proto",
+         "//client:client_interface",
++        "@com_google_absl//absl/log:check",
+     ],
+ )
+ 
+@@ -61,7 +63,7 @@ mozc_cc_library(
          "//base:vlog",
          "//protocol:config_cc_proto",
          "//protocol:commands_cc_proto",
 -        "@fcitx//:fcitx",
++        "@com_google_absl//absl/log:check",
      ],
  )
  
-@@ -77,7 +76,6 @@ mozc_cc_library(
+@@ -77,7 +79,7 @@ mozc_cc_library(
          "//base:util",
          "//base:port",
          "//base:vlog",
 -        "@fcitx//:fcitx",
++        "@com_google_absl//absl/log:check",
      ],
  )
  
-@@ -87,7 +85,6 @@ mozc_cc_binary(
+@@ -87,7 +89,6 @@ mozc_cc_binary(
      deps = [
          ":fcitx_mozc",
          "//base:init_mozc",
