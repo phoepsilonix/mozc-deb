@@ -258,30 +258,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.release_note.outputs.release_note }}"
 
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
-        with:
-          version: "v0.8.2"
-      - name: Mount rustup cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            /github/workspace/.rustup
-            /github/workspace/.cargo
-          key: rustup-${{ matrix.os }}-mozc-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
-          restore-keys: rustup-${{ matrix.os }}-mozc-${{ steps.startup.outputs.container_name }}-
-      - name: Install Rust for -with-jp-dict
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo -u nonroot sh -s -- -y
-          echo "Running Rust program for ${{ matrix.os }}"
       - name: Added SudachiDict for -with-jp-dict
         run: |
           srcdir=$PWD/source/
-          git clone --filter=tree:0 --single-branch https://github.com/phoepsilonix/dict-to-mozc.git
-          cd dict-to-mozc
-          _dict_to_mozc_commit=a78381248ae539db22f62ca0af6c10b9035e5dab
-          git checkout $_dict_to_mozc_commit
-          . "$HOME/.cargo/env"
+          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+          tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
+          cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
@@ -290,23 +272,21 @@ jobs:
           unzip -o core_lex.zip
           unzip -o notcore_lex.zip
           # すだちを優先
-          echo '1. Build the rust program(mozcdict-ext), it may take some time...'
-          sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n) | grep -v musl && TARGET=$(sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep -v musl|head -n1) || TARGET=$(sudo -u nonroot rustup target list --installed | grep $(sudo -u nonroot rustc -vV | sed -e 's|host: ||' -e 's|-gnu||p' -n)|grep musl|head -n1)
-          unset RUSTC
-          sudo -u nonroot cargo build --release --target $TARGET
+          echo '1. Build the rust program(dict-to-mozc), it may take some time...'
+          which dict-to-mozc
           echo '2. Convert SudachiDict to Mozc System Dictionary format. It may take some time...'
           cat "${srcdir}"/src/data/dictionary_oss/dictionary*.txt > all-dict.txt
           cat small_lex.csv core_lex.csv notcore_lex.csv > all.csv
           cp ${srcdir}/src/data/dictionary_oss/id.def ./
-          ./target/$TARGET/release/dict-to-mozc -s -i ./id.def -f all.csv >> all-dict.txt
+          dict-to-mozc -s -i ./id.def -f all.csv >> all-dict.txt
           echo '3. Convert Mecab-unidic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
           xz -d mecab-unidic-user-dict-seed.20200910.csv.xz
-          ./target/$TARGET/release/dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
+          dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
           echo '4. Convert Mecab-ipadic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
           xz -d mecab-user-dict-seed.20200910.csv.xz
-          ./target/$TARGET/release/dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
+          dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
           echo '5. Duplicate data will be removed.'
           # 読み、品詞ID、右品詞ID、表記による重複チェック
           awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$2,$3,$5]++) {print $0}}' all-dict.txt|sort > finish-dict.txt
