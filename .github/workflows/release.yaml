@@ -26,8 +26,8 @@ jobs:
             container: ubuntu:mantic
           - os: ubuntu-24.04
             container: ubuntu:noble
-          - os: Rhino
-            container: ghcr.io/rhino-linux/docker:latest
+            #          - os: Rhino
+            #container: ghcr.io/rhino-linux/docker:latest
 
     runs-on: ubuntu-latest
     container:
