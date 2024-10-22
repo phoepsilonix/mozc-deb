@@ -368,7 +368,20 @@ jobs:
           artifacts: 'release_2/*'
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.release_note_2.outputs.release_note }}"
-
+      - name: Delete tag if job failed
+        if: failure()
+        run: |
+          TAG=${GITHUB_REF##*/}
+          if [[ $TAG == "main" ]];then
+            echo "Running release for branch: ${{ github.event.client_payload.repo.branch }}"
+            echo "Tag: ${{ github.event.client_payload.repo.tag }}"
+            TAG="${{ github.event.client_payload.repo.tag }}"
+          fi
+          git push origin -d $TAG || true
+          gh release delete --cleanup-tag "${{ steps.variables.outputs.tag_name }}" || true
+          gh release delete --cleanup-tag "${{ steps.variables.outputs.tag_name_2 }}" || true
+          git push origin -d "${{ steps.variables.outputs.tag_name }}" || true
+          git push origin -d "${{ steps.variables.outputs.tag_name_2 }}" || true
 
   tag-clear:
     runs-on: ubuntu-latest
