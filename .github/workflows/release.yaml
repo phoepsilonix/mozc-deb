@@ -26,8 +26,8 @@ jobs:
             container: ubuntu:mantic
           - os: ubuntu-24.04
             container: ubuntu:noble
-            #          - os: Rhino
-            #container: ghcr.io/rhino-linux/docker:latest
+          - os: Rhino
+            container: ghcr.io/rhino-linux/docker:latest
 
     runs-on: ubuntu-latest
     container:
@@ -235,15 +235,20 @@ jobs:
           cd source
           sed 's/bazel clean/bazel --version/' debian/rules -i
           sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
           sudo chown -R nonroot:nonroot ../
           sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
-          mkdir -p release
-          mv *deb mozc_* release/
+          sudo -u nonroot mkdir -p release
+          sudo -u nonroot mv *deb mozc_* release/
       - name: Generate release note
         id: release_note
         shell: bash
         run: |
+          ls -la
+          USER=`whoami`
+          sudo chown -R $USER:$USER .
+          ls -la
           git checkout main
           git checkout HEAD~ -- last_commit.txt
           OLD_COMMIT=$(cat last_commit.txt)
@@ -275,7 +280,7 @@ jobs:
           srcdir=$PWD/source/
           curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
-          cp dict-to-mozc /usr/local/bin/
+          sudo cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
@@ -316,18 +321,20 @@ jobs:
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
           cd source
-          patch -p1 -i ../dict-license.patch
+          sudo chown -R nonroot:nonroot ../
+          sudo -u nonroot patch -p1 -i ../dict-license.patch
           #sed 's/bazel clean/bazel --version/' debian/rules -i
           #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
-          #sudo chown -R nonroot:nonroot .
           sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
-          mkdir -p release_2
-          mv *deb mozc_* release_2/
+          sudo -u nonroot mkdir -p release_2
+          sudo -u nonroot mv *deb mozc_* release_2/
       - name: Generate release note
         id: release_note_2
         shell: bash
         run: |
+          USER=`whoami`
+          sudo chown -R $USER:$USER .
           git checkout main
           git checkout HEAD~ -- last_commit.txt
           OLD_COMMIT=$(cat last_commit.txt)
