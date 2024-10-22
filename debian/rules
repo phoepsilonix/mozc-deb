@@ -7,12 +7,12 @@ ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes), yes)
 endif
 
 CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
-CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC
-CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC
+CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC -fvisibility=hidden
+CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS) -fPIE -gdwarf-4 -fPIC -fvisibility=hidden -Wno-uninitialized
 LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS) -Wl,--as-needed -Wl,--build-id=sha1
 BAZEL_LDFLAGS:=$(shell echo $(LDFLAGS)|xargs -n1 echo "--linkopt")
-BAZEL_CFLAGS:=$(shell echo $(shell dpkg-buildflags --get CFLAGS) -fPIE -gdwarf-4 -fPIC|xargs -n1 echo "--copt")
-BAZEL_CXXFLAGS:=$(shell echo $(shell dpkg-buildflags --get CXXFLAGS) -fPIE -gdwarf-4 -fPIC|xargs -n1 echo "--cxxopt")
+BAZEL_CFLAGS:=$(shell echo $(CFLAGS)|xargs -n1|grep -Ev "FORTIFY_SOURCE|-Werror=implicit-function-declaration"|xargs -n1 echo "--copt")
+BAZEL_CXXFLAGS:=$(shell echo $(CXXFLAGS)|xargs -n1|grep -v FORTIFY_SOURCE|xargs -n1 echo "--cxxopt") --host_cxxopt=-Wno-uninitialized
 # clear XDG_CONFIG_DIRS for qtchooser
 unexport XDG_CONFIG_DIRS
 
