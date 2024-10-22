@@ -1,6 +1,7 @@
 permissions:
   contents: write
   actions: write
+  issues: write
 
 name: Release
 
@@ -269,7 +270,7 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: "${{ steps.variables.outputs.tag_name }}"
+          tag: "${{ steps.variables.outputs.tag_name }}", "${{ matrix.os }}"
           name: "${{ steps.variables.outputs.tag_name }}"
           artifacts: 'release/*'
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -368,6 +369,21 @@ jobs:
           artifacts: 'release_2/*'
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.release_note_2.outputs.release_note }}"
+
+      - name: Create label if not exists
+        run: |
+          if ! gh label list | grep -q "${{ matrix.os }}"; then
+            gh label create "${{ matrix.os }}" --color 0075ca --description "Related to ${{ matrix.os }} release"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add label to release
+        run: |
+          gh release edit "${{ steps.variables.outputs.tag_name }}" --add-label "${{ matrix.os }}"
+          gh release edit "${{ steps.variables.outputs.tag_name_2 }}" --add-label "${{ matrix.os }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Delete tag if job failed
         if: failure()
         run: |
