@@ -335,6 +335,8 @@ jobs:
         run: |
           USER=`whoami`
           sudo chown -R $USER:$USER .
+          # for Rhino .cache permission
+          sudo chown -R $USER:$USER /github/workspace/
           git checkout main
           git checkout HEAD~ -- last_commit.txt
           OLD_COMMIT=$(cat last_commit.txt)
