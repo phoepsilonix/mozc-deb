@@ -149,6 +149,10 @@ jobs:
             echo $TAG
             echo $TAG2
             cd ..
+            git tag $TAG -d||true
+            git tag $TAG2 -d||true
+            git push origin $TAG -d ||true
+            git push origin $TAG2 -d ||true
             git tag $TAG
             git tag $TAG2
             git push origin $TAG
@@ -168,6 +172,10 @@ jobs:
             TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             TAG=${TAG%*-}
             TAG2=${TAG2%*-}
+            git tag $TAG -d||true
+            git tag $TAG2 -d||true
+            git push origin $TAG -d ||true
+            git push origin $TAG2 -d ||true
             git tag $TAG
             git tag $TAG2
             git push origin $TAG
@@ -224,8 +232,11 @@ jobs:
         with:
           path: |
             /github/workspace/.cache/bazel
-          key: ${{ matrix.os }}-bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}
+          key: bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-${{ steps.variables.outputs.tag_commit }}
           restore-keys: |
+            bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-${{ steps.variables.outputs.tag_commit }}
+            bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
+            bazel-${{ steps.startup.outputs.container_name }}-
             ${{ matrix.os }}-bazel-${{ steps.startup.outputs.container_name }}-
 
       - name: Build
@@ -270,7 +281,7 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: "${{ steps.variables.outputs.tag_name }}", "${{ matrix.os }}"
+          tag: "${{ steps.variables.outputs.tag_name }}"
           name: "${{ steps.variables.outputs.tag_name }}"
           artifacts: 'release/*'
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -283,6 +294,7 @@ jobs:
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
           sudo cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
+          echo $_sudachidict_date
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
           curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/notcore_lex.zip"
@@ -370,20 +382,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.release_note_2.outputs.release_note }}"
 
-      - name: Create label if not exists
-        run: |
-          if ! gh label list | grep -q "${{ matrix.os }}"; then
-            gh label create "${{ matrix.os }}" --color 0075ca --description "Related to ${{ matrix.os }} release"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Add label to release
-        run: |
-          gh release edit "${{ steps.variables.outputs.tag_name }}" --add-label "${{ matrix.os }}"
-          gh release edit "${{ steps.variables.outputs.tag_name_2 }}" --add-label "${{ matrix.os }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Delete tag if job failed
         if: failure()
         run: |
@@ -430,6 +428,8 @@ jobs:
           [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^)
           [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^)
           [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^^)
+          [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^^^)
+          [[ -z $OLD_RELEASES ]] && OLD_RELEASES=$(git tag --points-at HEAD^^^^^^)
           if [[ "$(echo ${OLD_RELEASES}|grep -Eo "\-([^-]*)-g[^-]*$")" != "" ]];then
             echo ${OLD_RELEASES}
             echo ${OLD_RELEASES} | grep -E "\-([^-]*)-g[^-]*$" | xargs -n1 gh release delete --cleanup-tag -y || true
