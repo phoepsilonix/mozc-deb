@@ -193,6 +193,42 @@ index 0000000..e8f101b
 +ln -sf org.fcitx.Fcitx5.fcitx_mozc_dictionary.png "${PREFIX}/share/icons/hicolor/48x48/apps/fcitx_mozc_dictionary.png"
 +ln -sf org.fcitx.Fcitx5.fcitx_mozc_properties.png "${PREFIX}/share/icons/hicolor/48x48/apps/fcitx_mozc_properties.png"
 +ln -sf org.fcitx.Fcitx5.fcitx_mozc_tool.png "${PREFIX}/share/icons/hicolor/48x48/apps/fcitx_mozc_tool.png"
+diff --git a/scripts/install_fcitx_bazel b/scripts/install_fcitx_bazel
+new file mode 100755
+index 0000000..0c72e8d
+--- /dev/null
++++ b/scripts/install_fcitx_bazel
+@@ -0,0 +1,30 @@
++#!/bin/sh
++
++_bldtype="${_bldtype:-Debug}"
++PREFIX="${PREFIX:-/usr}"
++
++for pofile in unix/fcitx/po/*.po
++do
++  filename=`basename $pofile`
++  lang=${filename/.po/}
++  mofile=${pofile/.po/.mo}
++  msgfmt $pofile -o $mofile
++  install -D -m 644 "$mofile" "${PREFIX}/share/locale/$lang/LC_MESSAGES/fcitx-mozc.mo"
++  rm -f $mofile
++done
++
++install -D -m 755 "bazel-bin/unix/fcitx/fcitx-mozc.so" "${PREFIX}/lib/fcitx/fcitx-mozc.so"
++install -D -m 644 unix/fcitx/fcitx-mozc.conf "${PREFIX}/share/fcitx/addon/fcitx-mozc.conf"
++install -D -m 644 unix/fcitx/mozc.conf "${PREFIX}/share/fcitx/inputmethod/mozc.conf"
++
++install -d "${PREFIX}/share/fcitx/mozc/icon"
++install -D -m 644 data/images/product_icon_32bpp-128.png "${PREFIX}/share/fcitx/mozc/icon/mozc.png"
++install -D -m 644 ../scripts/icons/ui-alpha_full.png "${PREFIX}/share/fcitx/mozc/icon/mozc-alpha_full.png"
++install -D -m 644 ../scripts/icons/ui-alpha_half.png "${PREFIX}/share/fcitx/mozc/icon/mozc-alpha_half.png"
++install -D -m 644 ../scripts/icons/ui-direct.png "${PREFIX}/share/fcitx/mozc/icon/mozc-direct.png"
++install -D -m 644 ../scripts/icons/ui-hiragana.png "${PREFIX}/share/fcitx/mozc/icon/mozc-hiragana.png"
++install -D -m 644 ../scripts/icons/ui-katakana_full.png "${PREFIX}/share/fcitx/mozc/icon/mozc-katakana_full.png"
++install -D -m 644 ../scripts/icons/ui-katakana_half.png "${PREFIX}/share/fcitx/mozc/icon/mozc-katakana_half.png"
++install -D -m 644 ../scripts/icons/ui-dictionary.png "${PREFIX}/share/fcitx/mozc/icon/mozc-dictionary.png"
++install -D -m 644 ../scripts/icons/ui-properties.png "${PREFIX}/share/fcitx/mozc/icon/mozc-properties.png"
++install -D -m 644 ../scripts/icons/ui-tool.png "${PREFIX}/share/fcitx/mozc/icon/mozc-tool.png"
 diff --git a/scripts/install_server b/scripts/install_server
 new file mode 100755
 index 0000000..726a42f
@@ -246,46 +282,52 @@ index 0000000..978dc8e
 +
 +mv unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in{.new,}
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index 4c3ae30..576944c 100644
+index 4c3ae30..df10ba2 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
-@@ -127,6 +127,18 @@ pkg_config_repository(
+@@ -127,6 +127,21 @@ pkg_config_repository(
      ],
  )
  
 +# Fcitx
 +pkg_config_repository(
-+  name = "fcitx",
-+  packages = ["fcitx"],
++    name = "fcitx",
++    packages = ["fcitx"],
 +)
 +
 +# Fcitx 5
 +pkg_config_repository(
-+  name = "fcitx5",
-+  packages = ["Fcitx5Module", "Fcitx5Core"],
++    name = "fcitx5",
++    packages = [
++        "Fcitx5Core",
++        "Fcitx5Module",
++    ],
 +)
 +
  # Qt for Linux
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/WORKSPACE.bazel b/src/WORKSPACE.bazel
-index 3dfed4f..b907089 100644
+index 3dfed4f..62f069d 100644
 --- a/src/WORKSPACE.bazel
 +++ b/src/WORKSPACE.bazel
-@@ -198,6 +198,18 @@ pkg_config_repository(
+@@ -198,6 +198,21 @@ pkg_config_repository(
      ],
  )
  
 +# Fcitx
 +pkg_config_repository(
-+  name = "fcitx",
-+  packages = ["fcitx"],
++    name = "fcitx",
++    packages = ["fcitx"],
 +)
 +
 +# Fcitx 5
 +pkg_config_repository(
-+  name = "fcitx5",
-+  packages = ["Fcitx5Module", "Fcitx5Core"],
++    name = "fcitx5",
++    packages = [
++        "Fcitx5Core",
++        "Fcitx5Module",
++    ],
 +)
 +
  # Japanese Usage Dictionary
@@ -304,12 +346,12 @@ index f3f55e9..c38a2b6 100755
    gyp_file_names.sort()
    return gyp_file_names
  
-diff --git a/src/unix/fcitx/BUILD b/src/unix/fcitx/BUILD
+diff --git a/src/unix/fcitx/BUILD.bazel b/src/unix/fcitx/BUILD.bazel
 new file mode 100644
-index 0000000..e542359
+index 0000000..76beb76
 --- /dev/null
-+++ b/src/unix/fcitx/BUILD
-@@ -0,0 +1,98 @@
++++ b/src/unix/fcitx/BUILD.bazel
+@@ -0,0 +1,102 @@
 +load(
 +    "//:build_defs.bzl",
 +    "mozc_cc_binary",
@@ -328,9 +370,11 @@ index 0000000..e542359
 +        "//base:port",
 +        "//base:util",
 +        "//base:vlog",
-+        "//client:client",
++        "//client",
 +        "//protocol:commands_cc_proto",
-+    ]
++        "@com_google_absl//absl/log:check",
++        "@fcitx",
++    ],
 +)
 +
 +mozc_cc_library(
@@ -344,16 +388,17 @@ index 0000000..e542359
 +        "mozc_response_parser.h",
 +    ],
 +    deps = [
-+        ":mozc_connection",
 +        ":fcitx_key_util",
++        ":mozc_connection",
 +        ":surrounding_text_util",
 +        "//base:port",
 +        "//base:process",
 +        "//base:run_level",
 +        "//base:util",
 +        "//base:vlog",
-+        "//protocol:commands_cc_proto",
 +        "//client:client_interface",
++        "//protocol:commands_cc_proto",
++        "@com_google_absl//absl/log:check",
 +    ],
 +)
 +
@@ -371,9 +416,10 @@ index 0000000..e542359
 +        "//base:port",
 +        "//base:singleton",
 +        "//base:vlog",
-+        "//protocol:config_cc_proto",
 +        "//protocol:commands_cc_proto",
-+        "@fcitx//:fcitx",
++        "//protocol:config_cc_proto",
++        "@com_google_absl//absl/log:check",
++        "@fcitx",
 +    ],
 +)
 +
@@ -386,28 +432,28 @@ index 0000000..e542359
 +        "surrounding_text_util.h",
 +    ],
 +    deps = [
-+        "//base:util",
 +        "//base:port",
++        "//base:util",
 +        "//base:vlog",
-+        "@fcitx//:fcitx",
++        "@com_google_absl//absl/log:check",
++        "@fcitx",
 +    ],
 +)
 +
 +mozc_cc_binary(
 +    name = "fcitx-mozc.so",
 +    srcs = ["eim.cc"],
-+    deps = [
-+        ":fcitx_mozc",
-+        "//base:init_mozc",
-+        "@fcitx//:fcitx",
-+    ],
++    linkshared = 1,
++    linkstatic = 1,
 +    local_defines = [
 +        'LOCALEDIR=\\"/usr/share/locale\\"',
 +    ],
-+    linkstatic = 1,
-+    linkshared = 1,
++    deps = [
++        ":fcitx_mozc",
++        "//base:init_mozc",
++        "@fcitx",
++    ],
 +)
-+
 diff --git a/src/unix/fcitx/eim.cc b/src/unix/fcitx/eim.cc
 new file mode 100644
 index 0000000..b063c52
@@ -2828,7 +2874,7 @@ index 0000000..7417575
 +#endif  // MOZC_UNIX_SCIM_MOZC_CONNECTION_H_
 diff --git a/src/unix/fcitx/mozc_response_parser.cc b/src/unix/fcitx/mozc_response_parser.cc
 new file mode 100755
-index 0000000..e0ada89
+index 0000000..400374b
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_response_parser.cc
 @@ -0,0 +1,448 @@
@@ -3036,8 +3082,8 @@ index 0000000..e0ada89
 +    }
 +
 +    // Then show the candidate window.
-+    if (response.has_candidates()) {
-+        const mozc::commands::CandidateWindow &candidates = response.candidates();
++    if (response.has_candidate_window()) {
++        const mozc::commands::CandidateWindow &candidates = response.candidate_window();
 +        ParseCandidates(candidates, fcitx_mozc);
 +    }
 +
@@ -4566,12 +4612,12 @@ index 0000000..ce54291
 +}  // namespace mozc
 +
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
-diff --git a/src/unix/fcitx5/BUILD b/src/unix/fcitx5/BUILD
+diff --git a/src/unix/fcitx5/BUILD.bazel b/src/unix/fcitx5/BUILD.bazel
 new file mode 100644
-index 0000000..deaa8c2
+index 0000000..a2f304a
 --- /dev/null
-+++ b/src/unix/fcitx5/BUILD
-@@ -0,0 +1,125 @@
++++ b/src/unix/fcitx5/BUILD.bazel
+@@ -0,0 +1,124 @@
 +load(
 +    "//:build_defs.bzl",
 +    "mozc_cc_binary",
@@ -4590,9 +4636,9 @@ index 0000000..deaa8c2
 +        "//base:port",
 +        "//base:util",
 +        "//base:vlog",
-+        "//client:client",
++        "//client",
 +        "//protocol:commands_cc_proto",
-+    ]
++    ],
 +)
 +
 +mozc_cc_library(
@@ -4602,18 +4648,18 @@ index 0000000..deaa8c2
 +    deps = [
 +        ":mozc_connection",
 +        "//client:client_interface",
-+        "@fcitx5//:fcitx5",
-+    ]
++        "@fcitx5",
++    ],
 +)
 +
 +mozc_cc_library(
 +    name = "i18nwrapper",
 +    hdrs = [
-+        "i18nwrapper.h"
++        "i18nwrapper.h",
 +    ],
 +    deps = [
-+        "@fcitx5//:fcitx5"
-+    ]
++        "@fcitx5",
++    ],
 +)
 +
 +mozc_cc_library(
@@ -4621,18 +4667,18 @@ index 0000000..deaa8c2
 +    srcs = [
 +        "mozc_engine.cc",
 +        "mozc_response_parser.cc",
-+        "mozc_state.cc"
++        "mozc_state.cc",
 +    ],
 +    hdrs = [
 +        "mozc_engine.h",
 +        "mozc_response_parser.h",
-+        "mozc_state.h"
++        "mozc_state.h",
 +    ],
 +    deps = [
-+        ":i18nwrapper",
-+        ":mozc_connection",
-+        ":mozc_client_pool",
 +        ":fcitx_key_util",
++        ":i18nwrapper",
++        ":mozc_client_pool",
++        ":mozc_connection",
 +        ":surrounding_text_util",
 +        "//base:init_mozc",
 +        "//base:port",
@@ -4640,10 +4686,10 @@ index 0000000..deaa8c2
 +        "//base:run_level",
 +        "//base:util",
 +        "//base:vlog",
-+        "//protocol:candidates_cc_proto",
-+        "//protocol:commands_cc_proto",
 +        "//client:client_interface",
-+        "@fcitx5//:fcitx5",
++        "//protocol:candidate_window_cc_proto",
++        "//protocol:commands_cc_proto",
++        "@fcitx5",
 +    ],
 +)
 +
@@ -4659,12 +4705,12 @@ index 0000000..deaa8c2
 +    ],
 +    deps = [
 +        "//base:port",
-+        "//base:vlog",
 +        "//base:singleton",
-+        "//protocol:config_cc_proto",
++        "//base:vlog",
 +        "//protocol:commands_cc_proto",
++        "//protocol:config_cc_proto",
 +        "@com_google_absl//absl/log:check",
-+        "@fcitx5//:fcitx5",
++        "@fcitx5",
 +    ],
 +)
 +
@@ -4677,26 +4723,25 @@ index 0000000..deaa8c2
 +        "surrounding_text_util.h",
 +    ],
 +    deps = [
-+        "//base:util",
 +        "//base:port",
++        "//base:util",
 +        "//base:vlog",
 +        "@com_google_absl//absl/log:check",
-+        "@fcitx5//:fcitx5",
++        "@fcitx5",
 +    ],
 +)
 +
 +mozc_cc_binary(
 +    name = "fcitx5-mozc.so",
 +    srcs = [
-+        "mozc_engine_factory.cc"
++        "mozc_engine_factory.cc",
 +    ],
++    linkshared = 1,
++    linkstatic = 1,
 +    deps = [
 +        ":mozc_engine",
 +    ],
-+    linkstatic = 1,
-+    linkshared = 1,
 +)
-+
 diff --git a/src/unix/fcitx5/Messages.sh b/src/unix/fcitx5/Messages.sh
 new file mode 100755
 index 0000000..e705349
@@ -6761,10 +6806,10 @@ index 0000000..7ba6e79
 +FCITX_ADDON_FACTORY(fcitx::MozcEngineFactory)
 diff --git a/src/unix/fcitx5/mozc_response_parser.cc b/src/unix/fcitx5/mozc_response_parser.cc
 new file mode 100644
-index 0000000..9e9dc0e
+index 0000000..e989948
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.cc
-@@ -0,0 +1,497 @@
+@@ -0,0 +1,498 @@
 +// Copyright 2010-2012, Google Inc.
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
@@ -6818,7 +6863,7 @@ index 0000000..9e9dc0e
 +#include "absl/log/check.h"
 +#include "absl/log/log.h"
 +#include "base/vlog.h"
-+#include "protocol/candidates.pb.h"
++#include "protocol/candidate_window.pb.h"
 +#include "protocol/commands.pb.h"
 +#include "unix/fcitx5/i18nwrapper.h"
 +#include "unix/fcitx5/mozc_engine.h"
@@ -7159,8 +7204,9 @@ index 0000000..9e9dc0e
 +  }
 +
 +  // Then show the candidate window.
-+  if (response.has_candidates()) {
-+    const mozc::commands::CandidateWindow &candidates = response.candidates();
++  if (response.has_candidate_window()) {
++    const mozc::commands::CandidateWindow &candidates =
++        response.candidate_window();
 +    ParseCandidates(candidates, ic);
 +  }
 +
@@ -7264,7 +7310,7 @@ index 0000000..9e9dc0e
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_response_parser.h b/src/unix/fcitx5/mozc_response_parser.h
 new file mode 100644
-index 0000000..c788f4d
+index 0000000..2fabef0
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.h
 @@ -0,0 +1,78 @@
@@ -7303,7 +7349,7 @@ index 0000000..c788f4d
 +
 +#include <cstdint>
 +
-+#include "protocol/candidates.pb.h"
++#include "protocol/candidate_window.pb.h"
 +#include "protocol/commands.pb.h"
 +
 +namespace fcitx {
