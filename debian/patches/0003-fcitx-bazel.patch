@@ -1,15 +1,12 @@
-From ed6d04ec78537e46deac42f2b3322f3532cd698b Mon Sep 17 00:00:00 2001
+From 314934e6fd29bd61cae8fa7dd97c07c95e07e912 Mon Sep 17 00:00:00 2001
 From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
 Date: Sat, 26 Oct 2024 11:14:13 +0900
 Subject: [PATCH] Fcitx bazel build (#68)
 
   * add build_fcitx_bazel
-
-  * This is a fix to enable fcitx-mozc to be built with bazel.
 ---
- scripts/build_fcitx_bazel  | 5 +++++
- src/unix/fcitx/BUILD.bazel | 4 ----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ scripts/build_fcitx_bazel | 5 +++++
+ 1 file changed, 5 insertions(+)
  create mode 100755 scripts/build_fcitx_bazel
 
 diff --git a/scripts/build_fcitx_bazel b/scripts/build_fcitx_bazel
@@ -23,38 +20,41 @@ index 000000000..c68e9e61a
 +_BUILD_TARGETS="${_BUILD_TARGETS:-unix/fcitx:fcitx-mozc.so server:mozc_server gui/tool:mozc_tool}"
 +
 +bazel build -c opt --copt=-fPIC  --config oss_linux "$@" $_BUILD_TARGETS
-diff --git a/src/unix/fcitx/BUILD.bazel b/src/unix/fcitx/BUILD.bazel
-index 76beb768d..1b2d17f44 100644
---- a/src/unix/fcitx/BUILD.bazel
-+++ b/src/unix/fcitx/BUILD.bazel
-@@ -19,7 +19,6 @@ mozc_cc_library(
-         "//client",
-         "//protocol:commands_cc_proto",
-         "@com_google_absl//absl/log:check",
--        "@fcitx",
-     ],
- )
- 
-@@ -65,7 +64,6 @@ mozc_cc_library(
-         "//protocol:commands_cc_proto",
-         "//protocol:config_cc_proto",
-         "@com_google_absl//absl/log:check",
--        "@fcitx",
-     ],
- )
- 
-@@ -82,7 +80,6 @@ mozc_cc_library(
-         "//base:util",
-         "//base:vlog",
-         "@com_google_absl//absl/log:check",
--        "@fcitx",
-     ],
- )
- 
-@@ -97,6 +94,5 @@ mozc_cc_binary(
-     deps = [
-         ":fcitx_mozc",
-         "//base:init_mozc",
--        "@fcitx",
-     ],
- )
+From 3cfc361c913e7b6351138646de62bbb079a15dc9 Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Sat, 26 Oct 2024 17:53:46 +0900
+Subject: [PATCH] Enabling Bazel to recognize packages that do not output
+ cflags through pkg-config.
+
+If a package's cflags only contain '-I/usr/include', there will be no output
+from 'pkg-config --cflags-only-I'. Therefore, it does not recognize it as a
+package. Additionally, the referenced headers (hdrs) become absolute paths
+(`"/**"`), which causes Bazel to generate an error.
+The glob pattern does not allow absolute paths(`"/**"`) or empty strings("").
+
+This modification allows pkg-config to be re-executed with --keep-system-cflags
+if result.stdout.strip() is empty ("").
+Typically, -I/usr/include is returned, enabling bazel to recognize packages
+as valid even when pkg-config does not output cflags with standard options.
+---
+ src/bazel/pkg_config_repository.bzl | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/bazel/pkg_config_repository.bzl b/src/bazel/pkg_config_repository.bzl
+index 8d46e01ff..4e651e1d8 100644
+--- a/src/bazel/pkg_config_repository.bzl
++++ b/src/bazel/pkg_config_repository.bzl
+@@ -86,6 +86,13 @@ def _exec_pkg_config(repo_ctx, flag):
+         print("pkg-config is not found")  # buildifier: disable=print
+         return []
+     result = repo_ctx.execute([binary, flag] + repo_ctx.attr.packages)
++
++    # If result.stdout.strip() is empty, pkg-config will be re-executed with
++    # the --keep-system-cflags option added. Typically, -I/usr/include is
++    # returned, enabling Bazel to recognize packages that do not output cflags
++    # through pkg-config.
++    if result.stdout.strip() == "":
++        result = repo_ctx.execute([binary, flag] + ["--keep-system-cflags"] + repo_ctx.attr.packages)
+     items = result.stdout.strip().split(" ")
+     uniq_items = sorted({key: None for key in items}.keys())
+     return uniq_items
