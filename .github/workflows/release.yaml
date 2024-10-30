@@ -242,6 +242,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          sudo chown -R nonroot:nonroot /github/workspace/.cache
           export PATH=$HOME/bin:$PATH
           cp -a debian source/
           cd source
