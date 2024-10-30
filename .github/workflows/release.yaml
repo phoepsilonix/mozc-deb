@@ -52,18 +52,23 @@ jobs:
           if [[ "${{ matrix.os }}" == "debian-12" ]]; then
             apt-get update
             apt-get install -y sudo apt-utils wget git
+            echo "non_root=builduser" >> $GITHUB_OUTPUT
           elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
             sudo apt-get update
             sudo apt-get install -y apt-utils wget software-properties-common
             sudo add-apt-repository ppa:apt-fast/stable
             sudo apt-get update
             sudo apt-get -y install apt-fast git
+            # rhino
+            USER=`whoami`
+            echo "non_root=${USER}" >> $GITHUB_OUTPUT
           else
             apt-get update
             apt-get install -y sudo apt-utils wget software-properties-common
             sudo add-apt-repository ppa:apt-fast/stable
             sudo apt-get update
             sudo apt-get -y install apt-fast git
+            echo "non_root=builduser" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v4
         with:
@@ -72,25 +77,29 @@ jobs:
       - name: debian-12 and ubuntu-23.04 patch
         shell: bash
         run: |
-           if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
-             apt-get install patch
-             patch -p1 -i debian-12.patch
-           fi
+          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
+            apt-get install patch
+            patch -p1 -i debian-12.patch
+          fi
       - name: check
         run: |
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
+        shell: bash
         run: |
-          sudo useradd -m -d /github/workspace/ -s /usr/bin/bash nonroot
+          NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          if [[ "${{ matrix.os }}" != "Rhino" ]]; then
+            sudo useradd -m -d /github/workspace/ -s /usr/bin/bash ${NON_ROOT}
+          fi
           sudo mkdir -p /github/workspace
           sudo mkdir -p /github/workspace/.cache
           sudo mkdir -p /github/workspace/.rustup
           sudo mkdir -p /github/workspace/.cargo
           sudo cp config.toml /github/workspace/.cargo/
-          sudo chown -R nonroot:nonroot /github/workspace
-          sudo -u nonroot whoami
-          sudo -u nonroot id
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace
+          sudo -u ${NON_ROOT} whoami
+          sudo -u ${NON_ROOT} id
           whoami
           id
       - name: Setup Mozc source
@@ -222,10 +231,11 @@ jobs:
 
       - name: Install bazel
         run: |
+          NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
           sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
           sudo chmod +x /usr/local/bin/bazel
-          sudo -u nonroot bazel --version
+          sudo -u ${NON_ROOT} bazel --version
 
       - name: Bazel Cache
         uses: actions/cache@v4
@@ -242,18 +252,19 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          sudo chown -R nonroot:nonroot /github/workspace/.cache
+          NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           export PATH=$HOME/bin:$PATH
           cp -a debian source/
           cd source
           sed 's/bazel clean/bazel --version/' debian/rules -i
           sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
           sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
-          sudo chown -R nonroot:nonroot ../
-          sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} ../
+          sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
-          sudo -u nonroot mkdir -p release
-          sudo -u nonroot mv *deb mozc_* release/
+          sudo -u ${NON_ROOT} mkdir -p release
+          sudo -u ${NON_ROOT} mv *deb mozc_* release/
       - name: Generate release note
         id: release_note
         shell: bash
@@ -291,7 +302,7 @@ jobs:
       - name: Added SudachiDict for -with-jp-dict
         run: |
           srcdir=$PWD/source/
-          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.3/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
           sudo cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
@@ -331,18 +342,19 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          NON_ROOT="${{ steps.startup.outputs.non_root }}"
           rm -rf *deb mozc_*
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
           cd source
-          sudo chown -R nonroot:nonroot ../
-          sudo -u nonroot patch -p1 -i ../dict-license.patch
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} ../
+          sudo -u ${NON_ROOT} patch -p1 -i ../dict-license.patch
           #sed 's/bazel clean/bazel --version/' debian/rules -i
           #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
-          sudo -u nonroot dpkg-buildpackage -rfakeroot -b --no-sign
+          sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
-          sudo -u nonroot mkdir -p release_2
-          sudo -u nonroot mv *deb mozc_* release_2/
+          sudo -u ${NON_ROOT} mkdir -p release_2
+          sudo -u ${NON_ROOT} mv *deb mozc_* release_2/
       - name: Generate release note
         id: release_note_2
         shell: bash
