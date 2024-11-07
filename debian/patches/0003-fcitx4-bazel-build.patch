@@ -1,0 +1,22 @@
+From 4720ec7a37b9c95875a35bd59f69d2cc75fc1e81 Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Thu, 7 Nov 2024 18:03:58 +0900
+Subject: [PATCH] fix fcitx bazel build
+
+---
+ src/MODULE.bazel | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/MODULE.bazel b/src/MODULE.bazel
+index 1ef19d102..899ea07c6 100644
+--- a/src/MODULE.bazel
++++ b/src/MODULE.bazel
+@@ -132,7 +132,7 @@ new_local_repository(
+     name = "fcitx",
+     build_file = "BUILD.fcitx.bazel",
+     # This path should be updated per the environment.
+-    path = "/home/csslayer/Develop/build/fcitx",  # For Debian
++    path = "/usr",  # For Debian
+ )
+ 
+ # Fcitx 5
