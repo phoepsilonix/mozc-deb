@@ -343,6 +343,7 @@ jobs:
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           rm -rf *deb mozc_*
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
@@ -359,10 +360,10 @@ jobs:
         id: release_note_2
         shell: bash
         run: |
-          USER=`whoami`
-          sudo chown -R $USER:$USER .
+          NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           # for Rhino .cache permission
-          sudo chown -R $USER:$USER /github/workspace/
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           git checkout main
           git checkout HEAD~ -- last_commit.txt
           OLD_COMMIT=$(cat last_commit.txt)
