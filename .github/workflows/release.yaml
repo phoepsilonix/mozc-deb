@@ -61,7 +61,7 @@ jobs:
             sudo apt-get -y install git
             # rhino
             USER=`whoami`
-            echo "non_root=${USER}" >> $GITHUB_OUTPUT
+            echo "non_root=builduser" >> $GITHUB_OUTPUT
           else
             apt-get update
             apt-get install -y sudo apt-utils wget software-properties-common
@@ -89,9 +89,7 @@ jobs:
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
-          if [[ "${{ matrix.os }}" != "Rhino" ]]; then
-            sudo useradd -m -d /github/workspace/ -s /usr/bin/bash ${NON_ROOT}
-          fi
+          sudo useradd -m -d /github/workspace/ -s /usr/bin/bash ${NON_ROOT}
           sudo mkdir -p /github/workspace
           sudo mkdir -p /github/workspace/.cache
           sudo mkdir -p /github/workspace/.rustup
@@ -362,7 +360,6 @@ jobs:
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo chown -R ${NON_ROOT}:${NON_ROOT} .
-          # for Rhino .cache permission
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           git checkout main
           git checkout HEAD~ -- last_commit.txt
