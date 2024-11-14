@@ -300,7 +300,7 @@ jobs:
       - name: Added SudachiDict for -with-jp-dict
         run: |
           srcdir=$PWD/source/
-          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.0/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
           sudo cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
