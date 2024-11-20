@@ -17,14 +17,14 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [debian-12, ubuntu-23.04, ubuntu-23.10, ubuntu-24.04]
+        os: [debian-12, ubuntu-23.04, ubuntu-24.04]
         include:
           - os: debian-12
             container: debian:bookworm
           - os: ubuntu-23.04
             container: ubuntu:lunar
-          - os: ubuntu-23.10
-            container: ubuntu:mantic
+          #- os: ubuntu-23.10
+            #container: ubuntu:mantic
           - os: ubuntu-24.04
             container: ubuntu:noble
           - os: Rhino
@@ -49,9 +49,18 @@ jobs:
         shell: bash
         run: |
           echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
+          #if [[ "${{ matrix.os }}" == "debian-12" ]]; then
+          #  sed 's/http:/https:/' -i /etc/apt/sources.list.d/debian.sources
+          #elif [[ "${{ matrix.os }}" == "ubuntu-24.04" ]]; then
+          #  sed 's/http:/https:/' -i /etc/apt/sources.list.d/ubuntu.sources
+          #elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
+          #  sudo sed 's/http:/https:/' -i /etc/apt/sources.list.d/ubuntu.sources
+          #else
+          #  sed 's/http:/https:/' -i /etc/apt/sources.list
+          #fi
           if [[ "${{ matrix.os }}" == "debian-12" ]]; then
             apt-get update
-            apt-get install -y sudo apt-utils wget git
+            apt-get install -y sudo wget git
             echo "non_root=builduser" >> $GITHUB_OUTPUT
           elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
             sudo apt-get update
@@ -84,7 +93,7 @@ jobs:
       - name: check
         run: |
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
-          git config --global --add safe.directory $GITHUB_WORKSPACE
+          sudo git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
         shell: bash
         run: |
@@ -95,17 +104,22 @@ jobs:
           sudo mkdir -p /github/workspace/.rustup
           sudo mkdir -p /github/workspace/.cargo
           sudo cp config.toml /github/workspace/.cargo/
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.rustup
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cargo
+          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache
+          sudo mkdir -p $GITHUB_WORKSPACE/.git
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} $GITHUB_WORKSPACE/.git
           sudo -u ${NON_ROOT} whoami
           sudo -u ${NON_ROOT} id
           whoami
           id
       - name: Setup Mozc source
         run: |
-          git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
+          sudo git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
           cd source
-          git submodule update --init
-          git config --global --add safe.directory $PWD
+          sudo git submodule update --init
 
       - name: Setup Variables
         id: variables
@@ -113,7 +127,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global push.gpgSign if-asked
+          sudo git config --global push.gpgSign if-asked
           #cd source
           #SHA512SUMS=$(find src -type f -print0 | sort -z | xargs -0 sha512sum | sha512sum | cut -d' ' -f1)
           #echo "mozc_checksum=$SHA512SUMS" >> $GITHUB_OUTPUT
@@ -126,14 +140,14 @@ jobs:
           fi
           if [[ "$TAG" =~ ^commit- ]]; then
             cd source
-            COMMIT=$(git log -1 ${TAG#commit-} --pretty=%h)
-            git checkout $COMMIT
+            COMMIT=$(sudo git log -1 ${TAG#commit-} --pretty=%h)
+            sudo git checkout $COMMIT
             echo $TAG
             cd ..
-            #git tag $TAG -d
-            #git push origin $TAG -d
+            #sudo git tag $TAG -d
+            #sudo git push origin $TAG -d
             cd source
-            tag=$(git describe --tags --always ${COMMIT})
+            tag=$(sudo git describe --tags --always ${COMMIT})
             base_tag="${tag%%-*}"
             if [[ "$tag" =~ "-" ]];then
               after_tag="${tag#*-}"
@@ -156,19 +170,19 @@ jobs:
             echo $TAG
             echo $TAG2
             cd ..
-            git tag $TAG -d||true
-            git tag $TAG2 -d||true
-            git push origin $TAG -d ||true
-            git push origin $TAG2 -d ||true
-            git tag $TAG
-            git tag $TAG2
-            git push origin $TAG
-            git push origin $TAG2
+            sudo git tag $TAG -d||true
+            sudo git tag $TAG2 -d||true
+            sudo git push origin $TAG -d ||true
+            sudo git push origin $TAG2 -d ||true
+            sudo git tag $TAG
+            sudo git tag $TAG2
+            sudo git push origin $TAG
+            sudo git push origin $TAG2
             echo "tag_name=" $TAG
             echo "tag_name_2=" $TAG2
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
-            echo "tag_commit=$(git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(sudo git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
             echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
           else
             echo $TAG
@@ -179,21 +193,21 @@ jobs:
             TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
             TAG=${TAG%*-}
             TAG2=${TAG2%*-}
-            git tag $TAG -d||true
-            git tag $TAG2 -d||true
-            git push origin $TAG -d ||true
-            git push origin $TAG2 -d ||true
-            git tag $TAG
-            git tag $TAG2
-            git push origin $TAG
-            git push origin $TAG2
+            sudo git tag $TAG -d||true
+            sudo git tag $TAG2 -d||true
+            sudo git push origin $TAG -d ||true
+            sudo git push origin $TAG2 -d ||true
+            sudo git tag $TAG
+            sudo git tag $TAG2
+            sudo git push origin $TAG
+            sudo git push origin $TAG2
             cd source
-            COMMIT=$(git log -1 --pretty=%H $base_tag$after_tag)
+            COMMIT=$(sudo git log -1 --pretty=%H $base_tag$after_tag)
             echo $COMMIT
-            git checkout $COMMIT
+            sudo git checkout $COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
-            echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(sudo git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
             echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
           fi
 
@@ -231,7 +245,8 @@ jobs:
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
-          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/7.4.1/bazel-7.4.1-linux-x86_64
           sudo chmod +x /usr/local/bin/bazel
           sudo -u ${NON_ROOT} bazel --version
 
@@ -251,14 +266,14 @@ jobs:
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           export PATH=$HOME/bin:$PATH
-          cp -a debian source/
+          sudo cp -a debian source/
           cd source
-          sed 's/bazel clean/bazel --version/' debian/rules -i
-          sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
-          sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
+          sudo sed 's/bazel clean/bazel --version/' debian/rules -i
+          sudo sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sudo sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
           sudo chown -R ${NON_ROOT}:${NON_ROOT} ../
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release
@@ -267,9 +282,9 @@ jobs:
         id: release_note
         shell: bash
         run: |
-          ls -la
-          USER=`whoami`
-          sudo chown -R $USER:$USER .
+          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} .
           ls -la
           git checkout main
           git checkout HEAD~ -- last_commit.txt
@@ -299,6 +314,9 @@ jobs:
 
       - name: Added SudachiDict for -with-jp-dict
         run: |
+          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} .
           srcdir=$PWD/source/
           curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.6/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz --strip-components=1
@@ -341,7 +359,6 @@ jobs:
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           rm -rf *deb mozc_*
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
@@ -354,13 +371,16 @@ jobs:
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release_2
           sudo -u ${NON_ROOT} mv *deb mozc_* release_2/
+          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache
       - name: Generate release note
         id: release_note_2
         shell: bash
         run: |
-          NON_ROOT="${{ steps.startup.outputs.non_root }}"
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
+          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} .
           git checkout main
           git checkout HEAD~ -- last_commit.txt
           OLD_COMMIT=$(cat last_commit.txt)
