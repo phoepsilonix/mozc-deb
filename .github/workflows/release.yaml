@@ -44,6 +44,7 @@ jobs:
         run: |
           echo "Event name: ${{ github.event_name }}"
           echo "Event payload: ${{ toJson(github.event.client_payload) }}"
+          ls -la $GITHUB_WORKSPACE
       - name: install apt-utils and wget and git (Linux)
         id: startup
         shell: bash
@@ -98,17 +99,26 @@ jobs:
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          sudo mkdir -p /github/workspace/
           sudo useradd -m -d /github/workspace/ -s /usr/bin/bash ${NON_ROOT}
-          sudo mkdir -p /github/workspace
           sudo mkdir -p /github/workspace/.cache
           sudo mkdir -p /github/workspace/.rustup
           sudo mkdir -p /github/workspace/.cargo
+          sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/
+          sudo -u $NON_ROOT touch /github/workspace/.bashrc
+          sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/.bashrc
           sudo cp config.toml /github/workspace/.cargo/
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.rustup
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cargo
           # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
           DEFAULT_USER=$(whoami)
-          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache
+          # bazel cache
+          export XDG_CACHE_HOME=/github/workspace/.cache/
+          sudo mkdir -p ${XDG_CACHE_HOME}/bazel
+          echo "XDG_CACHE_HOME=${XDG_CACHE_HOME}" >> $GITHUB_ENV
+          echo 'export XDG_CACHE_HOME=${XDG_CACHE_HOME}' | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
+
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${XDG_CACHE_HOME}
           sudo mkdir -p $GITHUB_WORKSPACE/.git
           sudo chown -R ${NON_ROOT}:${NON_ROOT} $GITHUB_WORKSPACE/.git
           sudo -u ${NON_ROOT} whoami
@@ -254,26 +264,28 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /github/workspace/.cache/bazel
+            ${{ env.XDG_CACHE_HOME }}/bazel
           key: bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-${{ steps.variables.outputs.tag_commit }}
           restore-keys: |
-            bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-${{ steps.variables.outputs.tag_commit }}
             bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
             bazel-${{ steps.startup.outputs.container_name }}-
-            ${{ matrix.os }}-bazel-${{ steps.startup.outputs.container_name }}-
 
-      - name: Build
+      - name: Build(normal)
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           export PATH=$HOME/bin:$PATH
           sudo cp -a debian source/
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           cd source
+          echo $PWD
+          ls -la
           sudo sed 's/bazel clean/bazel --version/' debian/rules -i
           sudo sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
           sudo sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} ../
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
+          . /github/workspace/.bashrc
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release
@@ -355,25 +367,35 @@ jobs:
           split -d -l $ROWS --additional-suffix=.txt ../finish-dict.txt dictionary
           cp -af ./dictionary*.txt "$srcdir/src/data/dictionary_oss/"
           sync
-      - name: Build
+      - name: Build(-with-jp-dict)
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} ${{ env.XDG_CACHE_HOME }}
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           rm -rf *deb mozc_*
           export PATH=$HOME/bin:$PATH
           #cp -a debian source/
           cd source
-          sudo chown -R ${NON_ROOT}:${NON_ROOT} ../
           sudo -u ${NON_ROOT} patch -p1 -i ../dict-license.patch
           #sed 's/bazel clean/bazel --version/' debian/rules -i
           #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          . /github/workspace/.bashrc
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release_2
           sudo -u ${NON_ROOT} mv *deb mozc_* release_2/
           # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
-          DEFAULT_USER=$(whoami)
-          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache
+          if [[ "${{ matrix.os }}" == "Rhino" ]]; then
+            DEFAULT_USER=$(whoami)
+            echo $DEFAULT_USER
+            sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${{ env.XDG_CACHE_HOME }}
+          else
+            DEFAULT_USER=$(whoami)
+            echo $DEFAULT_USER
+            sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${{ env.XDG_CACHE_HOME }}
+          fi
       - name: Generate release note
         id: release_note_2
         shell: bash
