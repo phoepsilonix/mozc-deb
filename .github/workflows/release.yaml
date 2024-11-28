@@ -17,14 +17,10 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [debian-12, ubuntu-23.04, ubuntu-24.04]
+        os: [debian-12, ubuntu-24.04, Rhino]
         include:
           - os: debian-12
             container: debian:bookworm
-          - os: ubuntu-23.04
-            container: ubuntu:lunar
-          #- os: ubuntu-23.10
-            #container: ubuntu:mantic
           - os: ubuntu-24.04
             container: ubuntu:noble
           - os: Rhino
