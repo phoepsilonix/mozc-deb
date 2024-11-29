@@ -326,7 +326,7 @@ jobs:
           DEFAULT_USER=$(whoami)
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} .
           srcdir=$PWD/source/
-          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.6/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
+          curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.7/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
           tar xvf dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz --strip-components=1
           sudo cp dict-to-mozc /usr/local/bin/
           _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
