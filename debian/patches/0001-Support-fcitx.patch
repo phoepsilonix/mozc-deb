@@ -343,7 +343,7 @@ index 4c3ae30..899ea07 100644
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/build_mozc.py b/src/build_mozc.py
-index f3f55e9..c38a2b6 100755
+index 6e17812..3efd3af 100755
 --- a/src/build_mozc.py
 +++ b/src/build_mozc.py
 @@ -164,6 +164,8 @@ def GetGypFileNames(options):
