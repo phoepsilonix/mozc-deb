@@ -100,6 +100,7 @@ jobs:
           sudo mkdir -p /github/workspace/.cache
           sudo mkdir -p /github/workspace/.rustup
           sudo mkdir -p /github/workspace/.cargo
+          sudo cp .bazeliskrc /github/workspace/
           sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/
           sudo -u $NON_ROOT touch /github/workspace/.bashrc
           sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/.bashrc
@@ -248,11 +249,13 @@ jobs:
           make-default: true
 
       - name: Install bazel
+        env:
+          USE_BAZEL_VERSION: "7.4.1"
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
-          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
-          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/7.4.1/bazel-7.4.1-linux-x86_64
+          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.24.1/bazelisk-linux-amd64
+          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/7.4.1/bazel-7.4.1-linux-x86_64
           sudo chmod +x /usr/local/bin/bazel
           sudo -u ${NON_ROOT} bazel --version
 
@@ -267,6 +270,8 @@ jobs:
             bazel-${{ steps.startup.outputs.container_name }}-
 
       - name: Build(normal)
+        env:
+          USE_BAZEL_VERSION: "7.4.1"
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
@@ -364,6 +369,8 @@ jobs:
           cp -af ./dictionary*.txt "$srcdir/src/data/dictionary_oss/"
           sync
       - name: Build(-with-jp-dict)
+        env:
+          USE_BAZEL_VERSION: "7.4.1"
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
