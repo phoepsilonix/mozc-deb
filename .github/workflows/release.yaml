@@ -17,12 +17,14 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [debian-12, ubuntu-24.04, Rhino]
+        os: [debian-12, ubuntu-24.04, ubuntu-24.10, Rhino]
         include:
           - os: debian-12
             container: debian:bookworm
           - os: ubuntu-24.04
             container: ubuntu:noble
+          - os: ubuntu-24.10
+            container: ubuntu:oracular
           - os: Rhino
             container: ghcr.io/rhino-linux/docker:latest
 
@@ -46,15 +48,6 @@ jobs:
         shell: bash
         run: |
           echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
-          #if [[ "${{ matrix.os }}" == "debian-12" ]]; then
-          #  sed 's/http:/https:/' -i /etc/apt/sources.list.d/debian.sources
-          #elif [[ "${{ matrix.os }}" == "ubuntu-24.04" ]]; then
-          #  sed 's/http:/https:/' -i /etc/apt/sources.list.d/ubuntu.sources
-          #elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
-          #  sudo sed 's/http:/https:/' -i /etc/apt/sources.list.d/ubuntu.sources
-          #else
-          #  sed 's/http:/https:/' -i /etc/apt/sources.list
-          #fi
           if [[ "${{ matrix.os }}" == "debian-12" ]]; then
             apt-get update
             apt-get install -y sudo wget git
@@ -234,7 +227,8 @@ jobs:
           elif [[ "${{ matrix.os }}" == "ubuntu-24.04" || "${{ matrix.os }}" == "Rhino" ]]; then
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources
           else
-            sudo sed 's/^.*deb-src /deb-src /' -i /etc/apt/sources.list
+            sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources || true
+            sudo sed 's/^.*deb-src /deb-src /' -i /etc/apt/sources.list || true
           fi
           sudo apt-get update
           sudo apt-get build-dep -y mozc
