@@ -233,13 +233,13 @@ jobs:
           sudo apt-get update
           sudo apt-get build-dep -y mozc
           sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
-          if [[ "${{ matrix.os }}" == "Rhino" ]]; then
-            sudo apt-get install -y python3-six
-          fi
+          #if [[ "${{ matrix.os }}" == "Rhino" ]]; then
+          sudo apt-get install -y python3-six
+          #fi
       - name: Install mold linker
         uses: rui314/setup-mold@staging
         with:
-          mold-version: 2.35.0
+          mold-version: 2.35.1
           make-default: true
 
       - name: Install bazel
