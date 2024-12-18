@@ -45,6 +45,17 @@ index 0000000..ec6b5ae
 +_BUILD_TARGETS="${_BUILD_TARGETS:-unix/fcitx5:fcitx5-mozc.so server:mozc_server gui/tool:mozc_tool}"
 +
 +bazel build -c opt --copt=-fPIC  --config oss_linux "$@" $_BUILD_TARGETS
+diff --git a/scripts/build_fcitx_bazel b/scripts/build_fcitx_bazel
+new file mode 100755
+index 0000000..c68e9e6
+--- /dev/null
++++ b/scripts/build_fcitx_bazel
+@@ -0,0 +1,5 @@
++#!/bin/sh
++
++_BUILD_TARGETS="${_BUILD_TARGETS:-unix/fcitx:fcitx-mozc.so server:mozc_server gui/tool:mozc_tool}"
++
++bazel build -c opt --copt=-fPIC  --config oss_linux "$@" $_BUILD_TARGETS
 diff --git a/scripts/clang-format.sh b/scripts/clang-format.sh
 new file mode 100755
 index 0000000..1b574d5
@@ -315,10 +326,10 @@ index 0000000..86c9958
 +    ],
 +)
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index 4c3ae30..899ea07 100644
+index 4f3dc24..5d87e30 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
-@@ -127,6 +127,23 @@ pkg_config_repository(
+@@ -120,6 +120,23 @@ pkg_config_repository(
      ],
  )
  
