@@ -36,7 +36,7 @@ index 0000000..829e5c6
 +python build_mozc.py build ${_BUILD_TARGETS} -c ${_bldtype}
 diff --git a/scripts/build_fcitx5_bazel b/scripts/build_fcitx5_bazel
 new file mode 100755
-index 0000000..ec6b5ae
+index 0000000..f7946af
 --- /dev/null
 +++ b/scripts/build_fcitx5_bazel
 @@ -0,0 +1,5 @@
@@ -44,7 +44,7 @@ index 0000000..ec6b5ae
 +
 +_BUILD_TARGETS="${_BUILD_TARGETS:-unix/fcitx5:fcitx5-mozc.so server:mozc_server gui/tool:mozc_tool}"
 +
-+bazel build -c opt --copt=-fPIC  --config oss_linux "$@" $_BUILD_TARGETS
++bazel build -c opt --copt=-fPIC --config oss_linux --define server=1 "$@" $_BUILD_TARGETS
 diff --git a/scripts/build_fcitx_bazel b/scripts/build_fcitx_bazel
 new file mode 100755
 index 0000000..c68e9e6
@@ -4634,10 +4634,11 @@ index 0000000..ce54291
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
 diff --git a/src/unix/fcitx5/BUILD.bazel b/src/unix/fcitx5/BUILD.bazel
 new file mode 100644
-index 0000000..a2f304a
+index 0000000..9e923ab
 --- /dev/null
 +++ b/src/unix/fcitx5/BUILD.bazel
-@@ -0,0 +1,124 @@
+@@ -0,0 +1,184 @@
++load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 +load(
 +    "//:build_defs.bzl",
 +    "mozc_cc_binary",
@@ -4646,29 +4647,83 @@ index 0000000..a2f304a
 +
 +package(default_visibility = ["//:__subpackages__"])
 +
++bool_flag(
++    name = "use_server",
++    build_setting_default = True,
++)
++
++config_setting(
++    name = "without_server",
++    flag_values = {
++        ":use_server": "False",
++    },
++)
++
 +mozc_cc_library(
-+    name = "mozc_connection",
-+    srcs = ["mozc_connection.cc"],
-+    hdrs = ["mozc_connection.h"],
++    name = "mozc_client_interface",
++    hdrs = [
++        "mozc_client_interface.h",
++    ],
 +    deps = [
-+        ":fcitx_key_util",
-+        ":surrounding_text_util",
-+        "//base:port",
-+        "//base:util",
-+        "//base:vlog",
-+        "//client",
 +        "//protocol:commands_cc_proto",
++        "//protocol:config_cc_proto",
 +    ],
 +)
 +
 +mozc_cc_library(
 +    name = "mozc_client_pool",
-+    srcs = ["mozc_client_pool.cc"],
-+    hdrs = ["mozc_client_pool.h"],
++    srcs = [
++        "mozc_client_pool.cc",
++    ],
++    hdrs = [
++        "mozc_client_pool.h",
++    ],
 +    deps = [
-+        ":mozc_connection",
-+        "//client:client_interface",
++        ":mozc_client_interface",
++        "//protocol:commands_cc_proto",
++        "//protocol:config_cc_proto",
 +        "@fcitx5",
++    ],
++)
++
++mozc_cc_library(
++    name = "mozc_direct_client",
++    srcs = [
++        "mozc_direct_client.cc",
++    ],
++    hdrs = [
++        "mozc_direct_client.h",
++    ],
++    deps = [
++        ":mozc_client_interface",
++        "//base:singleton",
++        "//base:vlog",
++        "//config:config_handler",
++        "//engine:engine_factory",
++        "//protocol:commands_cc_proto",
++        "//protocol:config_cc_proto",
++        "//session:key_info_util",
++        "//session:session_handler",
++        "//session:session_handler_interface",
++        "//session:session_usage_observer",
++        "@com_google_absl//absl/log",
++    ],
++)
++
++mozc_cc_library(
++    name = "mozc_ipc_client",
++    srcs = [
++        "mozc_ipc_client.cc",
++    ],
++    hdrs = [
++        "mozc_ipc_client.h",
++    ],
++    deps = [
++        ":mozc_client_interface",
++        "//client",
++        "//ipc",
++        "//protocol:commands_cc_proto",
++        "//protocol:config_cc_proto",
 +    ],
 +)
 +
@@ -4698,7 +4753,6 @@ index 0000000..a2f304a
 +        ":fcitx_key_util",
 +        ":i18nwrapper",
 +        ":mozc_client_pool",
-+        ":mozc_connection",
 +        ":surrounding_text_util",
 +        "//base:init_mozc",
 +        "//base:port",
@@ -4706,11 +4760,17 @@ index 0000000..a2f304a
 +        "//base:run_level",
 +        "//base:util",
 +        "//base:vlog",
-+        "//client:client_interface",
 +        "//protocol:candidate_window_cc_proto",
 +        "//protocol:commands_cc_proto",
 +        "@fcitx5",
-+    ],
++    ] + select({
++        ":without_server": [
++            ":mozc_direct_client",
++        ],
++        "//conditions:default": [
++            ":mozc_ipc_client",
++        ],
++    }),
 +)
 +
 +mozc_cc_library(
@@ -5176,10 +5236,10 @@ index 0000000..3370a67
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/fcitx_key_event_handler.h b/src/unix/fcitx5/fcitx_key_event_handler.h
 new file mode 100644
-index 0000000..925f875
+index 0000000..7421fc6
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx_key_event_handler.h
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,83 @@
 +// Copyright 2010-2012, Google Inc.
 +// Copyright 2012-2017, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
@@ -5218,6 +5278,7 @@ index 0000000..925f875
 +#include <cstdint>
 +#include <memory>
 +#include <set>
++#include <string>
 +
 +#include "protocol/commands.pb.h"
 +#include "protocol/config.pb.h"
@@ -5841,12 +5902,62 @@ index 0000000..40725d7
 +LangCode=ja
 +Addon=mozc
 +Configurable=True
+diff --git a/src/unix/fcitx5/mozc_client_interface.h b/src/unix/fcitx5/mozc_client_interface.h
+new file mode 100644
+index 0000000..27e075e
+--- /dev/null
++++ b/src/unix/fcitx5/mozc_client_interface.h
+@@ -0,0 +1,44 @@
++#ifndef UNIX_FCITX5_MOZC_CLIENT_INTERFACE_H_
++#define UNIX_FCITX5_MOZC_CLIENT_INTERFACE_H_
++
++#include <memory>
++#include <string>
++#include <string_view>
++
++#include "protocol/commands.pb.h"
++#include "protocol/config.pb.h"
++
++namespace fcitx {
++
++// This is a simplified version of mozc::ClientInterface, with only functions
++// Needed by Fcitx.
++class MozcClientInterface {
++ public:
++  virtual ~MozcClientInterface() = default;
++  virtual bool EnsureConnection() = 0;
++  bool SendCommand(const mozc::commands::SessionCommand &command,
++                   mozc::commands::Output *output) {
++    return SendCommandWithContext(
++        command, mozc::commands::Context::default_instance(), output);
++  }
++  virtual bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
++                                  const mozc::commands::Context &context,
++                                  mozc::commands::Output *output) = 0;
++  virtual bool SendCommandWithContext(
++      const mozc::commands::SessionCommand &command,
++      const mozc::commands::Context &context,
++      mozc::commands::Output *output) = 0;
++  virtual bool IsDirectModeCommand(
++      const mozc::commands::KeyEvent &key) const = 0;
++  virtual bool GetConfig(mozc::config::Config *config) = 0;
++  virtual void set_client_capability(
++      const mozc::commands::Capability &capability) = 0;
++  virtual bool SyncData() = 0;
++  virtual bool LaunchTool(const std::string &mode, std::string_view arg) = 0;
++  virtual bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) = 0;
++};
++
++std::unique_ptr<MozcClientInterface> createClient();
++
++}  // namespace fcitx
++#endif
 diff --git a/src/unix/fcitx5/mozc_client_pool.cc b/src/unix/fcitx5/mozc_client_pool.cc
 new file mode 100644
-index 0000000..d913c1f
+index 0000000..b7fedd4
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_client_pool.cc
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,123 @@
 +// Copyright 2023-2023, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -5887,20 +5998,15 @@ index 0000000..d913c1f
 +#include <cassert>
 +#include <memory>
 +#include <string>
++#include <utility>
 +
-+#include "unix/fcitx5/mozc_connection.h"
++#include "protocol/commands.pb.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +
-+MozcClientHolder::~MozcClientHolder() {
-+  if (pool_) {
-+    pool_->unregisterClient(key_);
-+  }
-+}
-+
-+MozcClientPool::MozcClientPool(MozcConnection *connection,
-+                               PropertyPropagatePolicy initialPolicy)
-+    : connection_(connection), policy_(initialPolicy) {}
++MozcClientPool::MozcClientPool(PropertyPropagatePolicy initialPolicy)
++    : policy_(initialPolicy) {}
 +
 +void MozcClientPool::setPolicy(PropertyPropagatePolicy policy) {
 +  if (policy_ == policy) {
@@ -5922,7 +6028,7 @@ index 0000000..d913c1f
 +  return key;
 +}
 +
-+std::shared_ptr<MozcClientHolder> MozcClientPool::requestClient(
++std::shared_ptr<MozcClientInterface> MozcClientPool::requestClient(
 +    InputContext *ic) {
 +  std::string key;
 +  switch (policy_) {
@@ -5944,35 +6050,43 @@ index 0000000..d913c1f
 +  if (iter != clients_.end()) {
 +    return iter->second.lock();
 +  }
-+  auto newclient = std::make_shared<MozcClientHolder>();
-+  registerClient(key, newclient);
-+  return newclient;
++  std::unique_ptr<MozcClientInterface> newclient = createClient();
++  // Currently client capability is fixed.
++  mozc::commands::Capability capability;
++  capability.set_text_deletion(
++      mozc::commands::Capability::DELETE_PRECEDING_TEXT);
++  newclient->set_client_capability(capability);
++  return registerClient(key, std::move(newclient));
 +}
 +
-+void MozcClientPool::registerClient(const std::string &key,
-+                                    std::shared_ptr<MozcClientHolder> client) {
++std::shared_ptr<MozcClientInterface> MozcClientPool::registerClient(
++    const std::string &key, std::unique_ptr<MozcClientInterface> client) {
 +  assert(!key.empty());
-+  client->pool_ = this;
-+  client->client_ = connection_->CreateClient();
-+  client->key_ = key;
-+  auto [_, success] = clients_.emplace(key, client);
++  std::shared_ptr<MozcClientInterface> managedClient(
++      client.release(),
++      [key, ref = this->watch()](MozcClientInterface *client) {
++        if (auto *that = ref.get()) {
++          that->unregisterClient(key);
++        }
++        delete client;
++      });
++  const auto [iter, success] = clients_.emplace(key, managedClient);
 +  FCITX_UNUSED(success);
 +  assert(success);
++  return managedClient;
 +}
 +
 +void MozcClientPool::unregisterClient(const std::string &key) {
-+  auto count = clients_.erase(key);
-+  FCITX_UNUSED(count);
-+  assert(count > 0);
++  clients_.erase(key);
 +}
 +
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_client_pool.h b/src/unix/fcitx5/mozc_client_pool.h
 new file mode 100644
-index 0000000..855e882
+index 0000000..9a00f25
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_client_pool.h
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,66 @@
 +// Copyright 2023-2023, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -6005,6 +6119,7 @@ index 0000000..855e882
 +#ifndef UNIX_FCITX5_MOZC_CLIENT_POOL_H_
 +#define UNIX_FCITX5_MOZC_CLIENT_POOL_H_
 +
++#include <fcitx-utils/trackableobject.h>
 +#include <fcitx/inputcontext.h>
 +#include <fcitx/inputcontextmanager.h>
 +
@@ -6012,207 +6127,407 @@ index 0000000..855e882
 +#include <string>
 +#include <unordered_map>
 +
-+#include "client/client_interface.h"
-+#include "unix/fcitx5/mozc_connection.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +
-+class MozcClientPool;
-+
-+class MozcClientHolder {
-+  friend class MozcClientPool;
++class MozcClientPool : public TrackableObject<MozcClientPool> {
++  friend class MozcClientInterface;
 +
 + public:
-+  MozcClientHolder() = default;
-+
-+  MozcClientHolder(MozcClientHolder &&) = delete;
-+
-+  ~MozcClientHolder();
-+
-+  mozc::client::ClientInterface *client() const { return client_.get(); }
-+
-+ private:
-+  MozcClientPool *pool_;
-+  std::unique_ptr<mozc::client::ClientInterface> client_;
-+  std::string key_;
-+};
-+
-+class MozcClientPool {
-+  friend class MozcClientHolder;
-+
-+ public:
-+  MozcClientPool(MozcConnection *connection,
-+                 PropertyPropagatePolicy initialPolicy);
++  MozcClientPool(PropertyPropagatePolicy initialPolicy);
 +
 +  void setPolicy(PropertyPropagatePolicy policy);
 +  PropertyPropagatePolicy policy() const { return policy_; }
 +
-+  std::shared_ptr<MozcClientHolder> requestClient(InputContext *ic);
-+
-+  MozcConnection *connection() const { return connection_; }
++  std::shared_ptr<MozcClientInterface> requestClient(InputContext *ic);
 +
 + private:
-+  void registerClient(const std::string &key,
-+                      std::shared_ptr<MozcClientHolder> client);
++  std::shared_ptr<MozcClientInterface> registerClient(
++      const std::string &key, std::unique_ptr<MozcClientInterface> client);
 +  void unregisterClient(const std::string &key);
-+  MozcConnection *connection_;
 +  PropertyPropagatePolicy policy_;
-+  std::unordered_map<std::string, std::weak_ptr<MozcClientHolder>> clients_;
++  std::unordered_map<std::string, std::weak_ptr<MozcClientInterface>> clients_;
 +};
 +
 +}  // namespace fcitx
 +
 +#endif
-diff --git a/src/unix/fcitx5/mozc_connection.cc b/src/unix/fcitx5/mozc_connection.cc
+diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..b88bf12
+index 0000000..44e8de0
 --- /dev/null
-+++ b/src/unix/fcitx5/mozc_connection.cc
-@@ -0,0 +1,67 @@
-+// Copyright 2010-2012, Google Inc.
-+// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
-+// All rights reserved.
-+//
-+// Redistribution and use in source and binary forms, with or without
-+// modification, are permitted provided that the following conditions are
-+// met:
-+//
-+//     * Redistributions of source code must retain the above copyright
-+// notice, this list of conditions and the following disclaimer.
-+//     * Redistributions in binary form must reproduce the above
-+// copyright notice, this list of conditions and the following disclaimer
-+// in the documentation and/or other materials provided with the
-+// distribution.
-+//     * Neither the name of Google Inc. nor the names of its
-+// contributors may be used to endorse or promote products derived from
-+// this software without specific prior written permission.
-+//
-+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++++ b/src/unix/fcitx5/mozc_direct_client.cc
+@@ -0,0 +1,280 @@
++#include "unix/fcitx5/mozc_direct_client.h"
 +
-+#include "unix/fcitx5/mozc_connection.h"
++#include <Fcitx5/Utils/fcitx-utils/macros.h>
 +
++#include <cstddef>
++#include <cstdint>
 +#include <memory>
++#include <string>
++#include <string_view>
++#include <utility>
 +
-+#include "base/vlog.h"
-+#include "client/client.h"
-+#include "ipc/ipc.h"
++#include "absl/log/check.h"
++#include "absl/log/log.h"
++#include "base/singleton.h"
++#include "config/config_handler.h"
++#include "engine/engine_factory.h"
 +#include "protocol/commands.pb.h"
++#include "protocol/config.pb.h"
++#include "session/key_info_util.h"
++#include "session/session_handler.h"
++#include "session/session_handler_interface.h"
++#include "session/session_usage_observer.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +
-+std::unique_ptr<mozc::client::ClientInterface> CreateAndConfigureClient() {
-+  auto client = mozc::client::ClientFactory::NewClient();
-+  // Currently client capability is fixed.
-+  mozc::commands::Capability capability;
-+  capability.set_text_deletion(
-+      mozc::commands::Capability::DELETE_PRECEDING_TEXT);
-+  client->set_client_capability(capability);
-+  return client;
++namespace {
++
++std::unique_ptr<mozc::SessionHandlerInterface> CreateSessionHandler() {
++  auto engine = mozc::EngineFactory::Create();
++  DCHECK_OK(engine);
++  auto result =
++      std::make_unique<mozc::SessionHandler>(std::move(engine.value()));
++  result->AddObserver(
++      mozc::Singleton<mozc::session::SessionUsageObserver>::get());
++  return result;
 +}
 +
-+MozcConnection::MozcConnection()
-+    : client_factory_(mozc::IPCClientFactory::GetIPCClientFactory()) {
-+  MOZC_VLOG(1) << "MozcConnection is created";
++mozc::SessionHandlerInterface *GetSessionHandler() {
++  static std::unique_ptr<mozc::SessionHandlerInterface> g_session_handler =
++      CreateSessionHandler();
++  return g_session_handler.get();
 +}
 +
-+MozcConnection::~MozcConnection() {
-+  MOZC_VLOG(1) << "MozcConnection is destroyed";
++}  // namespace
++
++MozcDirectClient::MozcDirectClient() : id_(0) {
++  // Initialize direct_mode_keys_
++  mozc::config::Config config;
++  mozc::config::ConfigHandler::GetConfig(&config);
++  direct_mode_keys_ = mozc::KeyInfoUtil::ExtractSortedDirectModeKeys(config);
++  InitRequestForSvsJapanese(true);
 +}
 +
-+std::unique_ptr<mozc::client::ClientInterface> MozcConnection::CreateClient() {
-+  auto client = CreateAndConfigureClient();
-+  client->SetIPCClientFactory(client_factory_);
-+  return client;
++MozcDirectClient::~MozcDirectClient() { DeleteSession(); }
++
++void MozcDirectClient::InitRequestForSvsJapanese(bool use_svs) {
++  request_ = std::make_unique<mozc::commands::Request>();
++
++  mozc::commands::DecoderExperimentParams params;
++  uint32_t variation_types = params.variation_character_types();
++  if (use_svs) {
++    variation_types |= mozc::commands::DecoderExperimentParams::SVS_JAPANESE;
++  } else {
++    variation_types &= ~mozc::commands::DecoderExperimentParams::SVS_JAPANESE;
++  }
++  request_->mutable_decoder_experiment_params()->set_variation_character_types(
++      variation_types);
++}
++
++bool MozcDirectClient::EnsureSession() {
++  if (server_status_ == SERVER_OK) {
++    return true;
++  }
++  if (!CreateSession()) {
++    LOG(ERROR) << "CreateSession failed";
++    return false;
++  }
++
++  // Call SET_REQUEST if request_ is not nullptr.
++  if (request_) {
++    mozc::commands::Input input;
++    input.set_id(id_);
++    input.set_type(mozc::commands::Input::SET_REQUEST);
++    *input.mutable_request() = *request_;
++    mozc::commands::Output output;
++    Call(input, &output);
++  }
++
++  server_status_ = SERVER_OK;
++  return true;
++}
++
++bool MozcDirectClient::SendKeyWithContext(
++    const mozc::commands::KeyEvent &key, const mozc::commands::Context &context,
++    mozc::commands::Output *output) {
++  mozc::commands::Input input;
++  input.set_type(mozc::commands::Input::SEND_KEY);
++  *input.mutable_key() = key;
++  // If the pointer of |context| is not the default_instance, update the data.
++  if (&context != &mozc::commands::Context::default_instance()) {
++    *input.mutable_context() = context;
++  }
++  return EnsureCallCommand(&input, output);
++}
++
++bool MozcDirectClient::SendCommandWithContext(
++    const mozc::commands::SessionCommand &command,
++    const mozc::commands::Context &context, mozc::commands::Output *output) {
++  mozc::commands::Input input;
++  input.set_type(mozc::commands::Input::SEND_COMMAND);
++  *input.mutable_command() = command;
++  // If the pointer of |context| is not the default_instance, update the data.
++  if (&context != &mozc::commands::Context::default_instance()) {
++    *input.mutable_context() = context;
++  }
++  return EnsureCallCommand(&input, output);
++}
++
++bool MozcDirectClient::EnsureCallCommand(mozc::commands::Input *input,
++                                         mozc::commands::Output *output) {
++  if (!EnsureSession()) {
++    LOG(ERROR) << "EnsureSession failed";
++    return false;
++  }
++  InitInput(input);
++  output->set_id(0);
++
++  if (!Call(*input, output)) {
++    LOG(ERROR) << "Call command failed";
++    return false;
++  }
++  return true;
++}
++
++void MozcDirectClient::set_client_capability(
++    const mozc::commands::Capability &capability) {
++  client_capability_ = capability;
++}
++
++bool MozcDirectClient::CreateSession() {
++  id_ = 0;
++  mozc::commands::Input input;
++  input.set_type(mozc::commands::Input::CREATE_SESSION);
++
++  *input.mutable_capability() = client_capability_;
++
++  mozc::commands::Output output;
++  if (!Call(input, &output)) {
++    return false;
++  }
++
++  if (output.error_code() != mozc::commands::Output::SESSION_SUCCESS) {
++    LOG(ERROR) << "Server returns an error";
++    server_status_ = SERVER_INVALID_SESSION;
++    return false;
++  }
++
++  id_ = output.id();
++  return true;
++}
++
++bool MozcDirectClient::DeleteSession() {
++  // No need to delete session
++  if (id_ == 0) {
++    return true;
++  }
++
++  mozc::commands::Input input;
++  InitInput(&input);
++  input.set_type(mozc::commands::Input::DELETE_SESSION);
++
++  mozc::commands::Output output;
++  if (!Call(input, &output)) {
++    LOG(ERROR) << "DeleteSession failed";
++    return false;
++  }
++  id_ = 0;
++  return true;
++}
++
++bool MozcDirectClient::IsDirectModeCommand(
++    const mozc::commands::KeyEvent &key) const {
++  return mozc::KeyInfoUtil::ContainsKey(direct_mode_keys_, key);
++}
++
++bool MozcDirectClient::GetConfig(mozc::config::Config *config) {
++  mozc::commands::Input input;
++  InitInput(&input);
++  input.set_type(mozc::commands::Input::GET_CONFIG);
++
++  mozc::commands::Output output;
++  if (!Call(input, &output)) {
++    return false;
++  }
++
++  if (!output.has_config()) {
++    return false;
++  }
++
++  config->Clear();
++  *config = output.config();
++  return true;
++}
++
++bool MozcDirectClient::SyncData() {
++  return CallCommand(mozc::commands::Input::SYNC_DATA);
++}
++
++bool MozcDirectClient::CallCommand(mozc::commands::Input::CommandType type) {
++  mozc::commands::Input input;
++  InitInput(&input);
++  input.set_type(type);
++  mozc::commands::Output output;
++  return Call(input, &output);
++}
++
++bool MozcDirectClient::Call(const mozc::commands::Input &input,
++                            mozc::commands::Output *output) {
++  mozc::commands::Command command;
++  *command.mutable_input() = input;
++  *output = command.output();
++  return GetSessionHandler()->EvalCommand(&command);
++}
++
++void MozcDirectClient::InitInput(mozc::commands::Input *input) const {
++  input->set_id(id_);
++}
++
++bool MozcDirectClient::TranslateProtoBufToMozcToolArg(
++    const mozc::commands::Output &output, std::string *mode) {
++  if (!output.has_launch_tool_mode() || mode == nullptr) {
++    return false;
++  }
++
++  switch (output.launch_tool_mode()) {
++    case mozc::commands::Output::CONFIG_DIALOG:
++      mode->assign("config_dialog");
++      break;
++    case mozc::commands::Output::DICTIONARY_TOOL:
++      mode->assign("dictionary_tool");
++      break;
++    case mozc::commands::Output::WORD_REGISTER_DIALOG:
++      mode->assign("word_register_dialog");
++      break;
++    case mozc::commands::Output::NO_TOOL:
++    default:
++      // do nothing
++      return false;
++      break;
++  }
++
++  return true;
++}
++
++bool MozcDirectClient::LaunchToolWithProtoBuf(
++    const mozc::commands::Output &output) {
++  std::string mode;
++  if (!TranslateProtoBufToMozcToolArg(output, &mode)) {
++    return false;
++  }
++
++  // TODO(nona): extends output message to support extra argument.
++  return LaunchTool(mode, "");
++}
++
++bool MozcDirectClient::LaunchTool(const std::string &mode,
++                                  const std::string_view extra_arg) {
++  FCITX_UNUSED(mode);
++  FCITX_UNUSED(extra_arg);
++  // We don't spawn a server thread as for now, so the tool is not helpful
++  // anyway.
++  return false;
++}
++
++std::unique_ptr<MozcClientInterface> createClient() {
++  return std::make_unique<MozcDirectClient>();
 +}
 +
 +}  // namespace fcitx
-diff --git a/src/unix/fcitx5/mozc_connection.h b/src/unix/fcitx5/mozc_connection.h
+diff --git a/src/unix/fcitx5/mozc_direct_client.h b/src/unix/fcitx5/mozc_direct_client.h
 new file mode 100644
-index 0000000..1c9544a
+index 0000000..fc4e188
 --- /dev/null
-+++ b/src/unix/fcitx5/mozc_connection.h
-@@ -0,0 +1,65 @@
-+// Copyright 2010-2012, Google Inc.
-+// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
-+// All rights reserved.
-+//
-+// Redistribution and use in source and binary forms, with or without
-+// modification, are permitted provided that the following conditions are
-+// met:
-+//
-+//     * Redistributions of source code must retain the above copyright
-+// notice, this list of conditions and the following disclaimer.
-+//     * Redistributions in binary form must reproduce the above
-+// copyright notice, this list of conditions and the following disclaimer
-+// in the documentation and/or other materials provided with the
-+// distribution.
-+//     * Neither the name of Google Inc. nor the names of its
-+// contributors may be used to endorse or promote products derived from
-+// this software without specific prior written permission.
-+//
-+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++++ b/src/unix/fcitx5/mozc_direct_client.h
+@@ -0,0 +1,77 @@
++#ifndef UNIX_FCITX5_MOZC_DIRECT_CLIENT_H_
++#define UNIX_FCITX5_MOZC_DIRECT_CLIENT_H_
 +
-+#ifndef MOZC_UNIX_FCITX5_MOZC_CONNECTION_H_
-+#define MOZC_UNIX_FCITX5_MOZC_CONNECTION_H_
-+
++#include <cstdint>
 +#include <memory>
++#include <string>
++#include <string_view>
++#include <vector>
 +
-+namespace mozc {
-+
-+class IPCClientInterface;
-+class IPCClientFactoryInterface;
-+
-+namespace client {
-+class ClientInterface;
-+}  // namespace client
-+
-+}  // namespace mozc
++#include "composer/key_event_util.h"
++#include "protocol/commands.pb.h"
++#include "protocol/config.pb.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +
-+class MozcConnection {
++class MozcDirectClient : public MozcClientInterface {
 + public:
-+  static const int kNoSession;
++  MozcDirectClient();
++  ~MozcDirectClient();
 +
-+  MozcConnection();
-+  MozcConnection(const MozcConnection &) = delete;
-+  virtual ~MozcConnection();
-+
-+  std::unique_ptr<mozc::client::ClientInterface> CreateClient();
++  bool EnsureConnection() override { return true; }
++  bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
++                          const mozc::commands::Context &context,
++                          mozc::commands::Output *output) override;
++  bool SendCommandWithContext(const mozc::commands::SessionCommand &command,
++                              const mozc::commands::Context &context,
++                              mozc::commands::Output *output) override;
++  bool IsDirectModeCommand(const mozc::commands::KeyEvent &key) const override;
++  bool GetConfig(mozc::config::Config *config) override;
++  void set_client_capability(
++      const mozc::commands::Capability &capability) override;
++  bool SyncData() override;
++  bool LaunchTool(const std::string &mode, std::string_view arg) override;
++  bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) override;
 +
 + private:
-+  mozc::IPCClientFactoryInterface *client_factory_;
-+};
++  // Initializes `request_` with the flag.
++  // This function should be called before EnsureSession.
++  void InitRequestForSvsJapanese(bool use_svs);
++  // Converts Output message from server to corresponding mozc_tool arguments
++  // If launch_tool_mode is not set or NO_TOOL is set or an invalid value is
++  // set, this function will return false and do nothing.
++  static bool TranslateProtoBufToMozcToolArg(
++      const mozc::commands::Output &output, std::string *mode);
 +
++  bool EnsureSession();
++
++  enum ServerStatus {
++    SERVER_INVALID_SESSION,  // current session is not available
++    SERVER_OK,               // both server and session are health
++  };
++
++  // Initialize input filling id and preferences.
++  void InitInput(mozc::commands::Input *input) const;
++
++  bool CreateSession();
++  bool DeleteSession();
++  bool CallCommand(mozc::commands::Input::CommandType type);
++
++  // This method re-issue session id if it is not available.
++  bool EnsureCallCommand(mozc::commands::Input *input,
++                         mozc::commands::Output *output);
++
++  // The most primitive Call method
++  bool Call(const mozc::commands::Input &input, mozc::commands::Output *output);
++
++  uint64_t id_;
++  std::unique_ptr<mozc::commands::Request> request_;
++  ServerStatus server_status_ = SERVER_INVALID_SESSION;
++  // List of key combinations used in the direct input mode.
++  std::vector<mozc::KeyInformation> direct_mode_keys_;
++  mozc::commands::Capability client_capability_;
++};
 +}  // namespace fcitx
 +
-+#endif  // MOZC_UNIX_FCITX5_MOZC_CONNECTION_H_
++#endif
 diff --git a/src/unix/fcitx5/mozc_engine.cc b/src/unix/fcitx5/mozc_engine.cc
 new file mode 100644
-index 0000000..dfb7ece
+index 0000000..1ed28be
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.cc
-@@ -0,0 +1,343 @@
+@@ -0,0 +1,342 @@
 +/*
 + * Copyright (C) 2017~2017 by CSSlayer
 + * wengxt@gmail.com
@@ -6260,6 +6575,7 @@ index 0000000..dfb7ece
 +#include "base/process.h"
 +#include "protocol/commands.pb.h"
 +#include "unix/fcitx5/i18nwrapper.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +#include "unix/fcitx5/mozc_client_pool.h"
 +#include "unix/fcitx5/mozc_response_parser.h"
 +#include "unix/fcitx5/mozc_state.h"
@@ -6356,11 +6672,9 @@ index 0000000..dfb7ece
 +MozcEngine::MozcEngine(Instance *instance)
 +    : instance_(Init(instance)),
 +      parser_(std::make_unique<MozcResponseParser>(this)),
-+      connection_(std::make_unique<MozcConnection>()),
-+      client_(connection_->CreateClient()),
++      client_(createClient()),
 +      factory_([this](InputContext &ic) { return new MozcState(&ic, this); }) {
-+  pool_ = std::make_unique<MozcClientPool>(connection_.get(),
-+                                           GetSharedStatePolicy());
++  pool_ = std::make_unique<MozcClientPool>(GetSharedStatePolicy());
 +  for (auto command :
 +       {mozc::commands::DIRECT, mozc::commands::HIRAGANA,
 +        mozc::commands::FULL_KATAKANA, mozc::commands::FULL_ASCII,
@@ -6558,10 +6872,10 @@ index 0000000..dfb7ece
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_engine.h b/src/unix/fcitx5/mozc_engine.h
 new file mode 100644
-index 0000000..1f3e0f8
+index 0000000..1f06934
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.h
-@@ -0,0 +1,182 @@
+@@ -0,0 +1,180 @@
 +/*
 + * Copyright (C) 2017~2017 by CSSlayer
 + * wengxt@gmail.com
@@ -6607,15 +6921,14 @@ index 0000000..1f3e0f8
 +
 +#include "base/file_util.h"
 +#include "base/system_util.h"
-+#include "client/client_interface.h"
 +#include "protocol/commands.pb.h"
 +#include "unix/fcitx5/i18nwrapper.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +#include "unix/fcitx5/mozc_client_pool.h"
 +#include "unix/fcitx5/mozc_state.h"
 +
 +namespace fcitx {
 +
-+class MozcConnection;
 +class MozcResponseParser;
 +class MozcEngine;
 +
@@ -6723,8 +7036,7 @@ index 0000000..1f3e0f8
 +
 +  Instance *instance_;
 +  const std::unique_ptr<MozcResponseParser> parser_;
-+  std::unique_ptr<MozcConnection> connection_;
-+  std::unique_ptr<mozc::client::ClientInterface> client_;
++  std::unique_ptr<MozcClientInterface> client_;
 +  std::unique_ptr<MozcClientPool> pool_;
 +  FactoryFor<MozcState> factory_;
 +  SimpleAction toolAction_;
@@ -6746,10 +7058,10 @@ index 0000000..1f3e0f8
 +#endif  // _FCITX_UNIX_FCITX5_MOZC_ENGINE_H_
 diff --git a/src/unix/fcitx5/mozc_engine_factory.cc b/src/unix/fcitx5/mozc_engine_factory.cc
 new file mode 100644
-index 0000000..7ba6e79
+index 0000000..fad8f93
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine_factory.cc
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,75 @@
 +/*
 + * Copyright (C) 2020~2020 by CSSlayer
 + * wengxt@gmail.com
@@ -6774,6 +7086,7 @@ index 0000000..7ba6e79
 +#include <fcitx/addonfactory.h>
 +#include <fcitx/addoninstance.h>
 +
++#include <cstdlib>
 +#include <string_view>
 +
 +#include "base/system_util.h"
@@ -6824,6 +7137,125 @@ index 0000000..7ba6e79
 +}  // namespace fcitx
 +
 +FCITX_ADDON_FACTORY(fcitx::MozcEngineFactory)
+diff --git a/src/unix/fcitx5/mozc_ipc_client.cc b/src/unix/fcitx5/mozc_ipc_client.cc
+new file mode 100644
+index 0000000..97dc170
+--- /dev/null
++++ b/src/unix/fcitx5/mozc_ipc_client.cc
+@@ -0,0 +1,64 @@
++#include "unix/fcitx5/mozc_ipc_client.h"
++
++#include <memory>
++#include <string>
++#include <string_view>
++
++#include "client/client.h"
++#include "ipc/ipc.h"
++#include "protocol/commands.pb.h"
++#include "protocol/config.pb.h"
++#include "unix/fcitx5/mozc_client_interface.h"
++
++namespace fcitx {
++
++static mozc::IPCClientFactoryInterface *client_factory = nullptr;
++
++MozcIPCClient::MozcIPCClient()
++    : client_(mozc::client::ClientFactory::NewClient()) {
++  if (!client_factory) {
++    client_factory = mozc::IPCClientFactory::GetIPCClientFactory();
++  }
++  client_->SetIPCClientFactory(client_factory);
++}
++
++MozcIPCClient::~MozcIPCClient() {}
++
++bool MozcIPCClient::EnsureConnection() { return client_->EnsureConnection(); }
++
++bool MozcIPCClient::SendKeyWithContext(const mozc::commands::KeyEvent &key,
++                                       const mozc::commands::Context &context,
++                                       mozc::commands::Output *output) {
++  return client_->SendKeyWithContext(key, context, output);
++}
++
++bool MozcIPCClient::SendCommandWithContext(
++    const mozc::commands::SessionCommand &command,
++    const mozc::commands::Context &context, mozc::commands::Output *output) {
++  return client_->SendCommandWithContext(command, context, output);
++}
++bool MozcIPCClient::IsDirectModeCommand(
++    const mozc::commands::KeyEvent &key) const {
++  return client_->IsDirectModeCommand(key);
++}
++bool MozcIPCClient::GetConfig(mozc::config::Config *config) {
++  return client_->GetConfig(config);
++}
++void MozcIPCClient::set_client_capability(
++    const mozc::commands::Capability &capability) {
++  return client_->set_client_capability(capability);
++}
++bool MozcIPCClient::SyncData() { return client_->SyncData(); }
++bool MozcIPCClient::LaunchTool(const std::string &mode, std::string_view arg) {
++  return client_->LaunchTool(mode, arg);
++}
++bool MozcIPCClient::LaunchToolWithProtoBuf(
++    const mozc::commands::Output &output) {
++  return client_->LaunchToolWithProtoBuf(output);
++}
++
++std::unique_ptr<MozcClientInterface> createClient() {
++  return std::make_unique<MozcIPCClient>();
++}
++
++}  // namespace fcitx
+diff --git a/src/unix/fcitx5/mozc_ipc_client.h b/src/unix/fcitx5/mozc_ipc_client.h
+new file mode 100644
+index 0000000..b91b355
+--- /dev/null
++++ b/src/unix/fcitx5/mozc_ipc_client.h
+@@ -0,0 +1,43 @@
++#ifndef UNIX_FCITX5_MOZC_IPC_CLIENT_H_
++#define UNIX_FCITX5_MOZC_IPC_CLIENT_H_
++
++#include <memory>
++#include <string>
++#include <string_view>
++
++#include "client/client_interface.h"
++#include "protocol/commands.pb.h"
++#include "protocol/config.pb.h"
++#include "unix/fcitx5/mozc_client_interface.h"
++
++namespace fcitx {
++
++class MozcIPCClient : public MozcClientInterface {
++ public:
++  MozcIPCClient();
++
++  MozcIPCClient(MozcIPCClient &&) = delete;
++
++  ~MozcIPCClient();
++
++  bool EnsureConnection() override;
++  bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
++                          const mozc::commands::Context &context,
++                          mozc::commands::Output *output) override;
++  bool SendCommandWithContext(const mozc::commands::SessionCommand &command,
++                              const mozc::commands::Context &context,
++                              mozc::commands::Output *output) override;
++  bool IsDirectModeCommand(const mozc::commands::KeyEvent &key) const override;
++  bool GetConfig(mozc::config::Config *config) override;
++  void set_client_capability(
++      const mozc::commands::Capability &capability) override;
++  bool SyncData() override;
++  bool LaunchTool(const std::string &mode, std::string_view arg) override;
++  bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) override;
++
++ private:
++  std::unique_ptr<mozc::client::ClientInterface> client_;
++};
++
++}  // namespace fcitx
++#endif
 diff --git a/src/unix/fcitx5/mozc_response_parser.cc b/src/unix/fcitx5/mozc_response_parser.cc
 new file mode 100644
 index 0000000..e989948
@@ -7414,10 +7846,10 @@ index 0000000..2fabef0
 +#endif  // MOZC_UNIX_FCITX_MOZC_RESPONSE_PARSER_H_
 diff --git a/src/unix/fcitx5/mozc_state.cc b/src/unix/fcitx5/mozc_state.cc
 new file mode 100644
-index 0000000..58d5404
+index 0000000..a926c8b
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.cc
-@@ -0,0 +1,477 @@
+@@ -0,0 +1,475 @@
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -7471,12 +7903,10 @@ index 0000000..58d5404
 +#include "absl/log/log.h"
 +#include "base/process.h"
 +#include "base/vlog.h"
-+#include "client/client_interface.h"
 +#include "protocol/commands.pb.h"
 +#include "protocol/config.pb.h"
 +#include "unix/fcitx5/fcitx_key_event_handler.h"
 +#include "unix/fcitx5/i18nwrapper.h"
-+#include "unix/fcitx5/mozc_connection.h"
 +#include "unix/fcitx5/mozc_engine.h"
 +#include "unix/fcitx5/mozc_response_parser.h"
 +#include "unix/fcitx5/surrounding_text_util.h"
@@ -7885,22 +8315,22 @@ index 0000000..58d5404
 +  ic_->updateUserInterface(UserInterfaceComponent::InputPanel);
 +}
 +
-+mozc::client::ClientInterface* MozcState::GetClient() const {
-+  if (!client_holder_) {
-+    client_holder_ = engine_->pool()->requestClient(ic_);
++MozcClientInterface* MozcState::GetClient() const {
++  if (!client_) {
++    client_ = engine_->pool()->requestClient(ic_);
 +  }
-+  return client_holder_->client();
++  return client_.get();
 +}
 +
-+void MozcState::ReleaseClient() { client_holder_.reset(); }
++void MozcState::ReleaseClient() { client_.reset(); }
 +
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_state.h b/src/unix/fcitx5/mozc_state.h
 new file mode 100644
-index 0000000..8d6706d
+index 0000000..89b1a40
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.h
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,166 @@
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -7942,10 +8372,9 @@ index 0000000..8d6706d
 +#include <memory>
 +#include <string>
 +
-+#include "client/client_interface.h"
 +#include "protocol/commands.pb.h"
 +#include "protocol/config.pb.h"
-+#include "unix/fcitx5/mozc_client_pool.h"
++#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +inline const int32_t kBadCandidateId = -12345;
@@ -7999,7 +8428,7 @@ index 0000000..8d6706d
 +    return composition_mode_;
 +  }
 +
-+  mozc::client::ClientInterface *GetClient() const;
++  MozcClientInterface *GetClient() const;
 +  void ReleaseClient();
 +
 +  bool SendCommand(const mozc::commands::SessionCommand &session_command,
@@ -8050,7 +8479,7 @@ index 0000000..8d6706d
 +
 +  InputContext *ic_;
 +  MozcEngine *engine_;
-+  mutable std::shared_ptr<MozcClientHolder> client_holder_;
++  mutable std::shared_ptr<MozcClientInterface> client_;
 +
 +  mozc::commands::CompositionMode composition_mode_ = mozc::commands::HIRAGANA;
 +  mozc::config::Config::PreeditMethod preedit_method_ =
