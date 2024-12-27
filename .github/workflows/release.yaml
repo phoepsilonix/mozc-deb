@@ -93,7 +93,7 @@ jobs:
           sudo mkdir -p /github/workspace/.cache
           sudo mkdir -p /github/workspace/.rustup
           sudo mkdir -p /github/workspace/.cargo
-          sudo cp .bazeliskrc /github/workspace/
+          #sudo cp .bazeliskrc /github/workspace/
           sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/
           sudo -u $NON_ROOT touch /github/workspace/.bashrc
           sudo chown ${NON_ROOT}:${NON_ROOT} /github/workspace/.bashrc
