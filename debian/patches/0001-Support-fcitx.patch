@@ -6155,10 +6155,10 @@ index 0000000..9a00f25
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..44e8de0
+index 0000000..323a76a
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,283 @@
 +#include "unix/fcitx5/mozc_direct_client.h"
 +
 +#include <Fcitx5/Utils/fcitx-utils/macros.h>
@@ -6380,8 +6380,11 @@ index 0000000..44e8de0
 +                            mozc::commands::Output *output) {
 +  mozc::commands::Command command;
 +  *command.mutable_input() = input;
++  if (!GetSessionHandler()->EvalCommand(&command)) {
++    return false;
++  }
 +  *output = command.output();
-+  return GetSessionHandler()->EvalCommand(&command);
++  return true;
 +}
 +
 +void MozcDirectClient::InitInput(mozc::commands::Input *input) const {
