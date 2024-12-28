@@ -27,6 +27,8 @@ jobs:
             container: ubuntu:oracular
           - os: Rhino
             container: ghcr.io/rhino-linux/docker:latest
+          # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
+          # NON_ROOT is builduser
 
     runs-on: ubuntu-latest
     container:
@@ -87,6 +89,8 @@ jobs:
       - name: Setup non-root user
         shell: bash
         run: |
+          # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
+          # NON_ROOT is builduser
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /github/workspace/
           sudo useradd -m -d /github/workspace/ -s /usr/bin/bash ${NON_ROOT}
@@ -100,7 +104,6 @@ jobs:
           sudo cp config.toml /github/workspace/.cargo/
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.rustup
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cargo
-          # DEFAULT_USER is Rhino(rhino) or root(debian and ubuntu)
           DEFAULT_USER=$(whoami)
           # bazel cache
           export XDG_CACHE_HOME=/github/workspace/.cache/
@@ -256,6 +259,8 @@ jobs:
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           sudo -u ${NON_ROOT} bazel --version
+          DEFAULT_USER=$(whoami)
+          sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache/bazel/
 
       - name: Bazel Cache
         uses: actions/cache@v4
