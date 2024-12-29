@@ -7061,10 +7061,10 @@ index 0000000..1f06934
 +#endif  // _FCITX_UNIX_FCITX5_MOZC_ENGINE_H_
 diff --git a/src/unix/fcitx5/mozc_engine_factory.cc b/src/unix/fcitx5/mozc_engine_factory.cc
 new file mode 100644
-index 0000000..fad8f93
+index 0000000..69bf94b
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine_factory.cc
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,79 @@
 +/*
 + * Copyright (C) 2020~2020 by CSSlayer
 + * wengxt@gmail.com
@@ -7139,7 +7139,11 @@ index 0000000..fad8f93
 +};
 +}  // namespace fcitx
 +
++#ifdef FCITX_ADDON_FACTORY_V2
++FCITX_ADDON_FACTORY_V2(mozc, fcitx::MozcEngineFactory)
++#else
 +FCITX_ADDON_FACTORY(fcitx::MozcEngineFactory)
++#endif
 diff --git a/src/unix/fcitx5/mozc_ipc_client.cc b/src/unix/fcitx5/mozc_ipc_client.cc
 new file mode 100644
 index 0000000..97dc170
