@@ -4833,7 +4833,7 @@ index 0000000..e705349
 +gen_pot cxx:desktop:appdata fcitx5-mozc po .
 diff --git a/src/unix/fcitx5/fcitx5.gyp b/src/unix/fcitx5/fcitx5.gyp
 new file mode 100644
-index 0000000..58d9a66
+index 0000000..28ce73f
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx5.gyp
 @@ -0,0 +1,118 @@
@@ -4917,7 +4917,7 @@ index 0000000..58d9a66
 +        'fcitx_key_translator.cc',
 +        'fcitx_key_event_handler.cc',
 +        'surrounding_text_util.cc',
-+        'mozc_connection.cc',
++        'mozc_ipc_client.cc',
 +        'mozc_response_parser.cc',
 +        'mozc_engine.cc',
 +        'mozc_engine_factory.cc',
