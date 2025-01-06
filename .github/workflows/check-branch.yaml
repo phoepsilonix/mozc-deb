@@ -27,10 +27,14 @@ jobs:
           git config user.name "Masato TOYOSHIMA"
           git config user.email phoepsilonix@phoepsilonix.love
           git config --global push.gpgSign if-asked
-
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.PRIVATE_REPO_SSH_KEY }}
+          git config --global url.git@github.com:.insteadOf https://github.com/
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.PRIVATE_REPO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_ed25519
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: Import bot's GPG key for signing commits
         id: import-gpg
@@ -63,8 +67,9 @@ jobs:
           echo "Changes detected."
           echo
           echo "Fetching from original repository..."
-          git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
-          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          git remote add upstream https://github.com/$ORIGINAL_REPO.git
+          git fetch --filter=tree:0 upstream master
+          MOZC_COMMIT=$(git log -1 --pretty=%H upstream/master)
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
@@ -76,7 +81,7 @@ jobs:
           echo "Mozc version(tag) check"
           MOZC_TAG_1="v""$(head -n1 debian/changelog|grep -Eo "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")"
           echo "Resetting local master to FETCH_HEAD..."
-          git checkout FETCH_HEAD
+          git checkout upstream/master
 
           source <(grep = src/data/version/mozc_version_template.bzl| tr -d ' ')
           MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$((REVISION+2))")
