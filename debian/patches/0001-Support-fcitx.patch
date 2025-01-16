@@ -8506,10 +8506,10 @@ index 0000000..89b1a40
 +#endif  // MOZC_UNIX_FCITX_FCITX_MOZC_H_
 diff --git a/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in b/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in
 new file mode 100644
-index 0000000..96dcb65
+index 0000000..86988f1
 --- /dev/null
 +++ b/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,32 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<component type="addon">
 +  <id>org.fcitx.Fcitx5.Addon.Mozc</id>
@@ -8526,6 +8526,7 @@ index 0000000..96dcb65
 +  <url type="vcs-browser">https://github.com/fcitx/mozc</url>
 +  <project_group>Fcitx</project_group>
 +  <releases>
++    <release version="2.31.5712.102" date="2025-01-16"></release>
 +    <release version="2.30.5618.102" date="2024-10-10"></release>
 +    <release version="2.30.5595.102" date="2024-09-17"></release>
 +    <release version="2.30.5544.102" date="2024-08-28"></release>
