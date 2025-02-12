@@ -261,14 +261,15 @@ jobs:
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           sudo -u ${NON_ROOT} bazel --version
           DEFAULT_USER=$(whoami)
+          sudo mkdir -p /github/workspace/.cache/bazel/
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache/bazel/
-          sudo mkdir -p ./.cache/bazel
+          sudo mkdir -p ${{ github.workspace }}/.cache/bazel
 
       - name: Bazel Cache
         uses: actions/cache@v4
         with:
           path: |
-            ./.cache/bazel
+            ${{ github.workspace }}/.cache/bazel
           key: bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-${{ steps.variables.outputs.tag_commit }}
           restore-keys: |
             bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
@@ -279,7 +280,7 @@ jobs:
           USE_BAZEL_VERSION: "8.0.1"
         shell: bash
         run: |
-          sudo cp -af ./.cache/bazel ${{ env.XDG_CACHE_HOME }}/
+          sudo cp -af ${{ github.workspace }}/.cache/bazel ${{ env.XDG_CACHE_HOME }}/
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           export PATH=$HOME/bin:$PATH
           sudo cp -a debian source/
@@ -406,8 +407,8 @@ jobs:
             sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${{ env.XDG_CACHE_HOME }}
           fi
           cd
-          sudo cp -af ${{ env.XDG_CACHE_HOME }}bazel/ ./.cache/
-          sudo chown -R root:root ./.cache/bazel/
+          sudo cp -af ${{ env.XDG_CACHE_HOME }}bazel/ ${{ github.workspace }}/.cache/
+          sudo chown -R root:root ${{ github.workspace }}/.cache/bazel/
       - name: Generate release note
         id: release_note_2
         shell: bash
