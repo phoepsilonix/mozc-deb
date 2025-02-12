@@ -326,10 +326,10 @@ index 0000000..86c9958
 +    ],
 +)
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index 3cd9eb1..2138563 100644
+index 94f72f8..7794ca2 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
-@@ -138,6 +138,23 @@ pkg_config_repository(
+@@ -139,6 +139,23 @@ pkg_config_repository(
      ],
  )
  
@@ -366,6 +366,26 @@ index 6e17812..3efd3af 100755
    gyp_file_names.sort()
    return gyp_file_names
  
+diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
+index 6fa373b..66cfaa0 100644
+--- a/src/session/BUILD.bazel
++++ b/src/session/BUILD.bazel
+@@ -153,6 +153,7 @@ mozc_cc_library(
+         "//android:__subpackages__",
+         "//ios:__subpackages__",
+         "//server:__subpackages__",
++        "//unix/fcitx5:__subpackages__",
+     ],
+     deps = [
+         ":keymap",
+@@ -352,6 +353,7 @@ mozc_cc_library(
+     hdrs = ["key_info_util.h"],
+     visibility = [
+         "//client:__subpackages__",
++        "//unix/fcitx5:__subpackages__",
+         "//win32:__subpackages__",
+     ],
+     deps = [
 diff --git a/src/unix/fcitx/BUILD.bazel b/src/unix/fcitx/BUILD.bazel
 new file mode 100644
 index 0000000..76beb76
@@ -4634,10 +4654,10 @@ index 0000000..ce54291
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
 diff --git a/src/unix/fcitx5/BUILD.bazel b/src/unix/fcitx5/BUILD.bazel
 new file mode 100644
-index 0000000..9e923ab
+index 0000000..4e3bb31
 --- /dev/null
 +++ b/src/unix/fcitx5/BUILD.bazel
-@@ -0,0 +1,184 @@
+@@ -0,0 +1,182 @@
 +load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 +load(
 +    "//:build_defs.bzl",
@@ -4704,8 +4724,6 @@ index 0000000..9e923ab
 +        "//protocol:config_cc_proto",
 +        "//session:key_info_util",
 +        "//session:session_handler",
-+        "//session:session_handler_interface",
-+        "//session:session_usage_observer",
 +        "@com_google_absl//absl/log",
 +    ],
 +)
@@ -6155,10 +6173,10 @@ index 0000000..9a00f25
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..323a76a
+index 0000000..e17122d
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
-@@ -0,0 +1,283 @@
+@@ -0,0 +1,279 @@
 +#include "unix/fcitx5/mozc_direct_client.h"
 +
 +#include <Fcitx5/Utils/fcitx-utils/macros.h>
@@ -6179,26 +6197,22 @@ index 0000000..323a76a
 +#include "protocol/config.pb.h"
 +#include "session/key_info_util.h"
 +#include "session/session_handler.h"
-+#include "session/session_handler_interface.h"
-+#include "session/session_usage_observer.h"
 +#include "unix/fcitx5/mozc_client_interface.h"
 +
 +namespace fcitx {
 +
 +namespace {
 +
-+std::unique_ptr<mozc::SessionHandlerInterface> CreateSessionHandler() {
++std::unique_ptr<mozc::SessionHandler> CreateSessionHandler() {
 +  auto engine = mozc::EngineFactory::Create();
 +  DCHECK_OK(engine);
 +  auto result =
 +      std::make_unique<mozc::SessionHandler>(std::move(engine.value()));
-+  result->AddObserver(
-+      mozc::Singleton<mozc::session::SessionUsageObserver>::get());
 +  return result;
 +}
 +
-+mozc::SessionHandlerInterface *GetSessionHandler() {
-+  static std::unique_ptr<mozc::SessionHandlerInterface> g_session_handler =
++mozc::SessionHandler *GetSessionHandler() {
++  static std::unique_ptr<mozc::SessionHandler> g_session_handler =
 +      CreateSessionHandler();
 +  return g_session_handler.get();
 +}
