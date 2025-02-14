@@ -326,7 +326,7 @@ index 0000000..86c9958
 +    ],
 +)
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index 94f72f8..7794ca2 100644
+index dac43a4..6238b9a 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
 @@ -139,6 +139,23 @@ pkg_config_repository(
@@ -367,7 +367,7 @@ index 6e17812..3efd3af 100755
    return gyp_file_names
  
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 6fa373b..66cfaa0 100644
+index 4b65fe8..01237b5 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -153,6 +153,7 @@ mozc_cc_library(
