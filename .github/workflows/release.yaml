@@ -247,7 +247,7 @@ jobs:
 
       - name: Install bazel
         env:
-          USE_BAZEL_VERSION: "8.1.0"
+          USE_BAZEL_VERSION: "8.1.1"
         run: |
           # cache cleanup
           sudo rm -rf /github/workspace/.cache/bazel/*
@@ -255,7 +255,7 @@ jobs:
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
           sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
-          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.1.0/bazel-8.1.0-linux-x86_64
+          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.1.1/bazel-8.1.1-linux-x86_64
           sudo chmod +x /usr/local/bin/bazel
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
@@ -277,7 +277,7 @@ jobs:
 
       - name: Build(normal)
         env:
-          USE_BAZEL_VERSION: "8.1.0"
+          USE_BAZEL_VERSION: "8.1.1"
         shell: bash
         run: |
           #sudo cp -af ${{ github.workspace }}/.cache/bazel ${{ env.XDG_CACHE_HOME }}/
@@ -377,7 +377,7 @@ jobs:
           sync
       - name: Build(-with-jp-dict)
         env:
-          USE_BAZEL_VERSION: "8.1.0"
+          USE_BAZEL_VERSION: "8.1.1"
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
