@@ -87,6 +87,8 @@ jobs:
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
           sudo git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
+        env:
+          USE_BAZEL_VERSION: "8.1.1"
         shell: bash
         run: |
           # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
@@ -107,9 +109,12 @@ jobs:
           DEFAULT_USER=$(whoami)
           # bazel cache
           export XDG_CACHE_HOME=/github/workspace/.cache/
+          export USE_BAZEL_VERSION=${{ env.USE_BAZEL_VERSION }}
           sudo mkdir -p ${XDG_CACHE_HOME}/bazel
           echo "XDG_CACHE_HOME=${XDG_CACHE_HOME}" >> $GITHUB_ENV
-          echo 'export XDG_CACHE_HOME=${XDG_CACHE_HOME}' | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
+          echo "export XDG_CACHE_HOME=${XDG_CACHE_HOME}" | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
+          echo "export USE_BAZEL_VERSION=${USE_BAZEL_VERSION}" | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
+          sudo cat /github/workspace/.bashrc
 
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${XDG_CACHE_HOME}
           sudo mkdir -p $GITHUB_WORKSPACE/.git
