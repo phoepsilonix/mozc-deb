@@ -21,6 +21,8 @@ jobs:
         include:
           - os: debian-12
             container: debian:bookworm
+          - os: debian-13
+            container: debian:trixie
           - os: ubuntu-24.04
             container: ubuntu:noble
           - os: ubuntu-24.10
@@ -50,7 +52,7 @@ jobs:
         shell: bash
         run: |
           echo "container_name=${{ matrix.os }}" >> $GITHUB_OUTPUT
-          if [[ "${{ matrix.os }}" == "debian-12" ]]; then
+          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "debian-13" ]]; then
             apt-get update
             apt-get install -y sudo wget git
             echo "non_root=builduser" >> $GITHUB_OUTPUT
@@ -230,7 +232,7 @@ jobs:
       - name: install build tools (Linux)
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" == "debian-12" ]]; then
+          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "debian-13" ]]; then
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/debian.sources
           elif [[ "${{ matrix.os }}" == "ubuntu-24.04" || "${{ matrix.os }}" == "Rhino" ]]; then
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources
