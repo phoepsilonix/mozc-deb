@@ -6173,10 +6173,10 @@ index 0000000..9a00f25
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..e17122d
+index 0000000..f1d0522
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
-@@ -0,0 +1,279 @@
+@@ -0,0 +1,278 @@
 +#include "unix/fcitx5/mozc_direct_client.h"
 +
 +#include <Fcitx5/Utils/fcitx-utils/macros.h>
@@ -6221,9 +6221,8 @@ index 0000000..e17122d
 +
 +MozcDirectClient::MozcDirectClient() : id_(0) {
 +  // Initialize direct_mode_keys_
-+  mozc::config::Config config;
-+  mozc::config::ConfigHandler::GetConfig(&config);
-+  direct_mode_keys_ = mozc::KeyInfoUtil::ExtractSortedDirectModeKeys(config);
++  direct_mode_keys_ = mozc::KeyInfoUtil::ExtractSortedDirectModeKeys(
++      *mozc::config::ConfigHandler::GetSharedConfig());
 +  InitRequestForSvsJapanese(true);
 +}
 +
