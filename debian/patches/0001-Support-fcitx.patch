@@ -366,26 +366,2334 @@ index 6e17812..3efd3af 100755
    gyp_file_names.sort()
    return gyp_file_names
  
+diff --git a/src/client/BUILD.bazel b/src/client/BUILD.bazel
+index 0bafd75..1b04467 100644
+--- a/src/client/BUILD.bazel
++++ b/src/client/BUILD.bazel
+@@ -37,19 +37,12 @@ load(
+ )
+ load("//bazel:run_build_tool.bzl", "mozc_run_build_tool")
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "client_interface",
+     hdrs = ["client_interface.h"],
+-    visibility = [
+-        "//gui:__subpackages__",
+-        "//mac:__pkg__",
+-        "//renderer:__subpackages__",
+-        "//session:__pkg__",
+-        "//visibility:public",
+-        "//win32:__subpackages__",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         "//ipc",
+         "//protocol:commands_cc_proto",
+@@ -72,14 +65,7 @@ mozc_cc_library(
+         linux = ["MOZC_USE_SVS_JAPANESE"],
+         oss = ["MOZC_USE_SVS_JAPANESE"],
+     ),
+-    visibility = [
+-        "//gui:__subpackages__",
+-        "//mac:__pkg__",
+-        "//session:__pkg__",
+-        "//unix:__subpackages__",
+-        "//visibility:public",
+-        "//win32:__subpackages__",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         ":client_interface",
+         "//base:const",
+@@ -147,12 +133,7 @@ mozc_cc_library(
+     name = "client_mock",
+     testonly = True,
+     hdrs = ["client_mock.h"],
+-    visibility = [
+-        "//mac:__pkg__",
+-        "//session:__pkg__",
+-        "//unix:__subpackages__",
+-        "//visibility:public",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         ":client_interface",
+         "//ipc",
+diff --git a/src/composer/BUILD.bazel b/src/composer/BUILD.bazel
+index 45b9e50..02f5f6f 100644
+--- a/src/composer/BUILD.bazel
++++ b/src/composer/BUILD.bazel
+@@ -34,7 +34,9 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = [
++    "//visibility:private",
++])
+ 
+ mozc_cc_library(
+     name = "query",
+diff --git a/src/config/BUILD.bazel b/src/config/BUILD.bazel
+index 1847791..a0acc45 100644
+--- a/src/config/BUILD.bazel
++++ b/src/config/BUILD.bazel
+@@ -34,15 +34,12 @@ load(
+     "mozc_select",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "config_handler",
+     srcs = ["config_handler.cc"],
+     hdrs = ["config_handler.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-    ],
+     deps = [
+         "//base:clock",
+         "//base:config_file_stream",
+@@ -91,9 +88,6 @@ mozc_cc_library(
+     name = "stats_config_util",
+     srcs = ["stats_config_util.cc"],
+     hdrs = ["stats_config_util.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-    ],
+     deps = [
+         "//base:singleton",
+     ] + mozc_select(
+@@ -152,12 +146,6 @@ mozc_cc_library(
+     name = "character_form_manager",
+     srcs = ["character_form_manager.cc"],
+     hdrs = ["character_form_manager.h"],
+-    visibility = [
+-        "//composer:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":config_handler",
+         "//base:config_file_stream",
+diff --git a/src/converter/BUILD.bazel b/src/converter/BUILD.bazel
+index 1b2e4b7..65f062d 100644
+--- a/src/converter/BUILD.bazel
++++ b/src/converter/BUILD.bazel
+@@ -37,7 +37,7 @@ load(
+ )
+ load("//bazel:stubs.bzl", "bzl_library")
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "segments",
+@@ -51,9 +51,6 @@ mozc_cc_library(
+     ],
+     visibility = [
+         "//:__subpackages__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+     ],
+     deps = [
+         ":lattice",
+@@ -101,11 +98,6 @@ mozc_cc_library(
+     testonly = 1,
+     srcs = ["segments_matchers.h"],
+     hdrs = ["segments_matchers.h"],
+-    visibility = [
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         ":segments",
+         "//testing:gunit",
+@@ -136,7 +128,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "node_allocator",
+     hdrs = ["node_allocator.h"],
+-    visibility = ["//dictionary:__pkg__"],
++    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":node",
+         "//base/container:freelist",
+@@ -147,16 +139,13 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "node_list_builder",
+     hdrs = ["node_list_builder.h"],
+-    visibility = [
+-        "//prediction:__pkg__",
+-        "//typing_correction:__pkg__",
+-    ],
+     deps = [
+         ":node",
+         ":node_allocator",
+         "//dictionary:dictionary_interface",
+         "//dictionary:dictionary_token",
+         "//protocol:commands_cc_proto",
++        "@com_google_absl//absl/log",
+         "@com_google_absl//absl/log:check",
+         "@com_google_absl//absl/strings",
+     ],
+@@ -166,11 +155,6 @@ mozc_cc_library(
+     name = "connector",
+     srcs = ["connector.cc"],
+     hdrs = ["connector.h"],
+-    visibility = [
+-        "//data_manager:__pkg__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         "//data_manager",
+         "//storage/louds:simple_succinct_bit_vector_index",
+@@ -179,6 +163,8 @@ mozc_cc_library(
+         "@com_google_absl//absl/status",
+         "@com_google_absl//absl/status:statusor",
+         "@com_google_absl//absl/strings",
++        "@com_google_absl//absl/synchronization",
++        "@com_google_absl//absl/types:span",
+     ],
+ )
+ 
+@@ -307,11 +293,6 @@ mozc_cc_library(
+     name = "segmenter",
+     srcs = ["segmenter.cc"],
+     hdrs = ["segmenter.h"],
+-    visibility = [
+-        "//data_manager:__pkg__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         ":node",
+         "//base/container:bitarray",
+@@ -327,6 +308,7 @@ mozc_cc_library(
+         "lattice.cc",
+     ],
+     hdrs = ["lattice.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":node",
+         ":node_allocator",
+@@ -434,13 +416,6 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "converter_interface",
+     hdrs = ["converter_interface.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":segments",
+         "//request:conversion_request",
+@@ -456,7 +431,6 @@ mozc_cc_library(
+     ],
+     hdrs = ["converter.h"],
+     visibility = [
+-        "//converter:__pkg__",
+         "//engine:__pkg__",
+         "//rewriter:__pkg__",
+     ],
+@@ -543,7 +517,6 @@ mozc_cc_test(
+     name = "converter_regression_test",
+     size = "medium",
+     srcs = ["converter_regression_test.cc"],
+-    visibility = ["//engine:__subpackages__"],
+     deps = [
+         ":converter_interface",
+         ":segments",
+@@ -563,7 +536,6 @@ mozc_cc_library(
+     name = "history_reconstructor",
+     srcs = ["history_reconstructor.cc"],
+     hdrs = ["history_reconstructor.h"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         ":segments",
+         "//base:japanese_util",
+@@ -578,7 +550,6 @@ mozc_cc_library(
+ mozc_cc_test(
+     name = "history_reconstructor_test",
+     srcs = ["history_reconstructor_test.cc"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         ":history_reconstructor",
+         ":segments",
+@@ -598,7 +569,6 @@ mozc_cc_library(
+     name = "reverse_converter",
+     srcs = ["reverse_converter.cc"],
+     hdrs = ["reverse_converter.h"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         ":immutable_converter_interface",
+         ":segments",
+@@ -615,7 +585,6 @@ mozc_cc_library(
+ mozc_cc_test(
+     name = "reverse_converter_test",
+     srcs = ["reverse_converter_test.cc"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         ":immutable_converter_no_factory",
+         ":reverse_converter",
+@@ -740,7 +709,7 @@ mozc_py_binary(
+     srcs = ["gen_boundary_data.py"],
+     visibility = [
+         "//data_manager:__subpackages__",
+-        "//tools/periodical_update:__pkg__",
++        "//tools/periodical_update:__subpackages__",
+     ],
+ )
+ 
+@@ -771,12 +740,6 @@ mozc_cc_library(
+     name = "converter_mock",
+     testonly = True,
+     hdrs = ["converter_mock.h"],
+-    visibility = [
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":converter_interface",
+         ":segments",
+@@ -790,19 +753,12 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_quality_regression_test_data",
+     srcs = ["gen_quality_regression_test_data.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__subpackages__",
+-    ],
+ )
+ 
+ mozc_cc_library(
+     name = "quality_regression_util",
+     srcs = ["quality_regression_util.cc"],
+     hdrs = ["quality_regression_util.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-    ],
+     deps = [
+         ":converter_interface",
+         ":segments",
+@@ -828,7 +784,6 @@ mozc_cc_binary(
+     name = "quality_regression_main",
+     testonly = 1,
+     srcs = ["quality_regression_main.cc"],
+-    visibility = ["//data:__subpackages__"],
+     deps = [
+         ":quality_regression_util",
+         "//base:init_mozc",
+@@ -851,7 +806,6 @@ mozc_cc_binary(
+ mozc_py_binary(
+     name = "quality_regression",
+     srcs = ["quality_regression.py"],
+-    visibility = ["//data:__subpackages__"],
+     deps = ["//build_tools:mozc_version_lib"],
+ )
+ 
+@@ -860,9 +814,6 @@ mozc_cc_library(
+     testonly = True,
+     srcs = ["quality_regression_test_lib.cc"],
+     hdrs = ["quality_regression_test_lib.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-    ],
+     deps = [
+         ":quality_regression_util",
+         "//testing:gunit",
+@@ -879,4 +830,5 @@ bzl_library(
+     name = "evalution_bzl",
+     srcs = ["evaluation.bzl"],
+     test_size = "small",
++    visibility = ["//visibility:private"],
+ )
+diff --git a/src/data_manager/BUILD.bazel b/src/data_manager/BUILD.bazel
+index e65bb87..702844f 100644
+--- a/src/data_manager/BUILD.bazel
++++ b/src/data_manager/BUILD.bazel
+@@ -40,7 +40,7 @@ load(
+ )
+ load("//bazel:stubs.bzl", "bzl_library")
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//visibility:public"])
+ 
+ mozc_cc_library(
+     name = "data_manager",
+@@ -48,18 +48,6 @@ mozc_cc_library(
+         "data_manager.cc",
+     ],
+     hdrs = ["data_manager.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//android/jni:__pkg__",
+-        "//converter:__pkg__",
+-        "//data_manager:__subpackages__",
+-        "//dictionary:__pkg__",
+-        "//engine:__pkg__",
+-        "//ios:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":dataset_reader",
+         ":serialized_dictionary",
+@@ -85,9 +73,6 @@ mozc_cc_library(
+         "data_manager_test_base.cc",
+     ],
+     hdrs = ["data_manager_test_base.h"],
+-    visibility = [
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":connection_file_reader",
+         ":data_manager",
+@@ -120,10 +105,6 @@ mozc_py_library(
+ mozc_py_binary(
+     name = "gen_connection_data",
+     srcs = ["gen_connection_data.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":gen_connection_data_lib",
+         "//build_tools:code_generator_util",
+@@ -134,10 +115,6 @@ mozc_cc_library(
+     name = "connection_file_reader",
+     srcs = ["connection_file_reader.cc"],
+     hdrs = ["connection_file_reader.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__subpackages__",
+-    ],
+     deps = [
+         "//base:file_stream",
+         "//base:number_util",
+@@ -149,10 +126,12 @@ mozc_cc_library(
+ proto_library(
+     name = "dataset_proto",
+     srcs = ["dataset.proto"],
++    visibility = ["//visibility:private"],
+ )
+ 
+ cc_proto_library(
+     name = "dataset_cc_proto",
++    visibility = ["//visibility:private"],
+     deps = [":dataset_proto"],
+ )
+ 
+@@ -194,10 +173,6 @@ mozc_cc_test(
+ mozc_cc_binary(
+     name = "dataset_writer_main",
+     srcs = ["dataset_writer_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":dataset_writer",
+         "//base:file_stream",
+@@ -262,10 +237,6 @@ mozc_cc_library(
+     name = "serialized_dictionary",
+     srcs = ["serialized_dictionary.cc"],
+     hdrs = ["serialized_dictionary.h"],
+-    visibility = [
+-        "//dictionary:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "//base:bits",
+         "//base:file_stream",
+@@ -300,7 +271,6 @@ mozc_cc_library(
+         default = [],
+         oss = ["//data_manager/oss:pos_list.inc"],
+     ),
+-    visibility = ["//gui:__subpackages__"],
+     deps = [
+         "//base:embedded_file",
+         "//base/container:serialized_string_array",
+@@ -319,8 +289,4 @@ bzl_library(
+ mozc_cc_library(
+     name = "emoji_data",
+     hdrs = ["emoji_data.h"],
+-    visibility = [
+-        "//dictionary:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+ )
+diff --git a/src/dictionary/BUILD.bazel b/src/dictionary/BUILD.bazel
+index 9e85c4a..5953fb1 100644
+--- a/src/dictionary/BUILD.bazel
++++ b/src/dictionary/BUILD.bazel
+@@ -41,7 +41,7 @@ load(
+     "mozc_select",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "dictionary_interface",
+@@ -97,7 +97,6 @@ mozc_cc_library(
+     hdrs = [
+         "dictionary_impl.h",
+     ],
+-    visibility = ["//engine:__pkg__"],
+     deps = [
+         ":dictionary_interface",
+         ":dictionary_token",
+@@ -115,7 +114,6 @@ mozc_cc_library(
+     name = "suffix_dictionary",
+     srcs = ["suffix_dictionary.cc"],
+     hdrs = ["suffix_dictionary.h"],
+-    visibility = ["//engine:__pkg__"],
+     deps = [
+         ":dictionary_interface",
+         ":dictionary_token",
+@@ -136,10 +134,6 @@ mozc_cc_library(
+     hdrs = [
+         "user_dictionary.h",
+     ],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-    ],
+     deps = [
+         ":dictionary_interface",
+         ":dictionary_token",
+@@ -206,10 +200,6 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "user_dictionary_stub",
+     hdrs = ["user_dictionary_stub.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-    ],
+     deps = [
+         ":dictionary_interface",
+         "//protocol:user_dictionary_storage_cc_proto",
+@@ -236,32 +226,16 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_aux_dictionary",
+     srcs = ["gen_aux_dictionary.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data/dictionary:__subpackages__",
+-        "//data/dictionary_oss:__subpackages__",
+-        "//dictionary:__subpackages__",
+-    ],
+ )
+ 
+ mozc_py_binary(
+     name = "gen_filtered_dictionary",
+     srcs = ["gen_filtered_dictionary.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data/dictionary:__subpackages__",
+-        "//data/dictionary_oss:__subpackages__",
+-        "//dictionary:__subpackages__",
+-    ],
+ )
+ 
+ mozc_cc_library(
+     name = "pos_group",
+     hdrs = ["pos_group.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "@com_google_absl//absl/base:core_headers",
+         "@com_google_absl//absl/types:span",
+@@ -271,7 +245,6 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_pos_map",
+     srcs = ["gen_pos_map.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//build_tools:code_generator_util",
+     ],
+@@ -285,10 +258,9 @@ run_binary(
+     ],
+     outs = ["pos_map.inc"],
+     args = [
+-        "--user_pos_file=" +
+-        "$(location //data/rules:user_pos.def)",
+-        "--third_party_pos_map_file=" +
+-        "$(location" +
++        "--user_pos_file=$(location" +
++        " //data/rules:user_pos.def)",
++        "--third_party_pos_map_file=$(location" +
+         " //data/rules:third_party_pos_map.def)",
+         "--output=$(location pos_map.inc)",
+     ],
+@@ -337,9 +309,6 @@ mozc_cc_library(
+     name = "user_dictionary_session_handler",
+     srcs = ["user_dictionary_session_handler.cc"],
+     hdrs = ["user_dictionary_session_handler.h"],
+-    visibility = [
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         ":user_dictionary_session",
+         ":user_dictionary_util",
+@@ -375,10 +344,6 @@ mozc_cc_library(
+     name = "user_dictionary_storage",
+     srcs = ["user_dictionary_storage.cc"],
+     hdrs = ["user_dictionary_storage.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         ":user_dictionary_util",
+         "//base:file_stream",
+@@ -502,7 +467,6 @@ mozc_cc_library(
+     hdrs = [
+         "text_dictionary_loader.h",
+     ],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":dictionary_token",
+         ":pos_matcher",
+@@ -543,12 +507,6 @@ mozc_cc_library(
+     name = "user_pos",
+     srcs = ["user_pos.cc"],
+     hdrs = ["user_pos.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-        "//gui:__subpackages__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "//base/container:serialized_string_array",
+         "//base/strings:assign",
+@@ -575,6 +533,7 @@ mozc_cc_test(
+ mozc_py_library(
+     name = "pos_util",
+     srcs = ["pos_util.py"],
++    visibility = ["//visibility:private"],
+     deps = [
+         "//build_tools:code_generator_util",
+     ],
+@@ -583,10 +542,6 @@ mozc_py_library(
+ mozc_py_binary(
+     name = "gen_user_pos_data",
+     srcs = ["gen_user_pos_data.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":pos_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -596,10 +551,6 @@ mozc_py_binary(
+ mozc_py_binary(
+     name = "gen_pos_matcher_code",
+     srcs = ["gen_pos_matcher_code.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [":pos_util"],
+ )
+ 
+@@ -608,18 +559,23 @@ run_binary(
+     srcs = ["//data/rules:pos_matcher_rule.def"],
+     outs = ["pos_matcher_impl.inc"],
+     args = [
+-        "--pos_matcher_rule_file=" +
+-        "$(location //data/rules:pos_matcher_rule.def)",
++        "--pos_matcher_rule_file=$(location" +
++        " //data/rules:pos_matcher_rule.def)",
+         "--output_pos_matcher_h=$(location pos_matcher_impl.inc)",
+     ],
+     tool = ":gen_pos_matcher_code",
++    visibility = [
++        "//visibility:private",
++    ],
+ )
+ 
+ mozc_cc_library(
+     name = "pos_matcher",
+     hdrs = ["pos_matcher.h"],
+     textual_hdrs = [":pos_matcher_impl"],
+-    visibility = ["//:__subpackages__"],
++    visibility = [
++        "//:__subpackages__",
++    ],
+     deps = [
+         "@com_google_absl//absl/base:core_headers",
+         "@com_google_absl//absl/types:span",
+@@ -629,19 +585,11 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_pos_rewrite_rule",
+     srcs = ["gen_pos_rewrite_rule.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+ )
+ 
+ mozc_cc_binary(
+     name = "gen_system_dictionary_data_main",
+     srcs = ["gen_system_dictionary_data_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":pos_matcher",
+         ":text_dictionary_loader",
+@@ -659,10 +607,6 @@ mozc_cc_library(
+     name = "suppression_dictionary",
+     srcs = ["suppression_dictionary.cc"],
+     hdrs = ["suppression_dictionary.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-    ],
+     deps = [
+         "@com_google_absl//absl/base:core_headers",
+         "@com_google_absl//absl/container:flat_hash_set",
+@@ -677,7 +621,6 @@ mozc_cc_test(
+     name = "suppression_dictionary_test",
+     size = "small",
+     srcs = ["suppression_dictionary_test.cc"],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":suppression_dictionary",
+         "//base:thread",
+@@ -691,13 +634,6 @@ mozc_cc_library(
+     name = "dictionary_mock",
+     testonly = True,
+     hdrs = ["dictionary_mock.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//dictionary:__subpackages__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         ":dictionary_interface",
+         ":dictionary_token",
+@@ -711,10 +647,6 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_suffix_data",
+     srcs = ["gen_suffix_data.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         "//build_tools:serialized_string_array_builder",
+     ],
+@@ -743,7 +675,6 @@ mozc_cc_library(
+     testonly = True,
+     srcs = ["dictionary_test_util.cc"],
+     hdrs = ["dictionary_test_util.h"],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":dictionary_interface",
+         ":dictionary_token",
+@@ -760,10 +691,6 @@ mozc_cc_library(
+     name = "single_kanji_dictionary",
+     srcs = ["single_kanji_dictionary.cc"],
+     hdrs = ["single_kanji_dictionary.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         "//base:text_normalizer",
+         "//base:util",
+@@ -822,8 +749,4 @@ run_binary(
+         prod = [],
+     ),
+     tool = ":gen_zip_code_seed",
+-    visibility = [
+-        "//data:__subpackages__",
+-        "//dictionary:__subpackages__",
+-    ],
+ )
+diff --git a/src/dictionary/file/BUILD.bazel b/src/dictionary/file/BUILD.bazel
+index f30665e..0be02bb 100644
+--- a/src/dictionary/file/BUILD.bazel
++++ b/src/dictionary/file/BUILD.bazel
+@@ -36,13 +36,12 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "dictionary_file",
+     srcs = ["dictionary_file.cc"],
+     hdrs = ["dictionary_file.h"],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":codec_interface",
+         ":section",
+@@ -88,7 +87,6 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "codec_interface",
+     hdrs = ["codec_interface.h"],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":section",
+         "@com_google_absl//absl/status",
+@@ -129,10 +127,11 @@ mozc_cc_library(
+     hdrs = [
+         "codec_factory.h",
+     ],
+-    visibility = ["//dictionary:__subpackages__"],
+     deps = [
+         ":codec",
+         ":codec_interface",
++        ":codec_util",
++        ":section",
+         "//base:singleton",
+     ],
+ )
+diff --git a/src/dictionary/system/BUILD.bazel b/src/dictionary/system/BUILD.bazel
+index 1a31fd9..e2604e9 100644
+--- a/src/dictionary/system/BUILD.bazel
++++ b/src/dictionary/system/BUILD.bazel
+@@ -36,11 +36,10 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
+-
+ mozc_cc_library(
+     name = "codec_interface",
+     hdrs = ["codec_interface.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         "@com_google_absl//absl/strings",
+         "@com_google_absl//absl/types:span",
+@@ -54,6 +53,7 @@ mozc_cc_library(
+         "codec.h",
+         "codec_interface.h",
+     ],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":words_info",
+         "//base:singleton",
+@@ -89,6 +89,7 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "token_decode_iterator",
+     hdrs = ["token_decode_iterator.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":codec_interface",
+         ":words_info",
+@@ -188,6 +189,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "words_info",
+     hdrs = ["words_info.h"],
++    visibility = ["//visibility:private"],
+ )
+ 
+ mozc_cc_test(
+diff --git a/src/engine/BUILD.bazel b/src/engine/BUILD.bazel
+index be31ab3..8c6edf8 100644
+--- a/src/engine/BUILD.bazel
++++ b/src/engine/BUILD.bazel
+@@ -35,12 +35,15 @@ load(
+     "mozc_select_enable_supplemental_model",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "data_loader",
+     srcs = ["data_loader.cc"],
+     hdrs = ["data_loader.h"],
++    visibility = [
++        "//engine:__subpackages__",
++    ],
+     deps = [
+         ":modules",
+         "//base:file_util",
+@@ -88,12 +91,6 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "engine_interface",
+     hdrs = ["engine_interface.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-        "//ios:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":engine_converter_interface",
+         "//protocol:commands_cc_proto",
+@@ -108,10 +105,6 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "supplemental_model_interface",
+     hdrs = ["supplemental_model_interface.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         "//composer:query",
+         "//converter:segments",
+@@ -129,9 +122,6 @@ mozc_cc_library(
+     name = "supplemental_model_mock",
+     testonly = 1,
+     hdrs = ["supplemental_model_mock.h"],
+-    visibility = [
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         ":supplemental_model_interface",
+         "//composer:query",
+@@ -151,10 +141,6 @@ mozc_cc_library(
+     name = "modules",
+     srcs = ["modules.cc"],
+     hdrs = ["modules.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//prediction:__pkg__",
+-    ],
+     deps = [
+         ":supplemental_model_interface",
+         "//converter:connector",
+@@ -203,9 +189,7 @@ mozc_cc_library(
+         "engine.cc",
+     ],
+     hdrs = ["engine.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-    ],
++    visibility = ["//:__subpackages__"],
+     deps = [
+         ":data_loader",
+         ":engine_converter",
+@@ -267,7 +251,6 @@ mozc_cc_library(
+     name = "engine_mock",
+     testonly = 1,
+     hdrs = ["engine_mock.h"],
+-    visibility = ["//session:__pkg__"],
+     deps = [
+         ":engine_converter_interface",
+         ":engine_interface",
+@@ -282,11 +265,6 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "engine_factory",
+     hdrs = ["engine_factory.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//server:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = mozc_select(
+         android = [":android_engine_factory"],
+         default = [":google_engine_factory"],
+@@ -298,10 +276,6 @@ mozc_cc_library(
+     name = "eval_engine_factory",
+     srcs = ["eval_engine_factory.cc"],
+     hdrs = ["eval_engine_factory.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-    ],
+     deps = [
+         ":engine",
+         "//data_manager",
+@@ -323,7 +297,6 @@ filegroup(
+             "//data_manager/oss:mozc.data",
+         ],
+     ),
+-    visibility = ["//converter:__pkg__"],
+ )
+ 
+ mozc_cc_library(
+@@ -394,6 +367,8 @@ mozc_cc_library(
+         "//engine:__subpackages__",
+     ],
+     deps = [
++        ":engine_converter",
++        ":engine_converter_interface",
+         "//base/strings:assign",
+         "//converter:converter_interface",
+         "//converter:segments",
+@@ -407,7 +382,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "engine_converter_interface",
+     hdrs = ["engine_converter_interface.h"],
+-    visibility = ["//session:__pkg__"],
++    visibility = ["//session:__subpackages__"],
+     deps = [
+         "//composer",
+         "//protocol:commands_cc_proto",
+@@ -421,7 +396,6 @@ mozc_cc_library(
+     name = "engine_converter",
+     srcs = ["engine_converter.cc"],
+     hdrs = ["engine_converter.h"],
+-    visibility = ["//session:__pkg__"],
+     deps = [
+         ":candidate_list",
+         ":engine_converter_interface",
+@@ -452,7 +426,6 @@ mozc_cc_test(
+     srcs = ["engine_converter_test.cc"],
+     shard_count = 8,
+     tags = ["noandroid"],  # TODO(b/73698251): disabled due to errors
+-    visibility = ["//converter:__subpackages__"],
+     deps = [
+         ":candidate_list",
+         ":engine_converter",
+@@ -508,6 +481,9 @@ mozc_cc_library(
+     name = "candidate_list",
+     srcs = ["candidate_list.cc"],
+     hdrs = ["candidate_list.h"],
++    visibility = [
++        "//engine:__subpackages__",
++    ],
+     deps = [
+         "//base:hash",
+         "@com_google_absl//absl/container:flat_hash_map",
+@@ -521,6 +497,9 @@ mozc_cc_library(
+     name = "engine_output",
+     srcs = ["engine_output.cc"],
+     hdrs = ["engine_output.h"],
++    visibility = [
++        "//engine:__subpackages__",
++    ],
+     deps = [
+         ":candidate_list",
+         "//base:port",
+diff --git a/src/ipc/BUILD.bazel b/src/ipc/BUILD.bazel
+index e83438e..e5c1bf2 100644
+--- a/src/ipc/BUILD.bazel
++++ b/src/ipc/BUILD.bazel
+@@ -40,7 +40,7 @@ load(
+     "mozc_select",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "ipc",
+@@ -51,14 +51,6 @@ mozc_cc_library(
+         "win32_ipc.cc",
+     ],
+     hdrs = ["ipc.h"],
+-    visibility = [
+-        "//client:__pkg__",
+-        "//gui:__subpackages__",
+-        "//mac:__pkg__",
+-        "//renderer:__subpackages__",
+-        "//session:__pkg__",
+-        "//win32:__subpackages__",
+-    ],
+     deps = [
+         ":ipc_path_manager",
+         "//base:const",
+@@ -90,6 +82,7 @@ mozc_cc_library(
+ proto_library(
+     name = "ipc_proto",
+     srcs = ["ipc.proto"],
++    visibility = ["//visibility:private"],
+ )
+ 
+ cc_proto_library(
+@@ -171,10 +164,6 @@ mozc_cc_library(
+     testonly = True,
+     srcs = ["ipc_mock.cc"],
+     hdrs = ["ipc_mock.h"],
+-    visibility = [
+-        "//client:__pkg__",
+-        "//win32/base:__pkg__",
+-    ],
+     deps = [
+         ":ipc",
+         "//base:version",
+@@ -186,7 +175,6 @@ mozc_cc_library(
+     name = "ipc_test_util",
+     srcs = ["ipc_test_util.cc"],
+     hdrs = ["ipc_test_util.h"],
+-    visibility = ["//renderer:__subpackages__"],
+     deps = [
+         ":ipc",
+         "@com_google_absl//absl/log:check",
+@@ -229,11 +217,6 @@ mozc_cc_library(
+     name = "named_event",
+     srcs = ["named_event.cc"],
+     hdrs = ["named_event.h"],
+-    visibility = [
+-        "//client:__pkg__",
+-        "//renderer:__subpackages__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         "//base:const",
+         "//base:hash",
+@@ -282,7 +265,6 @@ mozc_cc_library(
+     name = "process_watch_dog",
+     srcs = ["process_watch_dog.cc"],
+     hdrs = ["process_watch_dog.h"],
+-    visibility = ["//renderer:__subpackages__"],
+     deps = [
+         "//base:port",
+         "//base:thread",
+@@ -308,6 +290,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "ipc_hdr",
+     textual_hdrs = ["ipc.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         "//base:thread",
+         "@com_google_absl//absl/strings",
+@@ -337,10 +320,10 @@ mozc_cc_test(
+ proto_library(
+     name = "window_info_proto",
+     srcs = ["window_info.proto"],
++    visibility = ["//visibility:private"],
+ )
+ 
+ cc_proto_library(
+     name = "window_info_cc_proto",
+-    visibility = ["//gui:__subpackages__"],
+     deps = [":window_info_proto"],
+ )
+diff --git a/src/mac/BUILD.bazel b/src/mac/BUILD.bazel
+index 9464857..c84f1fc 100644
+--- a/src/mac/BUILD.bazel
++++ b/src/mac/BUILD.bazel
+@@ -43,7 +43,7 @@ load(
+     "MACOS_CODESIGN_IDENTITY",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ # BUILD_TYPE_SELECT is treated as a function, but not a string. This cannot be a value of join().
+ BUILD_TYPE_SELECT = select({
+@@ -60,24 +60,12 @@ mozc_macos_application(
+             "//server:mozc_server_macos": "Resources",
+         },
+         oss_macos = {
+-            "//gui/about_dialog:about_dialog_macos": (
+-                "Resources"
+-            ),
+-            "//gui/config_dialog:config_dialog_macos": (
+-                "Resources"
+-            ),
+-            "//gui/dictionary_tool:dictionary_tool_macos": (
+-                "Resources"
+-            ),
+-            "//gui/error_message_dialog:error_message_dialog_macos": (
+-                "Resources"
+-            ),
+-            "//gui/tool:mozc_prelauncher_macos": (
+-                "Resources"
+-            ),
+-            "//gui/word_register_dialog:word_register_dialog_macos": (
+-                "Resources"
+-            ),
++            "//gui/about_dialog:about_dialog_macos": "Resources",
++            "//gui/config_dialog:config_dialog_macos": "Resources",
++            "//gui/dictionary_tool:dictionary_tool_macos": "Resources",
++            "//gui/error_message_dialog:error_message_dialog_macos": "Resources",
++            "//gui/tool:mozc_prelauncher_macos": "Resources",
++            "//gui/word_register_dialog:word_register_dialog_macos": "Resources",
+             "//renderer:mozc_renderer_macos": "Resources",
+             "//server:mozc_server_macos": "Resources",
+         },
+@@ -106,9 +94,6 @@ mozc_objc_library(
+     name = "common",
+     hdrs = ["common.h"],
+     sdk_frameworks = ["Foundation"],
+-    visibility = [
+-        "//renderer:__pkg__",
+-    ],
+     deps = ["//protocol:commands_cc_proto"],
+ )
+ 
+@@ -116,8 +101,8 @@ mozc_objc_library(
+     name = "mozc_macos_main_lib",
+     srcs = ["main.mm"],
+     sdk_frameworks = [
++        "Carbon",
+         "Cocoa",
+-        "Foundation",
+         "InputMethodKit",
+     ],
+     tags = ["manual"],
+@@ -146,6 +131,7 @@ mozc_objc_library(
+     sdk_frameworks = [
+         "Carbon",
+         "Cocoa",
++        "Foundation",
+         "InputMethodKit",
+     ],
+     tags = ["manual"],
+@@ -254,10 +240,8 @@ genrule(
+     name = "init_kanamap",
+     srcs = ["//data/preedit:mac-kana.tsv"],
+     outs = ["init_kanamap.h"],
+-    cmd = (
+-        "$(location :generate_mapping) --mapname=KanaMap" +
+-        " --result_type='const char *' --filename $< > $@"
+-    ),
++    cmd = ("$(location :generate_mapping) --mapname=KanaMap" +
++           " --result_type='const char *' --filename $< > $@"),
+     tools = [":generate_mapping"],
+ )
+ 
+@@ -265,10 +249,8 @@ genrule(
+     name = "init_specialkeymap",
+     srcs = ["//data/preedit:mac-specialkeys.tsv"],
+     outs = ["init_specialkeymap.h"],
+-    cmd = (
+-        "$(location :generate_mapping) --mapname=SpecialKeyMap" +
+-        " --result_type=KeyEvent::SpecialKey --filename $< > $@"
+-    ),
++    cmd = ("$(location :generate_mapping) --mapname=SpecialKeyMap" +
++           " --result_type=KeyEvent::SpecialKey --filename $< > $@"),
+     tools = [":generate_mapping"],
+ )
+ 
+@@ -276,11 +258,9 @@ genrule(
+     name = "init_specialcharmap",
+     srcs = ["//data/preedit:mac-specialchars.tsv"],
+     outs = ["init_specialcharmap.h"],
+-    cmd = (
+-        "$(location :generate_mapping) --mapname=SpecialCharMap" +
+-        " --key_type=unichar --result_type=KeyEvent::SpecialKey" +
+-        " --filename $< > $@"
+-    ),
++    cmd = ("$(location :generate_mapping) --mapname=SpecialCharMap" +
++           " --key_type=unichar --result_type=KeyEvent::SpecialKey" +
++           " --filename $< > $@"),
+     tools = [":generate_mapping"],
+ )
+ 
+@@ -354,6 +334,7 @@ mozc_objc_library(
+         "Uninstaller/Japanese.lproj/Dialogs.xib",
+     ],
+     sdk_frameworks = [
++        "Carbon",
+         "Cocoa",
+         "Security",
+     ],
+@@ -368,12 +349,11 @@ mozc_objc_library(
+ 
+ mozc_macos_application(
+     name = "uninstaller_macos",
+-    bundle_name = "Uninstall" +
+-                  mozc_select(
+-                      default = "GoogleJapaneseInput",
+-                      oss = "Mozc",
+-                      prod = "GoogleJapaneseInput",
+-                  ),
++    bundle_name = "Uninstall" + mozc_select(
++        default = "GoogleJapaneseInput",
++        oss = "Mozc",
++        prod = "GoogleJapaneseInput",
++    ),
+     infoplists = ["Uninstaller/Info.plist"],
+     strings = [
+         "Uninstaller/English.lproj/InfoPlist.strings",
+@@ -390,8 +370,7 @@ genrule(
+     ),
+     outs = ["preflight.sh"],
+     cmd = " ".join([
+-        "$(location" +
+-        " //build_tools:tweak_macinstaller_script)",
++        "$(location //build_tools:tweak_macinstaller_script)",
+         " --output $@",
+         " --input $<",
+         " --build_type ",
+@@ -407,12 +386,10 @@ genrule(
+     ),
+     outs = ["postflight.sh"],
+     cmd = " ".join([
+-        "$(location" +
+-        " //build_tools:tweak_macinstaller_script)",
++        "$(location //build_tools:tweak_macinstaller_script)",
+         " --output $@",
+         " --input $<",
+-        " --version_file" +
+-        " $(location //base:mozc_version_txt)" +
++        " --version_file $(location //base:mozc_version_txt)",
+         " --build_type ",
+     ]) + BUILD_TYPE_SELECT,  # "dev" or "stable".
+     tools = [
+@@ -481,16 +458,11 @@ genrule(
+     name = "productbuild_files",
+     srcs = [":zipped_installer_files"],
+     outs = ["productbuild_files.zip"],
+-    cmd = "$(location :tweak_installer_files) --productbuild --input $(SRCS)" +
+-          " --output $@" +
+-          mozc_select(
+-              default = " --noqt",
+-              oss_macos = " --oss",
+-              prod_macos = "",
+-          ) +
+-          ' --codesign_identity "' +
+-          MACOS_CODESIGN_IDENTITY +
+-          '"',
++    cmd = "$(location :tweak_installer_files) --productbuild --input $(SRCS) --output $@" + mozc_select(
++        default = " --noqt",
++        oss_macos = " --oss",
++        prod_macos = "",
++    ) + " --codesign_identity \"" + MACOS_CODESIGN_IDENTITY + "\"",
+     # Use local execution instead of sandbox because it uses `codesign` that accesses to keychain.
+     local = True,
+     tags = ["manual"],
+@@ -521,21 +493,18 @@ AUTO_UPDATER_DIR = "installer/client/mac_universal"  # Placeholder
+ 
+ genrule(
+     name = "installer_oss_macos",
+-    srcs = [":tweaked_installer_files"] +
+-           mozc_select(
+-               oss_macos = ["installer/Mozc_template.pkgproj"],
+-               prod_macos = ["installer/Mozc_template.pkgproj"],
+-           ),
++    srcs = [":tweaked_installer_files"] + mozc_select(
++        oss_macos = ["installer/Mozc_template.pkgproj"],
++        prod_macos = ["installer/Mozc_template.pkgproj"],
++    ),
+     outs = ["Mozc_Packages.pkg"],
+     cmd = " ".join([
+         "$(location :build_installer)",
+         "--input $(location :tweaked_installer_files) --output $@" +
+-        "--pkgproj_command" +
+-        " $(location //build_tools:tweak_pkgproj)",
++        "--pkgproj_command $(location //build_tools:tweak_pkgproj)",
+         "--pkgproj_input $(location installer/Mozc_template.pkgproj)",
+         "--pkgproj_output installer.pkgproj",
+-        "--version_file" +
+-        " $(location //base:mozc_version_txt)",
++        "--version_file $(location //base:mozc_version_txt)",
+         "--auto_updater_dir " + AUTO_UPDATER_DIR,
+         "--build_type ",
+     ]) + BUILD_TYPE_SELECT,  # "dev" or "stable"
+@@ -553,8 +522,7 @@ genrule(
+     srcs = ["installer/.keystone_install_template"],
+     outs = [".keystone_install"],
+     cmd = " ".join([
+-        "$(location" +
+-        " //build_tools:tweak_macinstaller_script)",
++        "$(location //build_tools:tweak_macinstaller_script)",
+         "--output $@",
+         "--input $(SRCS)",
+         "--build_type ",
+@@ -577,8 +545,7 @@ genrule(
+     name = "package",
+     srcs = [":productbuild_files"],
+     outs = ["Mozc.pkg"],
+-    cmd = "$(location :build_package) --input $(location :productbuild_files)" +
+-          " --output $@" +
++    cmd = "$(location :build_package) --input $(location :productbuild_files) --output $@" +
+           mozc_select(
+               default = "",
+               oss = " --oss",
+@@ -588,9 +555,6 @@ genrule(
+     # TODO(b/269007577): version_file, auto_updater_dir and build_type should be supported.
+     tags = ["manual"],
+     tools = [":build_package"],
+-    visibility = [
+-        "//:__pkg__",
+-    ],
+ )
+ 
+ genrule(
+@@ -622,7 +586,7 @@ genrule(
+         "chmod u+w $@ &&",
+         "/usr/bin/codesign",
+         "--timestamp --options=runtime",  # For notarization
+-        '--sign "' + MACOS_CODESIGN_IDENTITY + '"',
++        "--sign \"" + MACOS_CODESIGN_IDENTITY + "\"",
+         "--keychain login.keychain",
+         "$@",
+     ]),
+diff --git a/src/prediction/BUILD.bazel b/src/prediction/BUILD.bazel
+index 81c13c2..132be3d 100644
+--- a/src/prediction/BUILD.bazel
++++ b/src/prediction/BUILD.bazel
+@@ -41,11 +41,12 @@ load(
+     "mozc_py_library",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ proto_library(
+     name = "user_history_predictor_proto",
+     srcs = ["user_history_predictor.proto"],
++    visibility = ["//visibility:private"],
+ )
+ 
+ cc_proto_library(
+@@ -56,10 +57,6 @@ cc_proto_library(
+ mozc_cc_library(
+     name = "predictor_interface",
+     hdrs = ["predictor_interface.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         "//converter:segments",
+         "//request:conversion_request",
+@@ -71,11 +68,6 @@ mozc_cc_library(
+     name = "user_history_predictor",
+     srcs = ["user_history_predictor.cc"],
+     hdrs = ["user_history_predictor.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":predictor_interface",
+         ":user_history_predictor_cc_proto",
+@@ -168,10 +160,6 @@ mozc_cc_library(
+         "dictionary_predictor.cc",
+     ],
+     hdrs = ["dictionary_predictor.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         ":dictionary_prediction_aggregator",
+         ":prediction_aggregator_interface",
+@@ -186,6 +174,7 @@ mozc_cc_library(
+         "//converter:connector",
+         "//converter:converter_interface",
+         "//converter:immutable_converter_interface",
++        "//converter:node_list_builder",
+         "//converter:segmenter",
+         "//converter:segments",
+         "//dictionary:pos_matcher",
+@@ -231,6 +220,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "prediction_aggregator_interface",
+     hdrs = ["prediction_aggregator_interface.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":result",
+         "//converter:segments",
+@@ -244,6 +234,7 @@ mozc_cc_library(
+         "dictionary_prediction_aggregator.cc",
+     ],
+     hdrs = ["dictionary_prediction_aggregator.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":number_decoder",
+         ":prediction_aggregator_interface",
+@@ -371,7 +362,7 @@ mozc_cc_library(
+         "single_kanji_prediction_aggregator.cc",
+     ],
+     hdrs = ["single_kanji_prediction_aggregator.h"],
+-    visibility = ["//engine:__pkg__"],
++    visibility = ["//engine:__subpackages__"],
+     deps = [
+         ":prediction_aggregator_interface",
+         ":result",
+@@ -419,10 +410,6 @@ mozc_cc_library(
+     name = "predictor",
+     srcs = ["predictor.cc"],
+     hdrs = ["predictor.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         ":predictor_interface",
+         "//base:util",
+@@ -468,11 +455,6 @@ mozc_cc_library(
+     name = "suggestion_filter",
+     srcs = ["suggestion_filter.cc"],
+     hdrs = ["suggestion_filter.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//data_manager:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         "//base:hash",
+         "//base:util",
+@@ -488,7 +470,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "zero_query_dict",
+     hdrs = ["zero_query_dict.h"],
+-    visibility = ["//engine:__pkg__"],
++    visibility = ["//engine:__subpackages__"],
+     deps = [
+         "//base/container:serialized_string_array",
+         "@com_google_absl//absl/strings",
+@@ -498,6 +480,7 @@ mozc_cc_library(
+ mozc_cc_test(
+     name = "zero_query_dict_test",
+     srcs = ["zero_query_dict_test.cc"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":zero_query_dict",
+         "//base/container:serialized_string_array",
+@@ -509,10 +492,6 @@ mozc_cc_test(
+ mozc_cc_binary(
+     name = "gen_suggestion_filter_main",
+     srcs = ["gen_suggestion_filter_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         "//base:codegen_bytearray_stream",
+         "//base:file_stream",
+@@ -531,20 +510,21 @@ mozc_cc_binary(
+ mozc_py_library(
+     name = "gen_zero_query_util",
+     srcs = ["gen_zero_query_util.py"],
+-    deps = ["//build_tools:serialized_string_array_builder"],
++    deps = [
++        "//build_tools:code_generator_util",
++        "//build_tools:serialized_string_array_builder",
++    ],
+ )
+ 
+ mozc_py_binary(
+     name = "gen_zero_query_number_data",
+     srcs = ["gen_zero_query_number_data.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [":gen_zero_query_util"],
+ )
+ 
+ mozc_py_binary(
+     name = "gen_zero_query_data",
+     srcs = ["gen_zero_query_data.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         ":gen_zero_query_util",
+         "//build_tools:code_generator_util",
+@@ -572,6 +552,7 @@ mozc_cc_test(
+     deps = [
+         ":number_decoder",
+         "//testing:gunit_main",
++        "//testing:mozctest",
+         "@com_google_absl//absl/random",
+         "@com_google_absl//absl/strings",
+     ],
+diff --git a/src/prediction/dictionary_prediction_aggregator.cc b/src/prediction/dictionary_prediction_aggregator.cc
+index aabb3d0..ee2315d 100644
+--- a/src/prediction/dictionary_prediction_aggregator.cc
++++ b/src/prediction/dictionary_prediction_aggregator.cc
+@@ -1666,8 +1666,7 @@ void DictionaryPredictionAggregator::AggregateZeroQuerySuffixPrediction(
+     // input mode. For example, we do not need "です", "。" just after "when".
+     return;
+   }
+-  if (results->empty() || !IsZeroQuerySuffixPredictionDisabled(request) ||
+-      request_util::IsHandwriting(request)) {
++  if (results->empty() || !IsZeroQuerySuffixPredictionDisabled(request)) {
+     // Uses larger cutoff (kPredictionMaxResultsSize) in order to consider
+     // all suffix entries.
+     const size_t cutoff_threshold = kPredictionMaxResultsSize;
+diff --git a/src/prediction/dictionary_prediction_aggregator_test.cc b/src/prediction/dictionary_prediction_aggregator_test.cc
+index f68d034..6aaa716 100644
+--- a/src/prediction/dictionary_prediction_aggregator_test.cc
++++ b/src/prediction/dictionary_prediction_aggregator_test.cc
+@@ -2150,14 +2150,6 @@ TEST_F(DictionaryPredictionAggregatorTest, AggregateZeroQuerySuffixPrediction) {
+     aggregator.AggregateZeroQuerySuffixPrediction(convreq, segments, &results);
+     EXPECT_EQ(results.size(), 1);
+   }
+-  {
+-    // Suffix entries should be aggregated for handwriting
+-    request_->set_is_handwriting(true);
+-    std::vector<Result> results = {Result()};
+-    const ConversionRequest convreq = CreateSuggestionConversionRequest();
+-    aggregator.AggregateZeroQuerySuffixPrediction(convreq, segments, &results);
+-    EXPECT_FALSE(results.empty());
+-  }
+ }
+ 
+ struct EnglishPredictionTestEntry {
+diff --git a/src/prediction/result.h b/src/prediction/result.h
+index 6f6dc67..7264f51 100644
+--- a/src/prediction/result.h
++++ b/src/prediction/result.h
+@@ -58,7 +58,7 @@ enum PredictionType {
+   BIGRAM = 2,
+   // suggests from immutable_converter
+   REALTIME = 4,
+-  // add suffixes like "さん", "が" which matches to the previous context.
++  // add suffixes like "さん", "が" which matches to the pevious context.
+   SUFFIX = 8,
+   // add English words.
+   ENGLISH = 16,
+diff --git a/src/renderer/BUILD.bazel b/src/renderer/BUILD.bazel
+index bd3d727..43c6da9 100644
+--- a/src/renderer/BUILD.bazel
++++ b/src/renderer/BUILD.bazel
+@@ -42,21 +42,13 @@ load(
+ )
+ load("//bazel/win32:build_defs.bzl", "features_gdi")
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "renderer_client",
+     srcs = ["renderer_client.cc"],
+     hdrs = ["renderer_client.h"],
+-    visibility = [
+-        "//client:__pkg__",
+-        "//gui:__subpackages__",
+-        "//mac:__pkg__",
+-        "//renderer:__subpackages__",
+-        "//unix:__subpackages__",
+-        "//visibility:public",
+-        "//win32:__subpackages__",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         ":renderer_interface",
+         "//base:clock",
+@@ -108,7 +100,6 @@ mozc_cc_library(
+     hdrs = ["renderer_server.h"],
+     # TODO(b/180075250): IPC tests don't pass in forge
+     tags = ["nowin"],
+-    visibility = ["//renderer:__subpackages__"],
+     deps = [
+         ":renderer_interface",
+         "//base:const",
+@@ -156,7 +147,6 @@ mozc_cc_library(
+         "table_layout_interface.h",
+     ],
+     hdrs = ["table_layout.h"],
+-    visibility = ["//renderer:__subpackages__"],
+     deps = [
+         "//base:coordinates",
+         "@com_google_absl//absl/log",
+@@ -183,19 +173,13 @@ mozc_cc_library(
+     name = "window_util",
+     srcs = ["window_util.cc"],
+     hdrs = ["window_util.h"],
+-    visibility = ["//renderer:__subpackages__"],
+     deps = ["//base:coordinates"],
+ )
+ 
+ mozc_cc_library(
+     name = "renderer_interface",
+     hdrs = ["renderer_interface.h"],
+-    visibility = [
+-        "//mac:__pkg__",
+-        "//renderer:__subpackages__",
+-        "//unix:__subpackages__",
+-        "//visibility:public",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         "//client:client_interface",
+         "//protocol:renderer_cc_proto",
+@@ -206,10 +190,7 @@ mozc_cc_library(
+     name = "renderer_mock",
+     testonly = True,
+     hdrs = ["renderer_mock.h"],
+-    visibility = [
+-        "//unix:__subpackages__",
+-        "//visibility:public",
+-    ],
++    visibility = ["//visibility:public"],
+     deps = [
+         ":renderer_interface",
+         "//client:client_interface",
+@@ -235,7 +216,6 @@ mozc_cc_library(
+     srcs = ["renderer_style_handler.cc"],
+     hdrs = ["renderer_style_handler.h"],
+     features = features_gdi(),  # for Windows
+-    visibility = ["//renderer:__subpackages__"],
+     deps = [
+         "//base:singleton",
+         "//protocol:renderer_cc_proto",
+@@ -266,13 +246,7 @@ mozc_macos_application(
+     bundle_id = MACOS_BUNDLE_ID_PREFIX + ".Renderer",
+     bundle_name = BRANDING + "Renderer",
+     infoplists = ["mac/Info.plist"],
+-    resources = [
+-        "//data/images/mac:candidate_window_logo.tiff",
+-    ],
+-    visibility = [
+-        "//mac:__pkg__",
+-        "//renderer:__subpackages__",
+-    ],
++    resources = ["//data/images/mac:candidate_window_logo.tiff"],
+     deps = [":mozc_renderer_main_macos"],
+     # When we support Breakpad, uncomment the following block.
+     # additional_contents = {
+@@ -284,7 +258,7 @@ mozc_cc_library(
+     name = "mozc_renderer_main_macos",
+     srcs = mozc_select(macos = ["mac/mac_renderer_main.cc"]),
+     deps = [
+-        ":init_mozc_renderer",
++        "//renderer:init_mozc_renderer",
+     ] + mozc_select(
+         macos = [":mozc_renderer_lib_macos"],
+     ),
+diff --git a/src/renderer/qt/BUILD.bazel b/src/renderer/qt/BUILD.bazel
+index 1a79007..de9adce 100644
+--- a/src/renderer/qt/BUILD.bazel
++++ b/src/renderer/qt/BUILD.bazel
+@@ -39,7 +39,7 @@ load(
+     "mozc_qt_moc",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ licenses(["notice"])
+ 
+@@ -47,7 +47,6 @@ mozc_cc_binary(
+     name = "mozc_renderer",
+     srcs = ["qt_renderer_main.cc"],
+     defines = ["ENABLE_QT_RENDERER"],
+-    visibility = ["//unix:__subpackages__"],
+     deps = [
+         ":qt_server",
+         "//renderer:init_mozc_renderer",
+diff --git a/src/renderer/win32/BUILD.bazel b/src/renderer/win32/BUILD.bazel
+index 5708d7c..3df8996 100644
+--- a/src/renderer/win32/BUILD.bazel
++++ b/src/renderer/win32/BUILD.bazel
+@@ -40,7 +40,7 @@ load(
+ )
+ 
+ package(
+-    default_visibility = ["//visibility:private"],
++    default_visibility = ["//renderer:__pkg__"],
+     # Package default option is not configurable with select.
+     features = ["gdi"],
+ )
+@@ -56,9 +56,7 @@ mozc_win32_cc_prod_binary(
+     static_crt = False,
+     tags = MOZC_TAGS.WIN_ONLY,
+     target_compatible_with = ["@platforms//os:windows"],
+-    visibility = [
+-        "//win32/installer:__subpackages__",  # Scheuklappen: keep
+-    ],
++    visibility = ["//win32/installer:__subpackages__"],  # Scheuklappen: keep
+     deps = [
+         ":win32_renderer_main_resources",
+         ":win32_server",
+diff --git a/src/request/BUILD.bazel b/src/request/BUILD.bazel
+index a657782..40cf751 100644
+--- a/src/request/BUILD.bazel
++++ b/src/request/BUILD.bazel
+@@ -33,19 +33,11 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "conversion_request",
+     hdrs = ["conversion_request.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-        "//dictionary:__subpackages__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "//base:util",
+         "//base/strings:assign",
+@@ -75,13 +67,6 @@ mozc_cc_test(
+ mozc_cc_library(
+     name = "request_util",
+     hdrs = ["request_util.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-        "//dictionary:__subpackages__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         ":conversion_request",
+         "//composer",
+@@ -94,14 +79,6 @@ mozc_cc_library(
+     testonly = 1,
+     srcs = ["request_test_util.cc"],
+     hdrs = ["request_test_util.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         "//protocol:commands_cc_proto",
+     ],
+diff --git a/src/rewriter/BUILD.bazel b/src/rewriter/BUILD.bazel
+index e0797fe..8926305 100644
+--- a/src/rewriter/BUILD.bazel
++++ b/src/rewriter/BUILD.bazel
+@@ -39,15 +39,11 @@ load(
+     "mozc_select_enable_usage_rewriter",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "rewriter_interface",
+     textual_hdrs = ["rewriter_interface.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         "//converter:segments",
+         "//request:conversion_request",
+@@ -58,6 +54,7 @@ mozc_cc_test(
+     name = "merger_rewriter_test",
+     size = "small",
+     srcs = ["merger_rewriter_test.cc"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":merger_rewriter",
+         ":rewriter_interface",
+@@ -186,6 +183,7 @@ mozc_cc_library(
+         "//base:file_util",
+         "//base:util",
+         "//base:vlog",
++        "//converter:converter_interface",
+         "//converter:segments",
+         "//protocol:config_cc_proto",
+         "//request:conversion_request",
+@@ -222,7 +220,6 @@ mozc_cc_library(
+     name = "date_rewriter",
+     srcs = ["date_rewriter.cc"],
+     hdrs = ["date_rewriter.h"],
+-    visibility = ["//converter:__pkg__"],
+     deps = [
+         ":rewriter_interface",
+         "//base:clock",
+@@ -232,6 +229,7 @@ mozc_cc_library(
+         "//base:vlog",
+         "//base/strings:unicode",
+         "//composer",
++        "//converter:converter_interface",
+         "//converter:segments",
+         "//dictionary:dictionary_interface",
+         "//dictionary:dictionary_token",
+@@ -316,7 +314,9 @@ mozc_cc_test(
+         ":rewriter_interface",
+         "//base:number_util",
+         "//base/strings:assign",
++        "//composer",
+         "//config:character_form_manager",
++        "//config:config_handler",
+         "//converter:segments",
+         "//converter:segments_matchers",
+         "//data_manager/testing:mock_data_manager",
+@@ -339,6 +339,7 @@ mozc_cc_library(
+     deps = [
+         ":rewriter_interface",
+         "//base:util",
++        "//converter:converter_interface",
+         "//converter:segments",
+         "//protocol:commands_cc_proto",
+         "//request:conversion_request",
+@@ -375,9 +376,6 @@ mozc_cc_library(
+         "transliteration_rewriter.cc",
+     ],
+     hdrs = ["transliteration_rewriter.h"],
+-    visibility = [
+-        "//session:__pkg__",
+-    ],
+     deps = [
+         ":rewriter_interface",
+         "//base:japanese_util",
+@@ -599,7 +597,6 @@ mozc_cc_library(
+     name = "variants_rewriter",
+     srcs = ["variants_rewriter.cc"],
+     hdrs = ["variants_rewriter.h"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         ":rewriter_interface",
+         "//base:japanese_util",
+@@ -885,10 +882,6 @@ mozc_cc_test(
+ mozc_cc_binary(
+     name = "gen_symbol_rewriter_dictionary_main",
+     srcs = ["gen_symbol_rewriter_dictionary_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":dictionary_generator",
+         "//base:file_stream",
+@@ -913,7 +906,6 @@ mozc_cc_binary(
+ mozc_cc_binary(
+     name = "gen_emoticon_rewriter_data",
+     srcs = ["gen_emoticon_rewriter_data.cc"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//base:file_stream",
+         "//base:init_mozc_buildtool",
+@@ -930,7 +922,6 @@ mozc_cc_binary(
+ mozc_py_binary(
+     name = "gen_emoji_rewriter_data",
+     srcs = ["gen_emoji_rewriter_data.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//build_tools:code_generator_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -1014,7 +1005,6 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_single_kanji_rewriter_data",
+     srcs = ["gen_single_kanji_rewriter_data.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//build_tools:code_generator_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -1024,7 +1014,6 @@ mozc_py_binary(
+ mozc_cc_binary(
+     name = "gen_single_kanji_noun_prefix_data",
+     srcs = ["gen_single_kanji_noun_prefix_data.cc"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//base:init_mozc_buildtool",
+         "//data_manager:serialized_dictionary",
+@@ -1055,10 +1044,6 @@ mozc_cc_test(
+ mozc_py_binary(
+     name = "gen_counter_suffix_array",
+     srcs = ["gen_counter_suffix_array.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         "//build_tools:code_generator_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -1293,7 +1278,6 @@ mozc_cc_test(
+ mozc_cc_binary(
+     name = "gen_usage_rewriter_dictionary_main",
+     srcs = ["gen_usage_rewriter_dictionary_main.cc"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//base:file_stream",
+         "//base:init_mozc_buildtool",
+@@ -1366,10 +1350,6 @@ mozc_cc_test(
+ mozc_py_binary(
+     name = "gen_reading_correction_data",
+     srcs = ["gen_reading_correction_data.py"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         "//build_tools:code_generator_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -1431,7 +1411,6 @@ mozc_cc_library(
+ mozc_py_binary(
+     name = "gen_a11y_description_rewriter_data",
+     srcs = ["gen_a11y_description_rewriter_data.py"],
+-    visibility = ["//data_manager:__subpackages__"],
+     deps = [
+         "//build_tools:code_generator_util",
+         "//build_tools:serialized_string_array_builder",
+@@ -1461,10 +1440,6 @@ mozc_cc_library(
+         "rewriter.cc",
+     ],
+     hdrs = ["rewriter.h"],
+-    visibility = [
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-    ],
+     deps = [
+         ":a11y_description_rewriter",
+         ":calculator_rewriter",
+@@ -1518,6 +1493,7 @@ mozc_cc_test(
+     deps = [
+         "rewriter",
+         ":rewriter_interface",
++        "//converter:converter_mock",
+         "//converter:segments",
+         "//data_manager/testing:mock_data_manager",
+         "//engine:modules",
+@@ -1565,10 +1541,6 @@ mozc_cc_library(
+ mozc_cc_binary(
+     name = "gen_collocation_data_main",
+     srcs = ["gen_collocation_data_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":gen_existence_data",
+         "//base:file_stream",
+@@ -1581,10 +1553,6 @@ mozc_cc_binary(
+ mozc_cc_binary(
+     name = "gen_collocation_suppression_data_main",
+     srcs = ["gen_collocation_suppression_data_main.cc"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//data_manager:__subpackages__",
+-    ],
+     deps = [
+         ":gen_existence_data",
+         "//base:file_stream",
+@@ -1616,6 +1584,7 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "merger_rewriter",
+     hdrs = ["merger_rewriter.h"],
++    visibility = ["//visibility:private"],
+     deps = [
+         ":rewriter_interface",
+         "//converter:segments",
+diff --git a/src/rewriter/calculator/BUILD.bazel b/src/rewriter/calculator/BUILD.bazel
+index dbfa50b..58a0708 100644
+--- a/src/rewriter/calculator/BUILD.bazel
++++ b/src/rewriter/calculator/BUILD.bazel
+@@ -36,14 +36,13 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "calculator",
+     srcs = ["calculator.cc"],
+     hdrs = ["calculator.h"],
+     textual_hdrs = ["parser.c.inc"],
+-    visibility = ["//rewriter:__pkg__"],
+     deps = [
+         "//base:japanese_util",
+         "//base:number_util",
+diff --git a/src/server/BUILD.bazel b/src/server/BUILD.bazel
+index cd5ad3e..bb76262 100644
+--- a/src/server/BUILD.bazel
++++ b/src/server/BUILD.bazel
+@@ -46,13 +46,10 @@ load(
+     "MACOS_BUNDLE_ID_PREFIX",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_binary(
+     name = "mozc_server",
+-    visibility = [
+-        "//unix:__pkg__",
+-    ],
+     deps = [
+         ":mozc_server_lib",
+     ] + mozc_select(
+@@ -70,9 +67,6 @@ mozc_win32_cc_prod_binary(
+     static_crt = False,
+     tags = MOZC_TAGS.WIN_ONLY,
+     target_compatible_with = ["@platforms//os:windows"],
+-    visibility = [
+-        "//win32:__subpackages__",
+-    ],
+     deps = [
+         ":mozc_server_lib",
+         ":mozc_server_resources",
+@@ -122,9 +116,6 @@ mozc_macos_application(
+     bundle_id = MACOS_BUNDLE_ID_PREFIX + ".Converter",
+     bundle_name = BRANDING + "Converter",
+     infoplists = ["Info.plist"],
+-    visibility = [
+-        "//mac:__pkg__",
+-    ],
+     deps = [":mozc_server_lib"],
+     # When we support Breakpad, uncomment the following block.
+     # additional_contents = {
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index dca8461..7b167a5 100644
+index 8bfcbf8..7b167a5 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
-@@ -154,6 +154,7 @@ mozc_cc_library(
-         "//android:__subpackages__",
-         "//ios:__subpackages__",
-         "//server:__subpackages__",
+@@ -42,17 +42,12 @@ load(
+ )
+ load("//bazel:run_build_tool.bzl", "mozc_run_build_tool")
+ 
+-package(default_visibility = ["//visibility:private"])
+-
+ mozc_cc_library(
+     name = "session",
+     srcs = ["session.cc"],
+     hdrs = ["session.h"],
+     visibility = [
+-        "//android/jni:__pkg__",
+-        "//evaluation/candidates_diff_checker:__pkg__",
+-        "//ios:__pkg__",
+-        "//server:__pkg__",
++        "//evaluation:__subpackages__",
+     ],
+     deps = [
+         ":ime_context",
+@@ -109,6 +104,7 @@ mozc_cc_test(
+         "//rewriter:transliteration_rewriter",
+         "//testing:gunit_main",
+         "//testing:mozctest",
++        "//testing:testing_util",
+         "//transliteration",
+         "@com_google_absl//absl/log",
+         "@com_google_absl//absl/log:check",
+@@ -155,9 +151,10 @@ mozc_cc_library(
+     ],
+     hdrs = ["session_handler.h"],
+     visibility = [
+-        "//android/jni:__pkg__",
+-        "//ios:__pkg__",
+-        "//server:__pkg__",
++        "//android:__subpackages__",
++        "//ios:__subpackages__",
++        "//server:__subpackages__",
 +        "//unix/fcitx5:__subpackages__",
      ],
      deps = [
          ":keymap",
-@@ -353,6 +354,7 @@ mozc_cc_library(
+@@ -268,7 +265,9 @@ mozc_cc_library(
+     ],
+     hdrs = ["session_server.h"],
+     tags = ["noandroid"],
+-    visibility = ["//server:__pkg__"],
++    visibility = [
++        "//server:__subpackages__",
++    ],
+     deps = [
+         ":session_handler",
+         "//base:vlog",
+@@ -354,8 +353,9 @@ mozc_cc_library(
+     srcs = ["key_info_util.cc"],
      hdrs = ["key_info_util.h"],
      visibility = [
-         "//client:__subpackages__",
+-        "//client:__pkg__",
+-        "//win32/base:__pkg__",
++        "//client:__subpackages__",
 +        "//unix/fcitx5:__subpackages__",
-         "//win32:__subpackages__",
++        "//win32:__subpackages__",
      ],
      deps = [
+         ":keymap",
+@@ -413,8 +413,8 @@ mozc_cc_library(
+     ],
+     hdrs = ["random_keyevents_generator.h"],
+     visibility = [
+-        "//client:__pkg__",
+-        "//server:__pkg__",
++        "//client:__subpackages__",
++        "//server:__subpackages__",
+     ],
+     deps = [
+         ":keymap",
+@@ -574,6 +574,9 @@ mozc_cc_library(
+     name = "ime_context",
+     srcs = ["ime_context.cc"],
+     hdrs = ["ime_context.h"],
++    visibility = [
++        "//session:__subpackages__",
++    ],
+     deps = [
+         ":key_event_transformer",
+         ":keymap",
+@@ -594,7 +597,10 @@ mozc_cc_library(
+     name = "keymap",
+     srcs = ["keymap.cc"],
+     hdrs = ["keymap.h"],
+-    visibility = ["//gui/config_dialog:__pkg__"],
++    visibility = [
++        "//gui/config_dialog:__subpackages__",
++        "//session:__subpackages__",
++    ],
+     deps = [
+         "//base:config_file_stream",
+         "//base:file_stream",
+@@ -618,6 +624,9 @@ mozc_cc_library(
+     name = "key_event_transformer",
+     srcs = ["key_event_transformer.cc"],
+     hdrs = ["key_event_transformer.h"],
++    visibility = [
++        "//session:__subpackages__",
++    ],
+     deps = [
+         "//base:japanese_util",
+         "//composer:key_event_util",
+diff --git a/src/storage/BUILD.bazel b/src/storage/BUILD.bazel
+index 8bb65fe..19be219 100644
+--- a/src/storage/BUILD.bazel
++++ b/src/storage/BUILD.bazel
+@@ -36,16 +36,12 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "lru_storage",
+     srcs = ["lru_storage.cc"],
+     hdrs = ["lru_storage.h"],
+-    visibility = [
+-        "//config:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "//base:bits",
+         "//base:clock",
+@@ -69,13 +65,6 @@ mozc_cc_library(
+ mozc_cc_library(
+     name = "lru_cache",
+     hdrs = ["lru_cache.h"],
+-    visibility = [
+-        "//:__subpackages__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-        "//unix/emacs:__pkg__",
+-    ],
+     deps = [
+         "@com_google_absl//absl/container:flat_hash_map",
+         "@com_google_absl//absl/log:check",
+@@ -95,10 +84,6 @@ mozc_cc_library(
+     name = "existence_filter",
+     srcs = ["existence_filter.cc"],
+     hdrs = ["existence_filter.h"],
+-    visibility = [
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-    ],
+     deps = [
+         "//base:bits",
+         "//base:vlog",
+@@ -151,7 +136,6 @@ mozc_cc_library(
+     name = "encrypted_string_storage",
+     srcs = ["encrypted_string_storage.cc"],
+     hdrs = ["encrypted_string_storage.h"],
+-    visibility = ["//prediction:__pkg__"],
+     deps = [
+         "//base:encryptor",
+         "//base:file_stream",
+diff --git a/src/transliteration/BUILD.bazel b/src/transliteration/BUILD.bazel
+index 0a4e4a3..59d20da 100644
+--- a/src/transliteration/BUILD.bazel
++++ b/src/transliteration/BUILD.bazel
+@@ -36,20 +36,13 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_cc_library(
+     name = "transliteration",
+     srcs = ["transliteration.cc"],
+     hdrs = ["transliteration.h"],
+-    visibility = [
+-        "//composer:__pkg__",
+-        "//converter:__pkg__",
+-        "//engine:__pkg__",
+-        "//prediction:__pkg__",
+-        "//rewriter:__pkg__",
+-        "//session:__pkg__",
+-    ],
++    deps = ["//base:port"],
+ )
+ 
+ mozc_cc_test(
+diff --git a/src/unix/BUILD.bazel b/src/unix/BUILD.bazel
+index 3ad96f7..b69ce0b 100644
+--- a/src/unix/BUILD.bazel
++++ b/src/unix/BUILD.bazel
+@@ -39,7 +39,7 @@ load(
+     "LINUX_MOZC_SERVER_DIR",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ genrule(
+     name = "icons",
+@@ -76,9 +76,6 @@ genrule(
+     outs = ["icons.zip"],
+     cmd = "$(location :build_icons) --inputs $(SRCS) --output $@",
+     tools = [":build_icons"],
+-    visibility = [
+-        "//unix:__subpackages__",
+-    ],
+ )
+ 
+ mozc_py_binary(
+@@ -101,16 +98,15 @@ genrule(
+     outs = ["mozc.zip"],
+     cmd = " ".join([
+         "$(location :build_package) --inputs $(SRCS) --output $@",
+-        '--mozc_dir "' + LINUX_MOZC_SERVER_DIR + '"',
+-        '--mozc_icons_dir "' + LINUX_MOZC_ICONS_DIR + '"',
+-        '--ibus_component_dir "' + IBUS_COMPONENT_DIR + '"',
+-        '--ibus_mozc_path "' + IBUS_MOZC_PATH + '"',
+-        '--ibus_mozc_install_dir "' + IBUS_MOZC_INSTALL_DIR + '"',
+-        '--emacs_client_dir "' + EMACS_MOZC_CLIENT_DIR + '"',
+-        '--emacs_helper_dir "' + EMACS_MOZC_HELPER_DIR + '"',
++        "--mozc_dir \"" + LINUX_MOZC_SERVER_DIR + "\"",
++        "--mozc_icons_dir \"" + LINUX_MOZC_ICONS_DIR + "\"",
++        "--ibus_component_dir \"" + IBUS_COMPONENT_DIR + "\"",
++        "--ibus_mozc_path \"" + IBUS_MOZC_PATH + "\"",
++        "--ibus_mozc_install_dir \"" + IBUS_MOZC_INSTALL_DIR + "\"",
++        "--emacs_client_dir \"" + EMACS_MOZC_CLIENT_DIR + "\"",
++        "--emacs_helper_dir \"" + EMACS_MOZC_HELPER_DIR + "\"",
+     ]),
+     tools = [":build_package"],
+-    visibility = ["//:__pkg__"],
+ )
+ 
+ mozc_py_binary(
+diff --git a/src/unix/emacs/BUILD.bazel b/src/unix/emacs/BUILD.bazel
+index 19a321b..d831c2a 100644
+--- a/src/unix/emacs/BUILD.bazel
++++ b/src/unix/emacs/BUILD.bazel
+@@ -34,7 +34,7 @@ load(
+     "mozc_cc_test",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ exports_files(["mozc.el"])
+ 
+@@ -44,7 +44,6 @@ mozc_cc_binary(
+     copts = [
+         "$(STACK_FRAME_UNLIMITED)",  # mozc_emacs_helper.cc
+     ],
+-    visibility = ["//unix:__subpackages__"],
+     deps = [
+         ":mozc_emacs_helper_lib",
+         "//base:init_mozc",
 diff --git a/src/unix/fcitx/BUILD.bazel b/src/unix/fcitx/BUILD.bazel
 new file mode 100644
 index 0000000..76beb76
@@ -10501,3 +12809,62 @@ index 0000000..8370b74
 +}  // namespace fcitx
 +
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
+diff --git a/src/unix/ibus/BUILD.bazel b/src/unix/ibus/BUILD.bazel
+index 12ee508..99e32b4 100644
+--- a/src/unix/ibus/BUILD.bazel
++++ b/src/unix/ibus/BUILD.bazel
+@@ -45,7 +45,7 @@ load(
+     "LINUX_MOZC_SERVER_DIR",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ licenses(["notice"])
+ 
+@@ -67,7 +67,6 @@ genrule(
+         "> $@",
+     ]),
+     tools = [":gen_mozc_xml_main"],
+-    visibility = ["//unix:__subpackages__"],
+ )
+ 
+ genrule(
+@@ -147,7 +146,7 @@ mozc_cc_library(
+         "path_util.h",
+     ],
+     local_defines = [
+-        'MOZC_IBUS_INSTALL_DIR=\\"' + IBUS_MOZC_INSTALL_DIR + '\\"',
++        "MOZC_IBUS_INSTALL_DIR=\\\"" + IBUS_MOZC_INSTALL_DIR + "\\\"",
+     ],
+     deps = [
+         "//base:util",
+@@ -286,7 +285,6 @@ mozc_cc_binary(
+         ":gen_mozc_xml",
+         "//unix:icons",
+     ],
+-    visibility = ["//unix:__subpackages__"],
+     deps = [
+         ":ibus_config",
+         ":ibus_header",
+diff --git a/src/win32/cache_service/BUILD.bazel b/src/win32/cache_service/BUILD.bazel
+index e18d679..d0d26a6 100644
+--- a/src/win32/cache_service/BUILD.bazel
++++ b/src/win32/cache_service/BUILD.bazel
+@@ -40,7 +40,7 @@ load(
+     "mozc_win32_resource_from_template",
+ )
+ 
+-package(default_visibility = ["//visibility:private"])
++package(default_visibility = ["//:__subpackages__"])
+ 
+ mozc_win32_cc_prod_binary(
+     name = "mozc_cache_service",
+@@ -80,7 +80,6 @@ mozc_cc_library(
+     hdrs = ["cache_service_manager.h"],
+     tags = MOZC_TAGS.WIN_ONLY,
+     target_compatible_with = ["@platforms//os:windows"],
+-    visibility = ["//win32/custom_action:__pkg__"],
+     deps = [
+         ":win32_service_state_cc_proto",
+         "//base:const",
