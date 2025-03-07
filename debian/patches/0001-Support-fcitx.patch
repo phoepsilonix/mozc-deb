@@ -4644,7 +4644,7 @@ index 0000000..ce54291
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
 diff --git a/src/unix/fcitx5/BUILD.bazel b/src/unix/fcitx5/BUILD.bazel
 new file mode 100644
-index 0000000..6dde6b6
+index 0000000..1f6cb36
 --- /dev/null
 +++ b/src/unix/fcitx5/BUILD.bazel
 @@ -0,0 +1,182 @@
@@ -4710,7 +4710,7 @@ index 0000000..6dde6b6
 +        "//base:vlog",
 +        "//config:config_handler",
 +        "//data_manager/oss:oss_data_manager",
-+        "//engine:engine",
++        "//engine",
 +        "//protocol:commands_cc_proto",
 +        "//protocol:config_cc_proto",
 +        "//session:key_info_util",
