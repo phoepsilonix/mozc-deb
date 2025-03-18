@@ -127,8 +127,9 @@ jobs:
           id
       - name: Setup Mozc source
         run: |
-          sudo git clone --filter=tree:0 -b master https://github.com/phoepsilonix/mozc.git source
+          sudo git clone --filter=tree:0 https://github.com/phoepsilonix/mozc.git source
           cd source
+          git checkout master
           sudo git submodule update --init
 
       - name: Setup Variables
