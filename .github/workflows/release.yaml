@@ -129,7 +129,7 @@ jobs:
         run: |
           sudo git clone --filter=tree:0 https://github.com/phoepsilonix/mozc.git source
           cd source
-          git checkout master
+          sudo git checkout master
           sudo git submodule update --init
 
       - name: Setup Variables
