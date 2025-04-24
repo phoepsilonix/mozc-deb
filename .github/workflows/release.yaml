@@ -57,7 +57,38 @@ jobs:
             apt-get install -y sudo wget git
             echo "non_root=builduser" >> $GITHUB_OUTPUT
           elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
-            sudo apt-get update
+            # apt-get updateを実行し、エラーメッセージをキャッチ
+            ERR=$(sudo apt-get update 2>&1) || true
+
+            # エラーが発生した場合
+            echo $ERR|grep -i Codename
+            ERR2=$(echo -n $ERR|grep -i Codename)
+            echo "ERR2: "$ERR2
+            if [ ! -z "$ERR2" ]; then
+                echo "CHECK1:$ERR2"  # エラーメッセージを表示
+
+                # コーディング名を抽出
+                REPO1=$(echo -n "$ERR2" | grep Codename | sed "s|.*Codename' .*'\(.*\)'.*'\(.*\)'|\1|")
+                REPO2=$(echo -n "$ERR2" | grep Codename | sed "s|.*Codename' .*'\(.*\)'.*'\(.*\)'|\2|")
+
+                echo "REPO:$REPO1 $REPO2"
+
+                # リポジトリ設定を更新
+                sudo sed -i "s|$REPO1|$REPO2|g" /etc/apt/sources.list.d/ubuntu.sources
+                sudo sed -i "s|devel|$REPO2|g" /etc/apt/sources.list.d/ubuntu.sources
+
+                # 再度apt-get updateを実行
+                sudo apt-get update
+            fi
+
+            # エラー情報を表示
+            echo "ERR2: $ERR2, $REPO1, $REPO2"
+
+            echo "apt1"
+            cat /etc/apt/sources.list||true
+            echo "apt2"
+            cat /etc/apt/sources.list.d/ubuntu.sources||true
+            
             sudo apt-get install -y apt-utils wget software-properties-common
             #sudo add-apt-repository ppa:apt-fast/stable
             sudo apt-get update
