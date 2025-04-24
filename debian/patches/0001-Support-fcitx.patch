@@ -8503,10 +8503,10 @@ index 0000000..89b1a40
 +#endif  // MOZC_UNIX_FCITX_FCITX_MOZC_H_
 diff --git a/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in b/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in
 new file mode 100644
-index 0000000..86988f1
+index 0000000..2a23967
 --- /dev/null
 +++ b/src/unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,33 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<component type="addon">
 +  <id>org.fcitx.Fcitx5.Addon.Mozc</id>
@@ -8523,6 +8523,7 @@ index 0000000..86988f1
 +  <url type="vcs-browser">https://github.com/fcitx/mozc</url>
 +  <project_group>Fcitx</project_group>
 +  <releases>
++    <release version="2.31.5810.102" date="2025-04-24"></release>
 +    <release version="2.31.5712.102" date="2025-01-16"></release>
 +    <release version="2.30.5618.102" date="2024-10-10"></release>
 +    <release version="2.30.5595.102" date="2024-09-17"></release>
@@ -9870,7 +9871,7 @@ index 0000000..83fbc98
 +msgstr ""
 diff --git a/src/unix/fcitx5/po/vi.po b/src/unix/fcitx5/po/vi.po
 new file mode 100644
-index 0000000..736c250
+index 0000000..962789d
 --- /dev/null
 +++ b/src/unix/fcitx5/po/vi.po
 @@ -0,0 +1,139 @@
@@ -9885,7 +9886,7 @@ index 0000000..736c250
 +msgstr ""
 +"Project-Id-Version: fcitx5-mozc\n"
 +"Report-Msgid-Bugs-To: fcitx-dev@googlegroups.com\n"
-+"POT-Creation-Date: 2025-03-22 20:24+0000\n"
++"POT-Creation-Date: 2025-04-22 20:24+0000\n"
 +"PO-Revision-Date: 2017-11-23 05:28+0000\n"
 +"Last-Translator: hoanghuy309 <hoanghuy309@gmail.com>, 2025\n"
 +"Language-Team: Vietnamese (https://app.transifex.com/fcitx/teams/12005/vi/)\n"
@@ -9905,7 +9906,7 @@ index 0000000..736c250
 +
 +#: mozc_engine.h:64
 +msgid "All"
-+msgstr ""
++msgstr "Tất cả"
 +
 +#: mozc_engine.h:67
 +msgid "Always"
@@ -9913,7 +9914,7 @@ index 0000000..736c250
 +
 +#: mozc_engine.h:100 mozc_engine.cc:185
 +msgid "Configuration Tool"
-+msgstr ""
++msgstr "Công Cụ Cấu Hình"
 +
 +#: mozc_engine.h:102 mozc_engine.cc:193
 +msgid "Dictionary Tool"
@@ -9933,7 +9934,7 @@ index 0000000..736c250
 +
 +#: mozc_engine.h:64
 +msgid "Follow Global Configuration"
-+msgstr ""
++msgstr "Theo Cấu Hình Chung"
 +
 +#. Full width ASCII letter A.
 +#: mozc_engine.h:72 mozc_engine.cc:96
