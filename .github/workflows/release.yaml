@@ -58,11 +58,11 @@ jobs:
             echo "non_root=builduser" >> $GITHUB_OUTPUT
           elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
             # apt-get updateを実行し、エラーメッセージをキャッチ
-            ERR=$(sudo apt-get update 2>&1 || true)
+            ERR=$(sudo apt-get update 2>&1) ||true
+            echo "ERR" $ERR
 
             # エラーが発生した場合
-            echo $ERR|grep -i Codename
-            ERR2=$(echo -n $ERR|grep -i Codename)
+            ERR2=$(echo -n $ERR|grep -i Codename) || true
             echo "ERR2: "$ERR2
             if [ ! -z "$ERR2" ]; then
                 echo "CHECK1:$ERR2"  # エラーメッセージを表示
@@ -88,7 +88,7 @@ jobs:
             cat /etc/apt/sources.list||true
             echo "apt2"
             cat /etc/apt/sources.list.d/ubuntu.sources||true
-            
+            echo "Rhino: install"
             sudo apt-get install -y apt-utils wget software-properties-common
             #sudo add-apt-repository ppa:apt-fast/stable
             sudo apt-get update
