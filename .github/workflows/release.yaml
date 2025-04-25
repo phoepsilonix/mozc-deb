@@ -58,7 +58,7 @@ jobs:
             echo "non_root=builduser" >> $GITHUB_OUTPUT
           elif [[ "${{ matrix.os }}" == "Rhino" ]]; then
             # apt-get updateを実行し、エラーメッセージをキャッチ
-            ERR=$(sudo apt-get update 2>&1) || true
+            ERR=$(sudo apt-get update 2>&1 || true)
 
             # エラーが発生した場合
             echo $ERR|grep -i Codename
