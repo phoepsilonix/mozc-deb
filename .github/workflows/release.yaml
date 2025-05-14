@@ -423,6 +423,7 @@ jobs:
           split -d -l $ROWS --additional-suffix=.txt ../finish-dict.txt dictionary
           cp -af ./dictionary*.txt "$srcdir/src/data/dictionary_oss/"
           sync
+          grep "みにおぼえ" ./dictionary*.txt
       - name: Build(-with-jp-dict)
         env:
           USE_BAZEL_VERSION: "8.2.1"
