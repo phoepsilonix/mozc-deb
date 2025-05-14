@@ -392,10 +392,9 @@ jobs:
           echo '1. Build the rust program(dict-to-mozc), it may take some time...'
           which dict-to-mozc
           echo '2. Convert SudachiDict to Mozc System Dictionary format. It may take some time...'
-          cat "${srcdir}"/src/data/dictionary_oss/dictionary*.txt > all-dict.txt
           cat small_lex.csv core_lex.csv notcore_lex.csv > all.csv
           cp ${srcdir}/src/data/dictionary_oss/id.def ./
-          dict-to-mozc -s -i ./id.def -f all.csv >> all-dict.txt
+          dict-to-mozc -s -i ./id.def -f all.csv > all-dict.txt
           echo '3. Convert Mecab-unidic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
           xz -d mecab-unidic-user-dict-seed.20200910.csv.xz
@@ -405,9 +404,15 @@ jobs:
           xz -d mecab-user-dict-seed.20200910.csv.xz
           dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
           echo '5. Duplicate data will be removed.'
+          # 読み、表記による重複チェック。件数を抑制するために、品詞IDを無視し、読みと表記のみで重複チェック。
+          awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$5]++) {print $0}}' all-dict.txt|sort > finish-dict-pre.txt
+          # 「ろっ」「ろっき」からはじまる単語が多いと、「ろっき」の入力ができないエラー抑止のため一括削除
+          sed -i "/^ろっき/d" finish-dict-pre.txt
+          # Mozcソースのデータとの重複は品詞IDもチェック
+          cat "${srcdir}"/mozc/src/data/dictionary_oss/dictionary*.txt finish-dict-pre.txt|sort > finish-dict-pre-2.txt
           # 読み、品詞ID、右品詞ID、表記による重複チェック
-          awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$2,$3,$5]++) {print $0}}' all-dict.txt|sort > finish-dict.txt
-          echo '6. Finally, add the SudachiDict dictionary to the Mozc source.'
+          awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$2,$3,$5]++) {print $0}}' finish-dict-pre-2.txt|sort > finish-dict.txt
+          echo '6. Finally, add the SudachiDict, MeCab-unidic-Neologd and MeCab-ipadic-Neologd dictionary to the Mozc source.'
           mkdir -p tmp
           cd tmp
           ROWS=$(echo $(($(wc -l ../finish-dict.txt |cut -f1 -d" ")/10+1)))
