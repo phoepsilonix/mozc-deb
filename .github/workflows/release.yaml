@@ -413,7 +413,7 @@ jobs:
           # 「ろっ」「ろっき」からはじまる単語が多いと、「ろっき」の入力ができないエラー抑止のため一括削除
           sed -i "/^ろっき/d" finish-dict-pre.txt
           # Mozcソースのデータとの重複は品詞IDもチェック
-          cat "${srcdir}"/mozc/src/data/dictionary_oss/dictionary*.txt finish-dict-pre.txt|sort > finish-dict-pre-2.txt
+          cat "${srcdir}"/src/data/dictionary_oss/dictionary*.txt finish-dict-pre.txt|sort > finish-dict-pre-2.txt
           # 読み、品詞ID、右品詞ID、表記による重複チェック
           awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$2,$3,$5]++) {print $0}}' finish-dict-pre-2.txt|sort > finish-dict.txt
           echo '6. Finally, add the SudachiDict, MeCab-unidic-Neologd and MeCab-ipadic-Neologd dictionary to the Mozc source.'
