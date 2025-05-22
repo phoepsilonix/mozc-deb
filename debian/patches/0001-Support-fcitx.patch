@@ -367,7 +367,7 @@ index 6e17812..3efd3af 100755
    return gyp_file_names
  
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index e9a9ccf..4fa44fe 100644
+index d74bc0f..c99e1e5 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -158,6 +158,7 @@ mozc_cc_library(
@@ -378,7 +378,7 @@ index e9a9ccf..4fa44fe 100644
      ],
      deps = [
          ":keymap",
-@@ -356,6 +357,7 @@ mozc_cc_library(
+@@ -355,6 +356,7 @@ mozc_cc_library(
      hdrs = ["key_info_util.h"],
      visibility = [
          "//client:__pkg__",
