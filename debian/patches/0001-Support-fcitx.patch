@@ -6532,10 +6532,10 @@ index 0000000..fc4e188
 +#endif
 diff --git a/src/unix/fcitx5/mozc_engine.cc b/src/unix/fcitx5/mozc_engine.cc
 new file mode 100644
-index 0000000..1ed28be
+index 0000000..b2e3f8e
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.cc
-@@ -0,0 +1,342 @@
+@@ -0,0 +1,341 @@
 +/*
 + * Copyright (C) 2017~2017 by CSSlayer
 + * wengxt@gmail.com
@@ -6562,7 +6562,6 @@ index 0000000..1ed28be
 +#include <fcitx-utils/log.h>
 +#include <fcitx-utils/macros.h>
 +#include <fcitx-utils/semver.h>
-+#include <fcitx-utils/standardpath.h>
 +#include <fcitx-utils/stringutils.h>
 +#include <fcitx/action.h>
 +#include <fcitx/addoninstance.h>
