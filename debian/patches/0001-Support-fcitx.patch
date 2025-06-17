@@ -353,6 +353,178 @@ index 3ab80dc..37b3f8d 100644
  # Qt for Linux
  pkg_config_repository(
      name = "qt_linux",
+diff --git a/src/base/BUILD.bazel b/src/base/BUILD.bazel
+index e20f9e5..ee9345d 100644
+--- a/src/base/BUILD.bazel
++++ b/src/base/BUILD.bazel
+@@ -1142,3 +1142,10 @@ mozc_cc_test(
+         "@com_google_absl//absl/strings:string_view",
+     ],
+ )
++
++# TODO(b/397718233): Remove this library once Abseil LTS supports absl_nullable.
++mozc_cc_library(
++    name = "absl_nullability",
++    hdrs = ["absl_nullability.h"],
++    deps = ["@com_google_absl//absl/base:nullability"],
++)
+diff --git a/src/base/absl_nullability.h b/src/base/absl_nullability.h
+new file mode 100644
+index 0000000..026f9aa
+--- /dev/null
++++ b/src/base/absl_nullability.h
+@@ -0,0 +1,43 @@
++// Copyright 2010-2021, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++#ifndef MOZC_BASE_ABSL_NULLABILITY_H_
++#define MOZC_BASE_ABSL_NULLABILITY_H_
++
++#include "absl/base/nullability.h"  // IWYU pragma: export
++
++// This is for backward compatibility with the Abseil LTS version 20250127.1.
++// TODO(b/397718233): Remove this once the latest LTS version supports lower
++// case macros.
++#ifndef absl_nullable
++#define absl_nullable ABSL_NULLABLE
++#define absl_nonnull ABSL_NONNULL
++#endif  // absl_nullable
++
++#endif  // MOZC_BASE_ABSL_NULLABILITY_H_
+diff --git a/src/base/container/BUILD.bazel b/src/base/container/BUILD.bazel
+index e50368b..5a83654 100644
+--- a/src/base/container/BUILD.bazel
++++ b/src/base/container/BUILD.bazel
+@@ -67,7 +67,7 @@ mozc_cc_library(
+     hdrs = ["flat_map.h"],
+     deps = [
+         ":flat_internal",
+-        "@com_google_absl//absl/base:nullability",
++        "//base:absl_nullability",
+         "@com_google_absl//absl/types:span",
+     ],
+ )
+@@ -124,9 +124,7 @@ mozc_cc_library(
+     name = "freelist",
+     hdrs = ["freelist.h"],
+     visibility = ["//:__subpackages__"],
+-    deps = [
+-        "@com_google_absl//absl/base:nullability",
+-    ],
++    deps = ["//base:absl_nullability"],
+ )
+ 
+ mozc_cc_test(
+diff --git a/src/base/container/flat_map.h b/src/base/container/flat_map.h
+index f386953..2b4a0e0 100644
+--- a/src/base/container/flat_map.h
++++ b/src/base/container/flat_map.h
+@@ -37,8 +37,8 @@
+ #include <functional>
+ #include <utility>
+ 
+-#include "absl/base/nullability.h"
+ #include "absl/types/span.h"
++#include "base/absl_nullability.h"
+ #include "base/container/flat_internal.h"
+ 
+ namespace mozc {
+diff --git a/src/base/container/freelist.h b/src/base/container/freelist.h
+index 6dcb2cb..ca07c38 100644
+--- a/src/base/container/freelist.h
++++ b/src/base/container/freelist.h
+@@ -37,7 +37,7 @@
+ #include <utility>
+ #include <vector>
+ 
+-#include "absl/base/nullability.h"
++#include "base/absl_nullability.h"
+ 
+ namespace mozc {
+ 
+diff --git a/src/base/strings/BUILD.bazel b/src/base/strings/BUILD.bazel
+index 0c6c02b..ce9894b 100644
+--- a/src/base/strings/BUILD.bazel
++++ b/src/base/strings/BUILD.bazel
+@@ -80,8 +80,8 @@ mozc_cc_library(
+     hdrs = ["zstring_view.h"],
+     deps = [
+         ":pfchar",
++        "//base:absl_nullability",
+         "@com_google_absl//absl/base:core_headers",
+-        "@com_google_absl//absl/base:nullability",
+         "@com_google_absl//absl/log:check",
+         "@com_google_absl//absl/strings",
+     ],
+@@ -135,9 +135,9 @@ mozc_cc_library(
+     srcs = ["unicode.cc"],
+     hdrs = ["unicode.h"],
+     deps = [
++        "//base:absl_nullability",
+         "//base/strings/internal:utf8_internal",
+         "@com_google_absl//absl/base:core_headers",
+-        "@com_google_absl//absl/base:nullability",
+         "@com_google_absl//absl/log:check",
+         "@com_google_absl//absl/strings",
+     ],
+diff --git a/src/base/strings/unicode.h b/src/base/strings/unicode.h
+index f04c6b2..587c552 100644
+--- a/src/base/strings/unicode.h
++++ b/src/base/strings/unicode.h
+@@ -41,10 +41,10 @@
+ #include <utility>
+ 
+ #include "absl/base/attributes.h"
+-#include "absl/base/nullability.h"
+ #include "absl/base/optimization.h"
+ #include "absl/log/check.h"
+ #include "absl/strings/string_view.h"
++#include "base/absl_nullability.h"
+ #include "base/strings/internal/utf8_internal.h"
+ 
+ namespace mozc {
+diff --git a/src/base/strings/zstring_view.h b/src/base/strings/zstring_view.h
+index 0edd7dd..dbb7500 100644
+--- a/src/base/strings/zstring_view.h
++++ b/src/base/strings/zstring_view.h
+@@ -39,10 +39,10 @@
+ #include <string_view>
+ 
+ #include "absl/base/attributes.h"
+-#include "absl/base/nullability.h"
+ #include "absl/log/check.h"
+ #include "absl/strings/str_cat.h"
+ #include "absl/strings/string_view.h"
++#include "base/absl_nullability.h"
+ #include "base/strings/pfchar.h"
+ 
+ namespace mozc {
 diff --git a/src/build_mozc.py b/src/build_mozc.py
 index 6e17812..3efd3af 100755
 --- a/src/build_mozc.py
@@ -366,19 +538,1876 @@ index 6e17812..3efd3af 100755
    gyp_file_names.sort()
    return gyp_file_names
  
+diff --git a/src/converter/BUILD.bazel b/src/converter/BUILD.bazel
+index 36d4955..1c62e91 100644
+--- a/src/converter/BUILD.bazel
++++ b/src/converter/BUILD.bazel
+@@ -216,13 +216,13 @@ mozc_cc_library(
+         ":node",
+         ":segmenter",
+         ":segments",
++        "//base:absl_nullability",
+         "//base:vlog",
+         "//base/container:freelist",
+         "//dictionary:dictionary_interface",
+         "//dictionary:pos_matcher",
+         "//prediction:suggestion_filter",
+         "//request:conversion_request",
+-        "@com_google_absl//absl/base:nullability",
+         "@com_google_absl//absl/log",
+         "@com_google_absl//absl/log:check",
+         "@com_google_absl//absl/strings",
+diff --git a/src/converter/converter.cc b/src/converter/converter.cc
+index f6998dc..3601af5 100644
+--- a/src/converter/converter.cc
++++ b/src/converter/converter.cc
+@@ -745,17 +745,13 @@ bool Converter::PredictForRequestWithSegments(const ConversionRequest &request,
+           Candidate::DecodeLengths(result.inner_segment_boundary.back());
+       const int function_key_len = key_len - content_key_len;
+       const int function_value_len = value_len - content_value_len;
+-      const int content_key_start =
+-          candidate->content_key.size() - function_key_len;
+-      const int content_value_start =
+-          candidate->content_value.size() - function_value_len;
+-      if (function_key_len > 0 && content_key_start > 0 &&
++      if (function_key_len > 0 &&
+           function_key_len <= candidate->content_key.size()) {
+-        candidate->content_key.erase(content_key_start, function_key_len);
++        candidate->content_key.erase(content_key_len, function_key_len);
+       }
+-      if (function_value_len > 0 && content_value_start > 0 &&
++      if (function_value_len > 0 &&
+           function_value_len <= candidate->content_value.size()) {
+-        candidate->content_value.erase(content_value_start, function_value_len);
++        candidate->content_value.erase(content_value_len, function_value_len);
+       }
+     }
+ #ifndef NDEBUG
+diff --git a/src/converter/converter.gyp b/src/converter/converter.gyp
+index 16948e0..a422d11 100644
+--- a/src/converter/converter.gyp
++++ b/src/converter/converter.gyp
+@@ -46,7 +46,7 @@
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_strings',
+         '<(mozc_oss_src_dir)/base/base.gyp:number_util',
+         '<(mozc_oss_src_dir)/composer/composer.gyp:composer',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/prediction/prediction.gyp:prediction',
+         '<(mozc_oss_src_dir)/prediction/prediction.gyp:prediction_protocol',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+@@ -58,7 +58,7 @@
+         'immutable_converter.gyp:immutable_converter',
+       ],
+       'export_dependent_settings': [
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+       ],
+     },
+   ],
+diff --git a/src/converter/converter_base.gyp b/src/converter/converter_base.gyp
+index 80a53d2..46bebb9 100644
+--- a/src/converter/converter_base.gyp
++++ b/src/converter/converter_base.gyp
+@@ -97,7 +97,6 @@
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_log',
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_strings',
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/prediction/prediction_base.gyp:suggestion_filter',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/transliteration/transliteration.gyp:transliteration',
+diff --git a/src/converter/converter_main.cc b/src/converter/converter_main.cc
+index 7ff1978..f47a649 100644
+--- a/src/converter/converter_main.cc
++++ b/src/converter/converter_main.cc
+@@ -104,13 +104,6 @@ namespace {
+ 
+ using ::mozc::converter::Candidate;
+ 
+-int FindCandidate(const Segment &segment, absl::string_view value) {
+-  for (int i = 0; i < segment.candidates_size(); ++i) {
+-    if (segment.candidate(i).value == value) return i;
+-  }
+-  return -1;
+-}
+-
+ // Wrapper class for pos id printing
+ class PosIdPrintUtil {
+  public:
+@@ -448,36 +441,6 @@ bool ExecCommand(const ConverterInterface &converter, const std::string &line,
+     config->set_history_learning_level(config::Config::NO_HISTORY);
+   } else if (func == "enableuserhistory") {
+     config->set_history_learning_level(config::Config::DEFAULT_HISTORY);
+-  } else if (func == "zeroquerysuggest" || func == "z") {
+-    CHECK_FIELDS_LENGTH(3);  // command history_key history_value
+-    if (!ExecCommand(converter, "reset", request, config, segments)) {
+-      LOG(ERROR) << "Reset failed";
+-      return false;
+-    }
+-    if (!ExecCommand(converter, absl::StrFormat("predict %s", fields[1]),
+-                     request, config, segments)) {
+-      LOG(ERROR) << "Predict failed for context key " << fields[1];
+-      return false;
+-    }
+-    const int index = FindCandidate(segments->conversion_segment(0), fields[2]);
+-    if (index == -1) {
+-      LOG(ERROR) << "Cannot find candidate " << fields[2];
+-      return false;
+-    }
+-    if (!ExecCommand(converter, absl::StrFormat("commit 0 %d", index), request,
+-                     config, segments)) {
+-      LOG(ERROR) << "commit failed";
+-      return false;
+-    }
+-    if (!ExecCommand(converter, "finish", request, config, segments)) {
+-      LOG(ERROR) << "finish failed";
+-      return false;
+-    }
+-    if (!ExecCommand(converter, "predict", request, config, segments)) {
+-      LOG(ERROR) << "predict from zero query failed";
+-      return false;
+-    }
+-    return true;
+   } else {
+     LOG(WARNING) << "Unknown command: " << func;
+     return false;
+diff --git a/src/converter/converter_test.cc b/src/converter/converter_test.cc
+index 3e022e6..2e1c28c 100644
+--- a/src/converter/converter_test.cc
++++ b/src/converter/converter_test.cc
+@@ -115,7 +115,6 @@ using ::mozc::prediction::Result;
+ using ::mozc::prediction::UserHistoryPredictor;
+ using ::testing::_;
+ using ::testing::AnyNumber;
+-using ::testing::Return;
+ using ::testing::StrEq;
+ 
+ using UserEntry = user_dictionary::UserDictionary::Entry;
+@@ -2447,69 +2446,5 @@ TEST_F(ConverterTest, MakeLearningResultsTest) {
+   }
+ }
+ 
+-TEST_F(ConverterTest, Bugfix424676259) {
+-  auto mock_predictor = absl::make_unique<MockPredictor>();
+-  auto mock_rewriter = absl::make_unique<MockRewriter>();
+-
+-  std::vector<prediction::Result> results;
+-
+-  prediction::Result result;
+-  result.key = "3:30から";
+-  result.value = "３：３０から";
+-
+-  // 3|:|30から
+-  result.inner_segment_boundary.push_back(
+-      converter::Candidate::EncodeLengths(1, 3, 1, 3));  // 3
+-  result.inner_segment_boundary.push_back(
+-      converter::Candidate::EncodeLengths(1, 3, 1, 3));  // :
+-  result.inner_segment_boundary.push_back(
+-      converter::Candidate::EncodeLengths(8, 12, 2, 6));  // ３０_から
+-
+-  results.emplace_back(std::move(result));
+-
+-  EXPECT_CALL(*mock_predictor, Predict(_)).WillRepeatedly(Return(results));
+-
+-  std::unique_ptr<engine::Modules> modules =
+-      engine::Modules::Create(std::make_unique<testing::MockDataManager>())
+-          .value();
+-
+-  auto converter = std::make_unique<Converter>(
+-      std::move(modules),
+-      [](const engine::Modules &modules) {
+-        return std::make_unique<ImmutableConverter>(modules);
+-      },
+-      [&mock_predictor](
+-          const engine::Modules &modules, const ConverterInterface &converter,
+-          const ImmutableConverterInterface &immutable_converter) {
+-        return std::move(mock_predictor);
+-      },
+-      [&mock_rewriter](const engine::Modules &modules) {
+-        return std::move(mock_rewriter);
+-      });
+-
+-  commands::Request request;
+-  request.set_mixed_conversion(true);
+-  const ConversionRequest convreq =
+-      ConversionRequestBuilder()
+-          .SetRequestView(request)
+-          .SetRequestType(ConversionRequest::SUGGESTION)
+-          .Build();
+-
+-  converter::Segments segments;
+-  EXPECT_TRUE(converter->StartPrediction(convreq, &segments));
+-
+-  ASSERT_EQ(segments.segments_size(), 1);
+-  const converter::Segment &segment = segments.segment(0);
+-  ASSERT_EQ(segment.candidates_size(), 1);
+-  const converter::Candidate &candidate = segment.candidate(0);
+-
+-  EXPECT_EQ(candidate.key, "3:30から");
+-  EXPECT_EQ(candidate.value, "３：３０から");
+-  EXPECT_EQ(candidate.content_key, "3:30");
+-  EXPECT_EQ(candidate.content_value, "３：３０");
+-  EXPECT_EQ(candidate.inner_segment_boundary,
+-            results[0].inner_segment_boundary);
+-}
+-
+ }  // namespace converter
+ }  // namespace mozc
+diff --git a/src/converter/immutable_converter.gyp b/src/converter/immutable_converter.gyp
+index 0cd7a94..228fc56 100644
+--- a/src/converter/immutable_converter.gyp
++++ b/src/converter/immutable_converter.gyp
+@@ -47,7 +47,7 @@
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segmenter',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segments',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:suffix_dictionary',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/engine/engine_base.gyp:modules',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+diff --git a/src/converter/nbest_generator.cc b/src/converter/nbest_generator.cc
+index f7fca26..c6c2f48 100644
+--- a/src/converter/nbest_generator.cc
++++ b/src/converter/nbest_generator.cc
+@@ -36,12 +36,12 @@
+ #include <string>
+ #include <vector>
+ 
+-#include "absl/base/nullability.h"
+ #include "absl/log/check.h"
+ #include "absl/log/log.h"
+ #include "absl/strings/ascii.h"
+ #include "absl/strings/string_view.h"
+ #include "absl/types/span.h"
++#include "base/absl_nullability.h"
+ #include "base/vlog.h"
+ #include "converter/candidate.h"
+ #include "converter/candidate_filter.h"
+diff --git a/src/converter/nbest_generator.h b/src/converter/nbest_generator.h
+index d295bb9..680a092 100644
+--- a/src/converter/nbest_generator.h
++++ b/src/converter/nbest_generator.h
+@@ -34,9 +34,9 @@
+ #include <cstdint>
+ #include <vector>
+ 
+-#include "absl/base/nullability.h"
+ #include "absl/strings/string_view.h"
+ #include "absl/types/span.h"
++#include "base/absl_nullability.h"
+ #include "base/container/freelist.h"
+ #include "converter/candidate.h"
+ #include "converter/candidate_filter.h"
+diff --git a/src/data_manager/BUILD.bazel b/src/data_manager/BUILD.bazel
+index 2f75f44..66bdf10 100644
+--- a/src/data_manager/BUILD.bazel
++++ b/src/data_manager/BUILD.bazel
+@@ -316,5 +316,8 @@ bzl_library(
+ mozc_cc_library(
+     name = "emoji_data",
+     hdrs = ["emoji_data.h"],
+-    visibility = ["//rewriter:__pkg__"],
++    visibility = [
++        "//dictionary:__pkg__",
++        "//rewriter:__pkg__",
++    ],
+ )
+diff --git a/src/data_manager/data_manager_base.gypi b/src/data_manager/data_manager_base.gypi
+index f96e01d..6b9affc 100644
+--- a/src/data_manager/data_manager_base.gypi
++++ b/src/data_manager/data_manager_base.gypi
+@@ -98,7 +98,7 @@
+       'type': 'none',
+       'toolsets': ['host'],
+       'dependencies': [
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_util',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_util',
+       ],
+       'actions': [
+         {
+@@ -143,7 +143,7 @@
+       'type': 'none',
+       'toolsets': ['host'],
+       'dependencies': [
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_util',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_util',
+       ],
+       'actions': [
+         {
+diff --git a/src/data_manager/data_manager_test.gyp b/src/data_manager/data_manager_test.gyp
+index 8500f87..4e7c7a7 100644
+--- a/src/data_manager/data_manager_test.gyp
++++ b/src/data_manager/data_manager_test.gyp
+@@ -44,7 +44,7 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:connector',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segmenter',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/prediction/prediction_base.gyp:suggestion_filter',
+         '<(mozc_oss_src_dir)/testing/testing.gyp:testing',
+         'data_manager.gyp:connection_file_reader',
+diff --git a/src/dictionary/dictionary.gyp b/src/dictionary/dictionary.gyp
+index c80d0cd..cf6cd91 100644
+--- a/src/dictionary/dictionary.gyp
++++ b/src/dictionary/dictionary.gyp
+@@ -85,7 +85,7 @@
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:user_dictionary_storage_proto',
+-        'pos_matcher.gyp:pos_matcher',
++        'dictionary_base.gyp:pos_matcher',
+       ],
+     },
+     {
+@@ -100,7 +100,7 @@
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_strings',
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:data_manager',
+-        'pos_matcher.gyp:pos_matcher',
++        'dictionary_base.gyp:pos_matcher',
+         'system/system_dictionary.gyp:system_dictionary_builder',
+       ],
+       'msvs_settings': {
+diff --git a/src/dictionary/dictionary_base.gyp b/src/dictionary/dictionary_base.gyp
+index 3d60c7c..2b1e9b0 100644
+--- a/src/dictionary/dictionary_base.gyp
++++ b/src/dictionary/dictionary_base.gyp
+@@ -49,9 +49,60 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/base/base.gyp:multifile',
+         '<(mozc_oss_src_dir)/base/base.gyp:number_util',
+-        'pos_matcher.gyp:pos_matcher',
++        'pos_matcher',
+       ],
+     },
++    {
++      'target_name': 'pos_util',
++      'type': 'none',
++      'toolsets': ['host'],
++      'sources': [
++        '<(mozc_oss_src_dir)/build_tools/code_generator_util.py',
++        'pos_util.py',
++      ],
++    },
++    {
++      'target_name': 'gen_pos_matcher',
++      'type': 'none',
++      'toolsets': ['host'],
++      'dependencies': [
++        'pos_util',
++      ],
++      'actions': [
++        {
++          'action_name': 'gen_pos_matcher',
++          'variables': {
++            'pos_matcher_rule': '<(mozc_oss_src_dir)/data/rules/pos_matcher_rule.def',
++            'pos_matcher_header': '<(gen_out_dir)/pos_matcher_impl.inc',
++          },
++          'inputs': [
++            'gen_pos_matcher_code.py',
++            '<(pos_matcher_rule)'
++          ],
++          'outputs': [
++            '<(pos_matcher_header)',
++          ],
++          'action': [
++            '<(python)', 'gen_pos_matcher_code.py',
++            '--pos_matcher_rule_file=<(pos_matcher_rule)',
++            '--output_pos_matcher_h=<(pos_matcher_header)',
++          ],
++          'message': ('Generating <(pos_matcher_header)'),
++        },
++      ],
++    },
++    {
++      'target_name': 'pos_matcher',
++      'type': 'none',
++      'toolsets': ['target', 'host'],
++      'hard_dependency': 1,
++      'dependencies': [
++        'gen_pos_matcher#host',
++      ],
++      'export_dependent_settings': [
++        'gen_pos_matcher#host',
++      ]
++    },
+     {
+       'target_name': 'user_pos',
+       'type': 'static_library',
+@@ -123,7 +174,7 @@
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:user_dictionary_storage_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+         'gen_pos_map#host',
+-        'pos_matcher.gyp:pos_matcher',
++        'pos_matcher',
+       ],
+     },
+   ],
+diff --git a/src/dictionary/dictionary_test.gyp b/src/dictionary/dictionary_test.gyp
+index f60ce3c..0685a98 100644
+--- a/src/dictionary/dictionary_test.gyp
++++ b/src/dictionary/dictionary_test.gyp
+@@ -59,9 +59,9 @@
+         '<(mozc_oss_src_dir)/testing/testing.gyp:testing_util',
+         'dictionary.gyp:dictionary',
+         'dictionary.gyp:dictionary_test_util',
++        'dictionary_base.gyp:pos_matcher',
+         'dictionary_base.gyp:user_dictionary',
+         'dictionary_base.gyp:user_pos',
+-        'pos_matcher.gyp:pos_matcher',
+       ],
+       'variables': {
+         'test_size': 'small',
+diff --git a/src/dictionary/pos_matcher.gyp b/src/dictionary/pos_matcher.gyp
+deleted file mode 100644
+index fe3bc77..0000000
+--- a/src/dictionary/pos_matcher.gyp
++++ /dev/null
+@@ -1,90 +0,0 @@
+-# Copyright 2010-2021, Google Inc.
+-# All rights reserved.
+-#
+-# Redistribution and use in source and binary forms, with or without
+-# modification, are permitted provided that the following conditions are
+-# met:
+-#
+-#     * Redistributions of source code must retain the above copyright
+-# notice, this list of conditions and the following disclaimer.
+-#     * Redistributions in binary form must reproduce the above
+-# copyright notice, this list of conditions and the following disclaimer
+-# in the documentation and/or other materials provided with the
+-# distribution.
+-#     * Neither the name of Google Inc. nor the names of its
+-# contributors may be used to endorse or promote products derived from
+-# this software without specific prior written permission.
+-#
+-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-# pos_matcher.gyp defines targets for pos_matcher.
+-# This file is used to address cyclic dependency among gyp files.
+-{
+-  'variables': {
+-    'relative_dir': 'dictionary',
+-    'gen_out_dir': '<(SHARED_INTERMEDIATE_DIR)/<(relative_dir)',
+-  },
+-  'targets': [
+-    {
+-      'target_name': 'pos_util',
+-      'type': 'none',
+-      'toolsets': ['host'],
+-      'sources': [
+-        '<(mozc_oss_src_dir)/build_tools/code_generator_util.py',
+-        'pos_util.py',
+-      ],
+-    },
+-    {
+-      'target_name': 'gen_pos_matcher',
+-      'type': 'none',
+-      'toolsets': ['host'],
+-      'dependencies': [
+-        'pos_util',
+-      ],
+-      'actions': [
+-        {
+-          'action_name': 'gen_pos_matcher',
+-          'variables': {
+-            'pos_matcher_rule': '<(mozc_oss_src_dir)/data/rules/pos_matcher_rule.def',
+-            'pos_matcher_header': '<(gen_out_dir)/pos_matcher_impl.inc',
+-          },
+-          'inputs': [
+-            'gen_pos_matcher_code.py',
+-            '<(pos_matcher_rule)'
+-          ],
+-          'outputs': [
+-            '<(pos_matcher_header)',
+-          ],
+-          'action': [
+-            '<(python)', 'gen_pos_matcher_code.py',
+-            '--pos_matcher_rule_file=<(pos_matcher_rule)',
+-            '--output_pos_matcher_h=<(pos_matcher_header)',
+-          ],
+-          'message': ('Generating <(pos_matcher_header)'),
+-        },
+-      ],
+-    },
+-    {
+-      'target_name': 'pos_matcher',
+-      'type': 'none',
+-      'toolsets': ['target', 'host'],
+-      'hard_dependency': 1,
+-      'dependencies': [
+-        'gen_pos_matcher#host',
+-      ],
+-      'export_dependent_settings': [
+-        'gen_pos_matcher#host',
+-      ]
+-    },
+-  ],
+-}
+diff --git a/src/dictionary/system/system_dictionary.gyp b/src/dictionary/system/system_dictionary.gyp
+index eec1d66..5542a9b 100644
+--- a/src/dictionary/system/system_dictionary.gyp
++++ b/src/dictionary/system/system_dictionary.gyp
+@@ -79,8 +79,8 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:base_core',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+         '<(mozc_oss_src_dir)/storage/louds/louds.gyp:louds_trie',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/file/dictionary_file.gyp:codec_factory',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         'system_dictionary_codec',
+       ],
+     },
+@@ -96,10 +96,10 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:japanese_util',
+         '<(mozc_oss_src_dir)/storage/louds/louds.gyp:bit_vector_based_array_builder',
+         '<(mozc_oss_src_dir)/storage/louds/louds.gyp:louds_trie_builder',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:text_dictionary_loader',
+         '<(mozc_oss_src_dir)/dictionary/file/dictionary_file.gyp:codec',
+         '<(mozc_oss_src_dir)/dictionary/file/dictionary_file.gyp:codec_factory',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         'system_dictionary_codec',
+       ],
+     },
+diff --git a/src/dictionary/user_dictionary_session_handler_test.cc b/src/dictionary/user_dictionary_session_handler_test.cc
+index b73ba2e..f375015 100644
+--- a/src/dictionary/user_dictionary_session_handler_test.cc
++++ b/src/dictionary/user_dictionary_session_handler_test.cc
+@@ -114,7 +114,7 @@ class UserDictionarySessionHandlerTest
+     Clear();
+     command_->set_type(UserDictionaryCommand::CREATE_DICTIONARY);
+     command_->set_session_id(session_id);
+-    command_->set_dictionary_name(name);
++    command_->set_dictionary_name(std::string(name));
+     EXPECT_TRUE(handler_->Evaluate(*command_, status_.get()));
+     EXPECT_EQ(status_->status(),
+               (UserDictionaryCommandStatus::USER_DICTIONARY_COMMAND_SUCCESS));
+diff --git a/src/dictionary/user_dictionary_util.cc b/src/dictionary/user_dictionary_util.cc
+index b962bf7..3bd8b67 100644
+--- a/src/dictionary/user_dictionary_util.cc
++++ b/src/dictionary/user_dictionary_util.cc
+@@ -371,7 +371,7 @@ UserDictionaryCommandStatus::Status UserDictionaryUtil::CreateDictionary(
+   }
+ 
+   dictionary->set_id(*new_dictionary_id);
+-  dictionary->set_name(dictionary_name);
++  dictionary->set_name(std::string(dictionary_name));
+   return UserDictionaryCommandStatus::USER_DICTIONARY_COMMAND_SUCCESS;
+ }
+ 
+diff --git a/src/engine/BUILD.bazel b/src/engine/BUILD.bazel
+index 7a09b90..669d99c 100644
+--- a/src/engine/BUILD.bazel
++++ b/src/engine/BUILD.bazel
+@@ -113,6 +113,7 @@ mozc_cc_library(
+         "//prediction:__pkg__",
+     ],
+     deps = [
++        "//base:absl_nullability",
+         "//composer:query",
+         "//prediction:result",
+         "//protocol:commands_cc_proto",
+@@ -132,6 +133,7 @@ mozc_cc_library(
+     ],
+     deps = [
+         ":supplemental_model_interface",
++        "//base:absl_nullability",
+         "//composer:query",
+         "//prediction:result",
+         "//protocol:commands_cc_proto",
+diff --git a/src/engine/engine.gyp b/src/engine/engine.gyp
+index 5d25103..726abfd 100644
+--- a/src/engine/engine.gyp
++++ b/src/engine/engine.gyp
+@@ -45,7 +45,7 @@
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_status',
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:data_manager',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:engine_builder_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+       ],
+@@ -64,8 +64,8 @@
+         '<(mozc_oss_src_dir)/base/absl.gyp:absl_strings',
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/converter/converter.gyp:converter',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:user_dictionary',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/engine/engine_base.gyp:modules',
+         '<(mozc_oss_src_dir)/prediction/prediction.gyp:prediction',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+@@ -86,7 +86,7 @@
+         '<(mozc_oss_src_dir)/composer/composer.gyp:key_parser',
+         '<(mozc_oss_src_dir)/config/config.gyp:config_handler',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segments',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+@@ -131,7 +131,7 @@
+       ],
+       'dependencies': [
+         '<(mozc_oss_src_dir)/data_manager/testing/mock_data_manager.gyp:mock_data_manager',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+         'engine',
+         'engine_builder'
+@@ -160,7 +160,7 @@
+         '<(mozc_oss_src_dir)/composer/composer.gyp:composer',
+         '<(mozc_oss_src_dir)/converter/converter.gyp:converter',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:data_manager',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+       ],
+diff --git a/src/engine/engine_base.gyp b/src/engine/engine_base.gyp
+index 358fb6d..30a47dc 100644
+--- a/src/engine/engine_base.gyp
++++ b/src/engine/engine_base.gyp
+@@ -48,9 +48,9 @@
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segmenter',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:dictionary_impl',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:suffix_dictionary',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:user_dictionary',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:user_pos',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/system/system_dictionary.gyp:system_dictionary',
+         '<(mozc_oss_src_dir)/dictionary/system/system_dictionary.gyp:value_dictionary',
+         '<(mozc_oss_src_dir)/prediction/prediction_base.gyp:suggestion_filter',
+@@ -58,7 +58,7 @@
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:user_dictionary_storage_proto',
+       ],
+       'export_dependent_settings': [
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:user_dictionary_storage_proto',
+       ],
+     },
+diff --git a/src/gui/gui.gyp b/src/gui/gui.gyp
+index 121f672..f62ec24 100644
+--- a/src/gui/gui.gyp
++++ b/src/gui/gui.gyp
+@@ -470,8 +470,8 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:base',
+         '<(mozc_oss_src_dir)/client/client.gyp:client',
+         '<(mozc_oss_src_dir)/data_manager/data_manager.gyp:pos_list_provider',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:user_dictionary',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:user_dictionary_storage_proto',
+         'gen_word_register_dialog_files',
+diff --git a/src/mac/BUILD.bazel b/src/mac/BUILD.bazel
+index 5b4f978..ef6b488 100644
+--- a/src/mac/BUILD.bazel
++++ b/src/mac/BUILD.bazel
+@@ -238,7 +238,6 @@ mozc_objc_test(
+     sdk_frameworks = ["AppKit"],
+     deps = [
+         ":keycode_map",
+-        "//base/protobuf:text_format",
+         "//protocol:commands_cc_proto",
+         "//testing:gunit_main_objc",
+     ],
+diff --git a/src/mac/KeyCodeMap_test.mm b/src/mac/KeyCodeMap_test.mm
+index a048300..30bc280 100644
+--- a/src/mac/KeyCodeMap_test.mm
++++ b/src/mac/KeyCodeMap_test.mm
+@@ -34,29 +34,28 @@
+ 
+ #include <cstdint>
+ 
+-#include "base/protobuf/text_format.h"
+ #include "protocol/commands.pb.h"
+ #include "testing/gunit.h"
+ 
+ using mozc::commands::KeyEvent;
+ 
+ struct TestCase {
+-  absl::string_view title;
+-  const char *characters;
+-  const char *unmod_characters;
++  std::string title;
++  NSString *characters;
++  NSString *unmodCharacters;
+   int flags;
+   uint16_t keyCode;
+-  absl::string_view expected;
++  std::string expected;
+ };
+ 
+ class KeyCodeMapTest : public testing::Test {
+  protected:
+-  void SetUp() override { keyCodeMap_ = [[KeyCodeMap alloc] init]; }
++  void SetUp() { keyCodeMap_ = [[KeyCodeMap alloc] init]; }
+ 
+   void KanaMode() { keyCodeMap_.inputMode = KANA; }
+ 
+-  bool CreateKeyEvent(const char *characters, const char *unmod_characters, int flags,
+-                      uint16_t keyCode, KeyEvent *mozcKeyEvent) {
++  bool CreateKeyEvent(NSString *characters, NSString *unmodCharacters, int flags, uint16_t keyCode,
++                      KeyEvent *mozcKeyEvent) {
+     if (mozcKeyEvent == nullptr) {
+       return false;
+     }
+@@ -64,15 +63,15 @@ class KeyCodeMapTest : public testing::Test {
+     NSEventType type = NSKeyDown;
+     // if the key event is just pressing modifiers, the type should be
+     // NSFlagsChanged.
+-    if (characters == nullptr && unmod_characters == nullptr) {
++    if (characters == nil && unmodCharacters == nil) {
+       type = NSFlagsChanged;
+     }
+ 
+-    if (characters == nullptr) {
+-      characters = "";
++    if (characters == nil) {
++      characters = @"";
+     }
+-    if (unmod_characters == nullptr) {
+-      unmod_characters = characters;
++    if (unmodCharacters == nil) {
++      unmodCharacters = [characters copy];
+     }
+ 
+     NSEvent *event = [NSEvent keyEventWithType:type
+@@ -81,92 +80,88 @@ class KeyCodeMapTest : public testing::Test {
+                                      timestamp:0.0
+                                   windowNumber:0
+                                        context:nil
+-                                    characters:@(characters)
+-                   charactersIgnoringModifiers:@(unmod_characters)
++                                    characters:characters
++                   charactersIgnoringModifiers:unmodCharacters
+                                      isARepeat:NO
+                                        keyCode:keyCode];
+     return [keyCodeMap_ getMozcKeyCodeFromKeyEvent:event toMozcKeyEvent:mozcKeyEvent];
+   }
+ 
+   bool CreateKeyEventFromTestCase(const TestCase &testCase, KeyEvent *mozcKeyEvent) {
+-    return CreateKeyEvent(testCase.characters, testCase.unmod_characters, testCase.flags,
++    return CreateKeyEvent(testCase.characters, testCase.unmodCharacters, testCase.flags,
+                           testCase.keyCode, mozcKeyEvent);
+   }
+ 
+-  std::string GetDebugString(const KeyEvent &event) {
+-    std::string output;
+-    mozc::protobuf::TextFormat::PrintToString(event, &output);
+-    return output;
+-  }
+-
+  private:
+   KeyCodeMap *keyCodeMap_;
+ };
+ 
++static const TestCase kKeyEventTestCases[] = {
++    {"normal a", @"a", nil, 0, kVK_ANSI_A, "key_code: 97\n"},
++    {"\\S-a", @"A", @"a", NSShiftKeyMask, kVK_ANSI_A, "key_code: 65\n"},
++    {"\\C-a", @"\x01", @"a", NSControlKeyMask, kVK_ANSI_A,
++     "key_code: 97\n"
++     "modifier_keys: CTRL\n"},
++    {"\\S-C-a", @"a", nil, NSControlKeyMask | NSShiftKeyMask, kVK_ANSI_A,
++     "key_code: 97\n"
++     "modifier_keys: SHIFT\n"
++     "modifier_keys: CTRL\n"},
++    {"Tab key", @"\x09", nil, 0, kVK_Tab, "special_key: TAB\n"},
++    {"\\S-Tab", @"\x09", nil, NSShiftKeyMask, kVK_Tab,
++     "special_key: TAB\n"
++     "modifier_keys: SHIFT\n"},
++    {"function key", @"\x10", nil, 0, kVK_F1, "special_key: F1\n"},
++    {"tenkey", @"0", nil, 0, kVK_ANSI_Keypad0, "special_key: NUMPAD0\n"}};
++
++static const TestCase kKanaTypingTestCases[] = {
++    {"a -> ち", @"a", nil, 0, kVK_ANSI_A,
++     "key_code: 97\n"
++     "key_string: \"\\343\\201\\241\"\n"},
++    {"yen mark", @"¥", nil, 0, kVK_JIS_Yen,
++     "key_code: 92\n"
++     "key_string: \"\\343\\203\\274\"\n"},
++    {"\\S-2 -> ふ", @"@", @"2", NSShiftKeyMask, kVK_ANSI_2,
++     "key_code: 64\n"
++     "key_string: \"\\343\\201\\265\"\n"},
++    {"\\C-a -> \\C-a", @"\x01", @"a", NSControlKeyMask, kVK_ANSI_A,
++     "key_code: 97\n"
++     "modifier_keys: CTRL\n"
++     "key_string: \"\\343\\201\\241\"\n"},
++    {"\\S-0 -> を", @"0", nil, NSShiftKeyMask, kVK_ANSI_0,
++     "key_code: 48\n"
++     "key_string: \"\\343\\202\\222\"\n"},
++    {"yen mark -> ー", @"￥", nil, 0, kVK_JIS_Yen, "key_string: \"\\343\\203\\274\"\n"},
++    {"underscore -> ろ", @"_", nil, 0, kVK_JIS_Underscore,
++     "key_code: 95\n"
++     "key_string: \"\\343\\202\\215\"\n"},
++    {"@ -> ゛ in JIS keyboard", @"@", nil, 0, kVK_ANSI_LeftBracket,
++     "key_code: 64\n"
++     "key_string: \"\\343\\202\\233\"\n"},
++    {"[ -> ゛ in US keyboard", @"[", nil, 0, kVK_ANSI_LeftBracket,
++     "key_code: 91\n"
++     "key_string: \"\\343\\202\\233\"\n"},
++};
++
+ // Test for romaji typing
+ TEST_F(KeyCodeMapTest, NormaKeyEvent) {
+-  const TestCase test_cases[] = {
+-      {"normal a", "a", nullptr, 0, kVK_ANSI_A, "key_code: 97\n"},
+-      {"\\S-a", "A", "a", NSShiftKeyMask, kVK_ANSI_A, "key_code: 65\n"},
+-      {"\\C-a", "\x01", "a", NSControlKeyMask, kVK_ANSI_A,
+-       "key_code: 97\n"
+-       "modifier_keys: CTRL\n"},
+-      {"\\S-C-a", "a", nullptr, NSControlKeyMask | NSShiftKeyMask, kVK_ANSI_A,
+-       "key_code: 97\n"
+-       "modifier_keys: SHIFT\n"
+-       "modifier_keys: CTRL\n"},
+-      {"Tab key", "\x09", nullptr, 0, kVK_Tab, "special_key: TAB\n"},
+-      {"\\S-Tab", "\x09", nullptr, NSShiftKeyMask, kVK_Tab,
+-       "special_key: TAB\n"
+-       "modifier_keys: SHIFT\n"},
+-      {"function key", "\x10", nullptr, 0, kVK_F1, "special_key: F1\n"},
+-      {"tenkey", "0", nullptr, 0, kVK_ANSI_Keypad0, "special_key: NUMPAD0\n"}};
+-
+   KeyEvent event;
+-  for (const TestCase &test_case : test_cases) {
++  for (int i = 0; i < std::size(kKeyEventTestCases); ++i) {
++    const TestCase &testCase = kKeyEventTestCases[i];
+     event.Clear();
+-    EXPECT_TRUE(CreateKeyEventFromTestCase(test_case, &event));
+-    EXPECT_EQ(GetDebugString(event), test_case.expected) << test_case.title;
++    EXPECT_TRUE(CreateKeyEventFromTestCase(testCase, &event));
++    EXPECT_EQ(event.DebugString(), testCase.expected) << testCase.title;
+   }
+ }
+ 
+ // Test for kana typing
+ TEST_F(KeyCodeMapTest, KanaEvent) {
+-  const TestCase test_cases[] = {
+-      {"a -> ち", "a", nullptr, 0, kVK_ANSI_A,
+-       "key_code: 97\n"
+-       "key_string: \"\\343\\201\\241\"\n"},
+-      {"yen mark", "¥", nullptr, 0, kVK_JIS_Yen,
+-       "key_code: 92\n"
+-       "key_string: \"\\343\\203\\274\"\n"},
+-      {"\\S-2 -> ふ", "@", "2", NSShiftKeyMask, kVK_ANSI_2,
+-       "key_code: 64\n"
+-       "key_string: \"\\343\\201\\265\"\n"},
+-      {"\\C-a -> \\C-a", "\x01", "a", NSControlKeyMask, kVK_ANSI_A,
+-       "key_code: 97\n"
+-       "modifier_keys: CTRL\n"
+-       "key_string: \"\\343\\201\\241\"\n"},
+-      {"\\S-0 -> を", "0", nullptr, NSShiftKeyMask, kVK_ANSI_0,
+-       "key_code: 48\n"
+-       "key_string: \"\\343\\202\\222\"\n"},
+-      {"yen mark -> ー", "￥", nullptr, 0, kVK_JIS_Yen, "key_string: \"\\343\\203\\274\"\n"},
+-      {"underscore -> ろ", "_", nullptr, 0, kVK_JIS_Underscore,
+-       "key_code: 95\n"
+-       "key_string: \"\\343\\202\\215\"\n"},
+-      {"@ -> ゛ in JIS keyboard", "@", nullptr, 0, kVK_ANSI_LeftBracket,
+-       "key_code: 64\n"
+-       "key_string: \"\\343\\202\\233\"\n"},
+-      {"[ -> ゛ in US keyboard", "[", nullptr, 0, kVK_ANSI_LeftBracket,
+-       "key_code: 91\n"
+-       "key_string: \"\\343\\202\\233\"\n"},
+-  };
+-
+   KanaMode();
+   KeyEvent event;
+-  for (const TestCase &test_case : test_cases) {
++  for (int i = 0; i < std::size(kKanaTypingTestCases); ++i) {
++    const TestCase &testCase = kKanaTypingTestCases[i];
+     event.Clear();
+-    EXPECT_TRUE(CreateKeyEventFromTestCase(test_case, &event));
+-    EXPECT_EQ(GetDebugString(event), test_case.expected) << test_case.title;
++    EXPECT_TRUE(CreateKeyEventFromTestCase(testCase, &event));
++    EXPECT_EQ(event.DebugString(), testCase.expected) << testCase.title;
+   }
+ }
+ 
+@@ -175,41 +170,40 @@ TEST_F(KeyCodeMapTest, Modifiers) {
+   KeyEvent event;
+   TestCase testCase;
+   // Press shift key
+-  EXPECT_FALSE(CreateKeyEvent(nullptr, nullptr, NSShiftKeyMask, kVK_Shift, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, NSShiftKeyMask, kVK_Shift, &event));
+ 
+   // Release the shift key -> emit Shift-key event
+   event.Clear();
+-  EXPECT_TRUE(CreateKeyEvent(nullptr, nullptr, 0, kVK_Shift, &event));
+-  EXPECT_EQ(GetDebugString(event), "modifier_keys: SHIFT\n");
++  EXPECT_TRUE(CreateKeyEvent(nil, nil, 0, kVK_Shift, &event));
++  EXPECT_EQ(event.DebugString(), "modifier_keys: SHIFT\n");
+ 
+   // Press shift key
+   event.Clear();
+-  EXPECT_FALSE(CreateKeyEvent(nullptr, nullptr, NSShiftKeyMask, kVK_Shift, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, NSShiftKeyMask, kVK_Shift, &event));
+ 
+   // Press control key
+   event.Clear();
+-  EXPECT_FALSE(
+-      CreateKeyEvent(nullptr, nullptr, NSShiftKeyMask | NSControlKeyMask, kVK_Control, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, NSShiftKeyMask | NSControlKeyMask, kVK_Control, &event));
+ 
+   // Release shift key
+   event.Clear();
+-  EXPECT_FALSE(CreateKeyEvent(nullptr, nullptr, NSControlKeyMask, kVK_Control, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, NSControlKeyMask, kVK_Control, &event));
+ 
+   // Release control key -> emit Control + Shift
+   event.Clear();
+-  EXPECT_TRUE(CreateKeyEvent(nullptr, nullptr, 0, kVK_Control, &event));
+-  EXPECT_EQ(GetDebugString(event), "modifier_keys: SHIFT\nmodifier_keys: CTRL\n");
++  EXPECT_TRUE(CreateKeyEvent(nil, nil, 0, kVK_Control, &event));
++  EXPECT_EQ(event.DebugString(), "modifier_keys: SHIFT\nmodifier_keys: CTRL\n");
+ 
+   // Press control key
+   event.Clear();
+-  EXPECT_FALSE(CreateKeyEvent(nullptr, nullptr, NSControlKeyMask, kVK_Control, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, NSControlKeyMask, kVK_Control, &event));
+ 
+   // Press a -> emit \C-a
+   event.Clear();
+-  EXPECT_TRUE(CreateKeyEvent("a", nullptr, NSControlKeyMask, kVK_ANSI_A, &event));
+-  EXPECT_EQ(GetDebugString(event), "key_code: 97\nmodifier_keys: CTRL\n");
++  EXPECT_TRUE(CreateKeyEvent(@"a", nil, NSControlKeyMask, kVK_ANSI_A, &event));
++  EXPECT_EQ(event.DebugString(), "key_code: 97\nmodifier_keys: CTRL\n");
+ 
+   // Release control key -> Doesn't emit any key events
+   event.Clear();
+-  EXPECT_FALSE(CreateKeyEvent(nullptr, nullptr, 0, kVK_Control, &event));
++  EXPECT_FALSE(CreateKeyEvent(nil, nil, 0, kVK_Control, &event));
+ }
+diff --git a/src/prediction/BUILD.bazel b/src/prediction/BUILD.bazel
+index a6c8f32..f1051b2 100644
+--- a/src/prediction/BUILD.bazel
++++ b/src/prediction/BUILD.bazel
+@@ -191,6 +191,7 @@ mozc_cc_library(
+         "//converter:segmenter",
+         "//converter:segments",
+         "//dictionary:pos_matcher",
++        "//dictionary:single_kanji_dictionary",
+         "//engine:modules",
+         "//engine:supplemental_model_interface",
+         "//protocol:commands_cc_proto",
+@@ -219,11 +220,11 @@ mozc_cc_library(
+     ],
+     deps = [
+         ":zero_query_dict",
++        "//base:absl_nullability",
+         "//base/strings:unicode",
+         "//composer:query",
+         "//converter:segments",
+         "//dictionary:dictionary_token",
+-        "@com_google_absl//absl/base:nullability",
+         "@com_google_absl//absl/log",
+         "@com_google_absl//absl/strings",
+         "@com_google_absl//absl/strings:str_format",
+diff --git a/src/prediction/dictionary_predictor.cc b/src/prediction/dictionary_predictor.cc
+index 60368f0..976043b 100644
+--- a/src/prediction/dictionary_predictor.cc
++++ b/src/prediction/dictionary_predictor.cc
+@@ -60,6 +60,7 @@
+ #include "converter/segmenter.h"
+ #include "converter/segments.h"
+ #include "dictionary/pos_matcher.h"
++#include "dictionary/single_kanji_dictionary.h"
+ #include "engine/modules.h"
+ #include "engine/supplemental_model_interface.h"
+ #include "prediction/dictionary_prediction_aggregator.h"
+@@ -154,6 +155,9 @@ DictionaryPredictor::DictionaryPredictor(
+       connector_(modules.GetConnector()),
+       segmenter_(modules.GetSegmenter()),
+       suggestion_filter_(modules.GetSuggestionFilter()),
++      single_kanji_dictionary_(
++          std::make_unique<dictionary::SingleKanjiDictionary>(
++              modules.GetDataManager())),
+       pos_matcher_(modules.GetPosMatcher()),
+       general_symbol_id_(pos_matcher_.GetGeneralSymbolId()),
+       predictor_name_(std::move(predictor_name)),
+@@ -272,6 +276,9 @@ std::vector<Result> DictionaryPredictor::RerankAndFilterResults(
+       continue;
+     }
+ 
++    // TODO(taku): Add new method to fill the Result::candidate_attributes.
++    single_kanji_dictionary_->GenerateDescription(result.value,
++                                                  &result.description);
+     if ((result.candidate_attributes &
+          converter::Candidate::PARTIALLY_KEY_CONSUMED) &&
+         cursor_at_tail) {
+@@ -384,6 +391,41 @@ int DictionaryPredictor::CalculateSingleKanjiCostOffset(
+   return wcost_diff + kSingleKanjiPredictionCostOffset;
+ }
+ 
++std::string DictionaryPredictor::GetPredictionTypeDebugString(
++    PredictionTypes types) {
++  std::string debug_desc;
++  if (types & PredictionType::UNIGRAM) {
++    debug_desc.append(1, 'U');
++  }
++  if (types & PredictionType::BIGRAM) {
++    debug_desc.append(1, 'B');
++  }
++  if (types & PredictionType::REALTIME_TOP) {
++    debug_desc.append("R1");
++  } else if (types & PredictionType::REALTIME) {
++    debug_desc.append(1, 'R');
++  }
++  if (types & PredictionType::SUFFIX) {
++    debug_desc.append(1, 'S');
++  }
++  if (types & PredictionType::ENGLISH) {
++    debug_desc.append(1, 'E');
++  }
++  if (types & PredictionType::TYPING_CORRECTION) {
++    debug_desc.append(1, 'T');
++  }
++  if (types & PredictionType::TYPING_COMPLETION) {
++    debug_desc.append(1, 'C');
++  }
++  if (types & PredictionType::SUPPLEMENTAL_MODEL) {
++    debug_desc.append(1, 'X');
++  }
++  if (types & PredictionType::KEY_EXPANDED_IN_DICTIONARY) {
++    debug_desc.append(1, 'K');
++  }
++  return debug_desc;
++}
++
+ // Returns cost for |result| when it's transitioned from |rid|.  Suffix penalty
+ // is also added for non-realtime results.
+ int DictionaryPredictor::GetLMCost(const Result &result, int rid) const {
+diff --git a/src/prediction/dictionary_predictor.h b/src/prediction/dictionary_predictor.h
+index 9597e80..8edb666 100644
+--- a/src/prediction/dictionary_predictor.h
++++ b/src/prediction/dictionary_predictor.h
+@@ -49,6 +49,7 @@
+ #include "converter/immutable_converter_interface.h"
+ #include "converter/segmenter.h"
+ #include "dictionary/pos_matcher.h"
++#include "dictionary/single_kanji_dictionary.h"
+ #include "engine/modules.h"
+ #include "prediction/dictionary_prediction_aggregator.h"
+ #include "prediction/predictor_interface.h"
+@@ -177,6 +178,8 @@ class DictionaryPredictor : public PredictorInterface {
+                                      bool is_suggestion,
+                                      size_t total_candidates_size);
+ 
++  static std::string GetPredictionTypeDebugString(PredictionTypes types);
++
+   int CalculatePrefixPenalty(
+       const ConversionRequest &request, absl::string_view input_key,
+       const Result &result,
+@@ -215,6 +218,8 @@ class DictionaryPredictor : public PredictorInterface {
+   const Connector &connector_;
+   const Segmenter &segmenter_;
+   const SuggestionFilter &suggestion_filter_;
++  std::unique_ptr<const dictionary::SingleKanjiDictionary>
++      single_kanji_dictionary_;
+   const dictionary::PosMatcher pos_matcher_;
+   const uint16_t general_symbol_id_;
+   const std::string predictor_name_;
+diff --git a/src/prediction/dictionary_predictor_test.cc b/src/prediction/dictionary_predictor_test.cc
+index b6af9de..de7002d 100644
+--- a/src/prediction/dictionary_predictor_test.cc
++++ b/src/prediction/dictionary_predictor_test.cc
+@@ -837,6 +837,36 @@ TEST_F(DictionaryPredictorTest, MergeAttributesForDebug) {
+   }
+ }
+ 
++TEST_F(DictionaryPredictorTest, SetDescription) {
++  auto data_and_predictor = std::make_unique<MockDataAndPredictor>();
++  DictionaryPredictorTestPeer predictor_peer =
++      data_and_predictor->predictor_peer();
++
++  std::vector<Result> results = {
++      CreateResult6("ほせい", "補正", 0, 0, prediction::TYPING_CORRECTION,
++                    Token::NONE),
++      CreateResult6("あ", "亞", 0, 10, prediction::UNIGRAM, Token::NONE),
++      CreateResult6("たんご", "単語", 0, 20, prediction::UNIGRAM, Token::NONE),
++  };
++
++  Segments segments;
++  InitSegmentsWithKey("test", &segments);
++
++  const ConversionRequest convreq =
++      CreateConversionRequest(ConversionRequest::PREDICTION, segments);
++  results = predictor_peer.RerankAndFilterResults(convreq, results);
++
++  EXPECT_EQ(results.size(), 3);
++  EXPECT_EQ(results[0].value, "補正");
++  EXPECT_EQ(results[1].value, "亞");
++  // "亜の旧字体"
++  // We cannot compare the description as-is, since the other description
++  // may be appended in the dbg build.
++  EXPECT_TRUE(absl::StrContains(results[1].description, "の"));
++  EXPECT_EQ(results[2].value, "単語");
++  EXPECT_FALSE(absl::StrContains(results[2].description, "の"));
++}
++
+ TEST_F(DictionaryPredictorTest, PropagateResultCosts) {
+   auto data_and_predictor = std::make_unique<MockDataAndPredictor>();
+   DictionaryPredictorTestPeer predictor_peer =
+diff --git a/src/prediction/prediction_test.gyp b/src/prediction/prediction_test.gyp
+index 921a85f..08ba591 100644
+--- a/src/prediction/prediction_test.gyp
++++ b/src/prediction/prediction_test.gyp
+@@ -60,12 +60,12 @@
+         '<(mozc_oss_src_dir)/data_manager/testing/mock_data_manager.gyp:mock_data_manager',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:dictionary',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:suffix_dictionary',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/system/system_dictionary.gyp:system_dictionary',
+         '<(mozc_oss_src_dir)/dictionary/system/system_dictionary.gyp:value_dictionary',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+-        '<(mozc_oss_src_dir)/request/request.gyp:request_test_util',
++        '<(mozc_oss_src_dir)/request/request.gyp:request_test_util',	
+         '<(mozc_oss_src_dir)/storage/storage.gyp:storage',
+         '<(mozc_oss_src_dir)/testing/testing.gyp:gtest_main',
+         '<(mozc_oss_src_dir)/testing/testing.gyp:mozctest',
+diff --git a/src/prediction/result.cc b/src/prediction/result.cc
+index 4831397..4322822 100644
+--- a/src/prediction/result.cc
++++ b/src/prediction/result.cc
+@@ -31,9 +31,9 @@
+ 
+ #include <tuple>
+ 
+-#include "absl/base/nullability.h"
+ #include "absl/log/log.h"
+ #include "absl/strings/string_view.h"
++#include "base/absl_nullability.h"
+ #include "base/strings/unicode.h"
+ #include "composer/query.h"
+ #include "converter/candidate.h"
+@@ -131,39 +131,5 @@ void PopulateTypeCorrectedQuery(
+   result->wcost += adjustment;
+ }
+ 
+-std::string GetPredictionTypeDebugString(PredictionTypes types) {
+-  std::string debug_desc;
+-  if (types & PredictionType::UNIGRAM) {
+-    debug_desc.append(1, 'U');
+-  }
+-  if (types & PredictionType::BIGRAM) {
+-    debug_desc.append(1, 'B');
+-  }
+-  if (types & PredictionType::REALTIME_TOP) {
+-    debug_desc.append("R1");
+-  } else if (types & PredictionType::REALTIME) {
+-    debug_desc.append(1, 'R');
+-  }
+-  if (types & PredictionType::SUFFIX) {
+-    debug_desc.append(1, 'S');
+-  }
+-  if (types & PredictionType::ENGLISH) {
+-    debug_desc.append(1, 'E');
+-  }
+-  if (types & PredictionType::TYPING_CORRECTION) {
+-    debug_desc.append(1, 'T');
+-  }
+-  if (types & PredictionType::TYPING_COMPLETION) {
+-    debug_desc.append(1, 'C');
+-  }
+-  if (types & PredictionType::SUPPLEMENTAL_MODEL) {
+-    debug_desc.append(1, 'X');
+-  }
+-  if (types & PredictionType::KEY_EXPANDED_IN_DICTIONARY) {
+-    debug_desc.append(1, 'K');
+-  }
+-  return debug_desc;
+-}
+-
+ }  // namespace prediction
+ }  // namespace mozc
+diff --git a/src/prediction/result.h b/src/prediction/result.h
+index 35feefb..1fcabdf 100644
+--- a/src/prediction/result.h
++++ b/src/prediction/result.h
+@@ -36,11 +36,11 @@
+ #include <utility>
+ #include <vector>
+ 
+-#include "absl/base/nullability.h"
+ #include "absl/strings/str_format.h"
+ #include "absl/strings/str_join.h"
+ #include "absl/strings/str_split.h"
+ #include "absl/strings/string_view.h"
++#include "base/absl_nullability.h"
+ #include "composer/query.h"
+ #include "dictionary/dictionary_token.h"
+ #include "prediction/zero_query_dict.h"
+@@ -211,9 +211,6 @@ void PopulateTypeCorrectedQuery(
+     const composer::TypeCorrectedQuery &typing_corrected_result,
+     Result *absl_nonnull result);
+ 
+-// Makes debug string from `types`.
+-std::string GetPredictionTypeDebugString(PredictionTypes types);
+-
+ #ifndef NDEBUG
+ #define MOZC_WORD_LOG(result, ...)                                  \
+   {                                                                 \
+diff --git a/src/prediction/user_history_predictor.cc b/src/prediction/user_history_predictor.cc
+index 970b646..3013e87 100644
+--- a/src/prediction/user_history_predictor.cc
++++ b/src/prediction/user_history_predictor.cc
+@@ -83,17 +83,19 @@ using ::mozc::composer::TypeCorrectedQuery;
+ 
+ // Finds suggestion candidates from the most recent 3000 history in LRU.
+ // We don't check all history, since suggestion is called every key event
+-constexpr size_t kDefaultMaxSuggestionTrial = 3000;
++constexpr size_t kMaxSuggestionTrial = 3000;
+ 
+ // Finds suffix matches of history_segments from the most recent 500 histories
+ // in LRU.
+ constexpr size_t kMaxPrevValueTrial = 500;
+ 
+-// On-memory LRU cache size.
++// Cache size
+ // Typically memory/storage footprint becomes kLruCacheSize * 70 bytes.
+-// Note that actual entries serialized to the disk may be smaller
+-// than this size.
++#ifdef __ANDROID__
++constexpr size_t kLruCacheSize = 4000;
++#else   // __ANDROID__
+ constexpr size_t kLruCacheSize = 10000;
++#endif  // __ANDROID__
+ 
+ // Don't save key/value that are
+ // longer than kMaxCandidateSize to avoid memory explosion
+@@ -115,6 +117,8 @@ constexpr absl::string_view kEmojiDescription = "絵文字";
+ 
+ constexpr size_t kRevertCacheSize = 16;
+ 
++constexpr absl::Duration k62Days = absl::Hours(62 * 24);
++
+ // TODO(peria, hidehiko): Unify this checker and IsEmojiCandidate in
+ //     EmojiRewriter.  If you make similar functions before the merging in
+ //     case, put a similar note to avoid twisted dependency.
+@@ -230,11 +234,20 @@ bool UserHistoryStorage::Load() {
+     return false;
+   }
+ 
++  const int num_deleted = DeleteEntriesUntouchedFor62Days();
++  LOG_IF(INFO, num_deleted > 0)
++      << num_deleted << " old entries were not loaded "
++      << proto_.entries_size();
++
+   MOZC_VLOG(1) << "Loaded user history, size=" << proto_.entries_size();
+   return true;
+ }
+ 
+ bool UserHistoryStorage::Save() {
++  const int num_deleted = DeleteEntriesUntouchedFor62Days();
++  LOG_IF(INFO, num_deleted > 0)
++      << num_deleted << " old entries were removed before save";
++
+   std::string output;
+   if (!proto_.AppendToString(&output)) {
+     LOG(ERROR) << "AppendToString failed";
+@@ -256,6 +269,37 @@ bool UserHistoryStorage::Save() {
+   return true;
+ }
+ 
++int UserHistoryStorage::DeleteEntriesBefore(uint64_t timestamp) {
++  // Partition entries so that [0, new_size) is kept and [new_size, size) is
++  // deleted.
++  int i = 0;
++  int new_size = proto_.entries_size();
++  while (i < new_size) {
++    if (proto_.entries(i).last_access_time() >= timestamp) {
++      ++i;
++      continue;
++    }
++    // Swap this entry (to be deleted) and the last entry (not yet checked) for
++    // batch deletion.
++    --new_size;
++    if (i != new_size) {
++      proto_.mutable_entries()->SwapElements(i, new_size);
++    }
++  }
++  if (new_size == proto_.entries_size()) {
++    return 0;
++  }
++  const int num_deleted = proto_.entries_size() - new_size;
++  proto_.mutable_entries()->DeleteSubrange(new_size, num_deleted);
++  return num_deleted;
++}
++
++int UserHistoryStorage::DeleteEntriesUntouchedFor62Days() {
++  const absl::Time now = Clock::GetAbslTime();
++  const absl::Time timestamp = std::max(now - k62Days, absl::UnixEpoch());
++  return DeleteEntriesBefore(absl::ToUnixSeconds(timestamp));
++}
++
+ bool UserHistoryPredictor::EntryPriorityQueue::Push(Entry *entry) {
+   DCHECK(entry);
+   if (!seen_.insert(absl::HashOf(entry->value())).second) {
+@@ -328,7 +372,10 @@ bool UserHistoryPredictor::CheckSyncerAndDelete() const {
+   return true;
+ }
+ 
+-bool UserHistoryPredictor::Sync() { return AsyncSave(); }
++bool UserHistoryPredictor::Sync() {
++  return AsyncSave();
++  // return Save();   blocking version
++}
+ 
+ bool UserHistoryPredictor::Reload() {
+   WaitForSyncer();
+@@ -404,27 +451,10 @@ bool UserHistoryPredictor::Save() {
+ 
+   UserHistoryStorage history(filename);
+ 
+-  // Copy the current values to avoid these values from being updated in
+-  // the actual copy operations.
+-  const int store_size = cache_store_size_.load();
+-  const absl::Duration lifetime_days = entry_lifetime_days_as_duration();
+-  auto &proto = history.GetProto();
+-
+-  const absl::Time now = Clock::GetAbslTime();
+-  for (const DicElement &elm : *dic_) {
+-    if (store_size > 0 && proto.entries_size() >= store_size) {
+-      break;
+-    }
+-    if (absl::FromUnixSeconds(elm.value.last_access_time()) + lifetime_days <
+-        now) {
+-      continue;
+-    }
+-    *proto.add_entries() = elm.value;
++  for (const DicElement *elm = dic_->Tail(); elm != nullptr; elm = elm->prev) {
++    *history.GetProto().add_entries() = elm->value;
+   }
+ 
+-  // Reverse the contents to keep the LRU order when loading.
+-  absl::c_reverse(*proto.mutable_entries());
+-
+   if (!history.Save()) {
+     LOG(ERROR) << "UserHistoryStorage::Save() failed";
+     return false;
+@@ -1125,9 +1155,6 @@ std::vector<Result> UserHistoryPredictor::Predict(
+ 
+   const auto &params = request.request().decoder_experiment_params();
+ 
+-  SetEntryLifetimeDays(params.user_history_entry_lifetime_days());
+-  SetCacheStoreSize(params.user_history_cache_store_size());
+-
+   const bool is_zero_query =
+       request.request().zero_query_suggestion() && is_empty_input;
+   size_t max_prediction_size =
+@@ -1227,10 +1254,8 @@ const UserHistoryPredictor::Entry *UserHistoryPredictor::LookupPrevEntry(
+ 
+   // Check the timestamp of prev_entry.
+   const absl::Time now = Clock::GetAbslTime();
+-  const absl::Duration lifetime_days = entry_lifetime_days_as_duration();
+   if (prev_entry != nullptr &&
+-      absl::FromUnixSeconds(prev_entry->last_access_time()) + lifetime_days <
+-          now) {
++      absl::FromUnixSeconds(prev_entry->last_access_time()) + k62Days < now) {
+     updated_ = true;  // We found an entry to be deleted at next save.
+     return nullptr;
+   }
+@@ -1300,12 +1325,6 @@ UserHistoryPredictor::GetEntry_QueueFromHistoryDictionary(
+   EntryPriorityQueue entry_queue;
+   const absl::Time now = Clock::GetAbslTime();
+   int trial = 0;
+-  int max_trial = request.request()
+-                      .decoder_experiment_params()
+-                      .user_history_max_suggestion_trial();
+-  if (max_trial <= 0) max_trial = kDefaultMaxSuggestionTrial;
+-  const absl::Duration lifetime_days = entry_lifetime_days_as_duration();
+-
+   for (const DicElement &elm : *dic_) {
+     // already found enough entry_queue.
+     if (entry_queue.size() >= max_entry_queue_size) {
+@@ -1315,13 +1334,12 @@ UserHistoryPredictor::GetEntry_QueueFromHistoryDictionary(
+     if (!IsValidEntryIgnoringRemovedField(elm.value)) {
+       continue;
+     }
+-    if (absl::FromUnixSeconds(elm.value.last_access_time()) + lifetime_days <
+-        now) {
++    if (absl::FromUnixSeconds(elm.value.last_access_time()) + k62Days < now) {
+       updated_ = true;  // We found an entry to be deleted at next save.
+       continue;
+     }
+     if (request.request_type() == ConversionRequest::SUGGESTION &&
+-        trial++ >= max_trial) {
++        trial++ >= kMaxSuggestionTrial) {
+       MOZC_VLOG(2) << "too many trials";
+       break;
+     }
+diff --git a/src/prediction/user_history_predictor.h b/src/prediction/user_history_predictor.h
+index 870a868..b5432a8 100644
+--- a/src/prediction/user_history_predictor.h
++++ b/src/prediction/user_history_predictor.h
+@@ -68,6 +68,14 @@ class UserHistoryStorage {
+   // Saves history into encrypted file.
+   bool Save();
+ 
++  // Deletes entries before the given timestamp.  Returns the number of deleted
++  // entries.
++  int DeleteEntriesBefore(uint64_t timestamp);
++
++  // Deletes entries that are not accessed for 62 days.  Returns the number of
++  // deleted entries.
++  int DeleteEntriesUntouchedFor62Days();
++
+   mozc::user_history_predictor::UserHistory &GetProto() { return proto_; }
+   const mozc::user_history_predictor::UserHistory &GetProto() const {
+     return proto_;
+@@ -442,16 +450,6 @@ class UserHistoryPredictor : public PredictorInterface {
+   void MaybeRemoveUnselectedHistory(absl::Span<const Result> results,
+                                     RevertEntries *revert_entries);
+ 
+-  // Default entry lifetime period.
+-  // Entries will be automatically purged after this period.
+-  static constexpr int kDefaultEntryLifetimeDays = 62;
+-
+-  void SetEntryLifetimeDays(int days) const {
+-    entry_lifetime_days_.store(days <= 0 ? kDefaultEntryLifetimeDays : days);
+-  }
+-
+-  void SetCacheStoreSize(int size) const { cache_store_size_.store(size); }
+-
+   const dictionary::DictionaryInterface &dictionary_;
+   const dictionary::UserDictionaryInterface &user_dictionary_;
+   const std::string predictor_name_;
+@@ -461,16 +459,6 @@ class UserHistoryPredictor : public PredictorInterface {
+   mutable std::optional<BackgroundFuture<void>> sync_;
+   const engine::Modules &modules_;
+ 
+-  mutable std::atomic<int> entry_lifetime_days_ = kDefaultEntryLifetimeDays;
+-
+-  absl::Duration entry_lifetime_days_as_duration() const {
+-    return absl::Hours(24 * entry_lifetime_days_.load());
+-  }
+-
+-  // The maximum entries size serialized to the file.
+-  // When zero, all entries in the on-memory LRU are stored.
+-  mutable std::atomic<int> cache_store_size_ = 0;
+-
+   // Internal LRU cache to store dic_key/Entry to be reverted.
+   storage::LruCache<uint64_t, RevertEntries> revert_cache_;
+ };
+diff --git a/src/prediction/user_history_predictor_test.cc b/src/prediction/user_history_predictor_test.cc
+index 124f561..954b52e 100644
+--- a/src/prediction/user_history_predictor_test.cc
++++ b/src/prediction/user_history_predictor_test.cc
+@@ -119,11 +119,6 @@ class UserHistoryPredictorTestPeer
+   PEER_METHOD(LookupEntry);
+   PEER_METHOD(RemoveNgramChain);
+   PEER_METHOD(WaitForSyncer);
+-  PEER_METHOD(Save);
+-  PEER_METHOD(SetEntryLifetimeDays);
+-  PEER_METHOD(SetCacheStoreSize);
+-  PEER_VARIABLE(cache_store_size_);
+-  PEER_VARIABLE(entry_lifetime_days_);
+   PEER_VARIABLE(dic_);
+   PEER_DECLARE(MatchType);
+   PEER_DECLARE(RemoveNgramChainResult);
+@@ -2725,6 +2720,68 @@ TEST_F(UserHistoryPredictorTest, UserHistoryStorage) {
+   EXPECT_OK(FileUtil::UnlinkIfExists(filename));
+ }
+ 
++TEST_F(UserHistoryPredictorTest, UserHistoryStorageContainingOldEntries) {
++  ScopedClockMock clock(absl::FromUnixSeconds(1));
++  TempDirectory temp_dir = testing::MakeTempDirectoryOrDie();
++
++  // Create a history proto containing old entries (timestamp = 1).
++  user_history_predictor::UserHistory history;
++  for (int i = 0; i < 10; ++i) {
++    auto *entry = history.add_entries();
++    entry->set_key(absl::StrFormat("old_key%d", i));
++    entry->set_value(absl::StrFormat("old_value%d", i));
++    entry->set_last_access_time(absl::ToUnixSeconds(clock->GetAbslTime()));
++  }
++  clock->Advance(absl::Hours(24 * 63));  // Advance clock for 63 days.
++  for (int i = 0; i < 10; ++i) {
++    auto *entry = history.add_entries();
++    entry->set_key(absl::StrFormat("new_key%d", i));
++    entry->set_value(absl::StrFormat("new_value%d", i));
++    entry->set_last_access_time(absl::ToUnixSeconds(clock->GetAbslTime()));
++  }
++
++  // Test Load().
++  {
++    const std::string filename =
++        FileUtil::JoinPath(temp_dir.path(), "testload");
++    // Write directly to the file to keep old entries for testing.
++    storage::EncryptedStringStorage file_storage(filename);
++    ASSERT_TRUE(file_storage.Save(history.SerializeAsString()));
++
++    UserHistoryStorage storage(filename);
++    ASSERT_TRUE(storage.Load());
++    // Only the new entries are loaded.
++    EXPECT_EQ(storage.GetProto().entries_size(), 10);
++    for (const auto &entry : storage.GetProto().entries()) {
++      EXPECT_TRUE(entry.key().starts_with("new_"));
++      EXPECT_TRUE(entry.value().starts_with("new_"));
++    }
++    EXPECT_OK(FileUtil::Unlink(filename));
++  }
++
++  // Test Save().
++  {
++    const std::string filename =
++        FileUtil::JoinPath(temp_dir.path(), "testsave");
++    UserHistoryStorage storage(filename);
++    storage.GetProto() = history;
++    ASSERT_TRUE(storage.Save());
++
++    // Directly open the file to check the actual entries written.
++    storage::EncryptedStringStorage file_storage(filename);
++    std::string content;
++    ASSERT_TRUE(file_storage.Load(&content));
++    user_history_predictor::UserHistory modified_history;
++    ASSERT_TRUE(modified_history.ParseFromString(content));
++    EXPECT_EQ(modified_history.entries_size(), 10);
++    for (const auto &entry : storage.GetProto().entries()) {
++      EXPECT_TRUE(entry.key().starts_with("new_"));
++      EXPECT_TRUE(entry.value().starts_with("new_"));
++    }
++    EXPECT_OK(FileUtil::Unlink(filename));
++  }
++}
++
+ TEST_F(UserHistoryPredictorTest, UserHistoryStorageContainingInvalidEntries) {
+   // This test checks invalid entries are not loaded into dic_.
+   ScopedClockMock clock(absl::FromUnixSeconds(1));
+@@ -4583,101 +4640,6 @@ TEST_F(UserHistoryPredictorTest, PunctuationLinkDesktop) {
+   }
+ }
+ 
+-TEST_F(UserHistoryPredictorTest, EntriesMaxTrialSize) {
+-  UserHistoryPredictor *predictor = GetUserHistoryPredictorWithClearedHistory();
+-  UserHistoryPredictorTestPeer predictor_peer(*predictor);
+-
+-  // Insert one entry per day.
+-  for (int i = 0; i < 30; ++i) {
+-    Segments segments;
+-    const ConversionRequest convreq = SetUpInputForConversion(
+-        absl::StrFormat("わたしのなまえ%2d", i), &composer_, &segments);
+-    AddCandidate(absl::StrFormat("私の名前%2d", i), &segments);
+-    predictor->Finish(convreq, Converter::MakeLearningResults(segments),
+-                      segments.revert_id());
+-  }
+-
+-  for (int trial : {10, 20}) {
+-    request_.mutable_decoder_experiment_params()
+-        ->set_user_history_max_suggestion_trial(trial);
+-    for (int i = 29; i >= 0; --i) {
+-      Segments segments;
+-      const ConversionRequest convreq = SetUpInputForSuggestion(
+-          absl::StrFormat("わたしのなまえ%2d", i), &composer_, &segments);
+-      const std::vector<Result> results = predictor->Predict(convreq);
+-      const int lookup_trial = 29 - i;
+-      if (lookup_trial < trial) {
+-        EXPECT_FALSE(results.empty());
+-      } else {
+-        EXPECT_TRUE(results.empty());
+-      }
+-    }
+-  }
+-
+-  request_.mutable_decoder_experiment_params()
+-      ->set_user_history_max_suggestion_trial(0);
+-}
+-
+-TEST_F(UserHistoryPredictorTest, EntriesAreDeletedAtSync) {
+-  // mode 0 -> delete by lifetime
+-  // mode 1 -> delete by cache size.
+-
+-  for (const int mode : {0, 1}) {
+-    for (const int limit : {10, 20, 30, 40}) {
+-      ScopedClockMock clock(absl::FromUnixSeconds(1));
+-      UserHistoryPredictor *predictor =
+-          GetUserHistoryPredictorWithClearedHistory();
+-      UserHistoryPredictorTestPeer predictor_peer(*predictor);
+-
+-      if (mode == 0) {
+-        predictor_peer.SetEntryLifetimeDays(limit);
+-        EXPECT_EQ(predictor_peer.entry_lifetime_days_(), limit);
+-      } else {
+-        predictor_peer.SetCacheStoreSize(limit);
+-        EXPECT_EQ(predictor_peer.cache_store_size_(), limit);
+-      }
+-
+-      // Insert one entry per day.
+-      for (int i = 0; i < 50; ++i) {
+-        Segments segments;
+-        const ConversionRequest convreq = SetUpInputForConversion(
+-            absl::StrFormat("わたしのなまえ%2d", i), &composer_, &segments);
+-        AddCandidate(absl::StrFormat("私の名前%2d", i), &segments);
+-        predictor->Finish(convreq, Converter::MakeLearningResults(segments),
+-                          segments.revert_id());
+-        if (mode == 0) {
+-          clock->Advance(absl::Hours(24));  // advance one day.
+-        }
+-      }
+-
+-      predictor_peer.Save();
+-
+-      auto lookup_key = [&](absl::string_view key) -> std::string {
+-        Segments segments;
+-        const ConversionRequest convreq =
+-            SetUpInputForPrediction(key, &composer_, &segments);
+-        const std::vector<Result> results = predictor->Predict(convreq);
+-        return results.empty() ? "" : results[0].value;
+-      };
+-
+-      const int deleted = 50 - limit;
+-      for (int i = 0; i < deleted; ++i) {
+-        EXPECT_EQ(lookup_key(absl::StrFormat("わたしのなまえ%2d", i)), "");
+-      }
+-
+-      for (int i = deleted; i < limit; ++i) {
+-        EXPECT_EQ(lookup_key(absl::StrFormat("わたしのなまえ%2d", i)),
+-                  absl::StrFormat("私の名前%2d", i));
+-      }
+-
+-      predictor_peer.SetEntryLifetimeDays(0);
+-      predictor_peer.SetCacheStoreSize(0);
+-      EXPECT_EQ(predictor_peer.entry_lifetime_days_(), 62);
+-      EXPECT_EQ(predictor_peer.cache_store_size_(), 0);
+-    }
+-  }
+-}
+-
+ TEST_F(UserHistoryPredictorTest, 62DayOldEntriesAreDeletedAtSync) {
+   ScopedClockMock clock(absl::FromUnixSeconds(1));
+ 
+diff --git a/src/protocol/commands.proto b/src/protocol/commands.proto
+index 86f303e..aa9096e 100644
+--- a/src/protocol/commands.proto
++++ b/src/protocol/commands.proto
+@@ -546,7 +546,7 @@ message Capability {
+       [default = NO_TEXT_DELETION_CAPABILITY];
+ }
+ 
+-// Next ID: 111
++// Next ID: 108
+ // Bundles together some Android experiment flags so that they can be easily
+ // retrieved throughout the native code.  These flags are generally specific to
+ // the decoder, and are made available when the decoder is initialized.
+@@ -643,19 +643,6 @@ message DecoderExperimentParams {
+   // filtered.
+   // The candidate will not be filtered if this value is zero.
+   optional int32 suffix_nwp_transition_cost_threshold = 107 [default = 0];
+-
+-  // How many initial LRU entries to look up.
+-  // We use a simple linear-search on LRU.
+-  // When zero, default value (3000) is used.
+-  optional int32 user_history_max_suggestion_trial = 108 [ default = 0];
+-
+-  // The maximum lifetime of the entries.
+-  // When zero, default value (62) is used.
+-  optional int32 user_history_entry_lifetime_days = 109 [ default = 0];
+-
+-  // The maximum size of entries actually saved to disk.
+-  // When zero, store all entries in the on-memory LRU.
+-  optional int32 user_history_cache_store_size = 110 [ default = 0];
+ }
+ 
+ // Clients' request to the server.
+diff --git a/src/request/BUILD.bazel b/src/request/BUILD.bazel
+index 3afc139..3d1f29c 100644
+--- a/src/request/BUILD.bazel
++++ b/src/request/BUILD.bazel
+@@ -81,6 +81,7 @@ mozc_cc_library(
+     visibility = [
+         "//:__subpackages__",
+         "//converter:__pkg__",
++        "//dictionary:__subpackages__",
+         "//prediction:__pkg__",
+         "//rewriter:__pkg__",
+     ],
+diff --git a/src/rewriter/rewriter.gyp b/src/rewriter/rewriter.gyp
+index 71c279b..d586955 100644
+--- a/src/rewriter/rewriter.gyp
++++ b/src/rewriter/rewriter.gyp
+@@ -95,7 +95,7 @@
+         '<(mozc_oss_src_dir)/converter/immutable_converter.gyp:immutable_converter',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:serialized_dictionary',
+         '<(mozc_oss_src_dir)/dictionary/dictionary.gyp:dictionary',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+diff --git a/src/rewriter/rewriter_base.gyp b/src/rewriter/rewriter_base.gyp
+index 443ae5b..ea8d8fe 100644
+--- a/src/rewriter/rewriter_base.gyp
++++ b/src/rewriter/rewriter_base.gyp
+@@ -40,7 +40,7 @@
+       'target_name': 'gen_rewriter_files',
+       'type': 'none',
+       'dependencies': [
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_util',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_util',
+         'gen_usage_rewriter_dictionary_main#host',
+       ],
+       'toolsets': ['host'],
+@@ -130,8 +130,8 @@
+         '<(mozc_oss_src_dir)/base/base.gyp:serialized_string_array',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:data_manager',
+         '<(mozc_oss_src_dir)/data_manager/data_manager_base.gyp:serialized_dictionary',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:user_pos',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
+       ],
+     },
+     {
+diff --git a/src/rewriter/rewriter_test.gyp b/src/rewriter/rewriter_test.gyp
+index 00c4860..c9aeea9 100644
+--- a/src/rewriter/rewriter_test.gyp
++++ b/src/rewriter/rewriter_test.gyp
+@@ -124,7 +124,7 @@
+         '<(mozc_oss_src_dir)/config/config.gyp:config_handler',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segments',
+         '<(mozc_oss_src_dir)/data_manager/testing/mock_data_manager.gyp:mock_data_manager',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
+         '<(mozc_oss_src_dir)/request/request.gyp:conversion_request',
+diff --git a/src/rewriter/single_kanji_rewriter.cc b/src/rewriter/single_kanji_rewriter.cc
+index 4e34222..567f994 100644
+--- a/src/rewriter/single_kanji_rewriter.cc
++++ b/src/rewriter/single_kanji_rewriter.cc
+@@ -123,12 +123,7 @@ bool SingleKanjiRewriter::Rewrite(const ConversionRequest &request,
+   if (request.request().mixed_conversion() &&
+       request.request_type() != ConversionRequest::CONVERSION) {
+     MOZC_VLOG(2) << "single kanji prediction is enabled";
+-    // Single kanji entries are populated in the predictor when mixed conversion
+-    // mode, so we only sets the description of single kanji.
+-    for (Segment &segment : segments->conversion_segments()) {
+-      AddDescriptionForExistingCandidates(&segment);
+-    }
+-    return true;
++    return false;
+   }
+ 
+   bool modified = false;
+diff --git a/src/rewriter/single_kanji_rewriter_test.cc b/src/rewriter/single_kanji_rewriter_test.cc
+index ac864c6..6acdf6e 100644
+--- a/src/rewriter/single_kanji_rewriter_test.cc
++++ b/src/rewriter/single_kanji_rewriter_test.cc
+@@ -224,47 +224,23 @@ TEST_F(SingleKanjiRewriterTest, InsertionPositionTest) {
+ 
+ TEST_F(SingleKanjiRewriterTest, AddDescriptionTest) {
+   const SingleKanjiRewriter rewriter(data_manager_);
+-
+   Segments segments;
++  Segment *segment = segments.add_segment();
+ 
+-  auto init_segment = [&segments]() {
+-    segments.Clear();
+-    Segment *segment = segments.add_segment();
+-
+-    segment->set_key("あ");
+-    {
+-      converter::Candidate *candidate = segment->add_candidate();
+-      candidate->key = segment->key();
+-      candidate->content_key = segment->key();
+-      candidate->value = "亞";  // variant of "亜".
+-      candidate->content_value = candidate->value;
+-    }
+-    return segment;
+-  };
+-
+-  // desktop
++  segment->set_key("あ");
+   {
+-    Segment *segment = init_segment();
+-    EXPECT_EQ(segment->candidates_size(), 1);
+-    EXPECT_TRUE(segment->candidate(0).description.empty());
+-    EXPECT_TRUE(rewriter.Rewrite(default_request_, &segments));
+-    EXPECT_LT(1, segment->candidates_size());  // Some candidates were inserted.
+-    EXPECT_EQ(segment->candidate(0).description, "亜の旧字体");
++    converter::Candidate *candidate = segment->add_candidate();
++    candidate->key = segment->key();
++    candidate->content_key = segment->key();
++    candidate->value = "亞";  // variant of "亜".
++    candidate->content_value = candidate->value;
+   }
+ 
+-  // Only sets the description in mixed conversion mode.
+-  {
+-    commands::Request request;
+-    request_test_util::FillMobileRequest(&request);
+-    Segment *segment = init_segment();
+-    const ConversionRequest convreq =
+-        ConvReq(request, ConversionRequest::PREDICTION);
+-    EXPECT_EQ(segment->candidates_size(), 1);
+-    EXPECT_TRUE(segment->candidate(0).description.empty());
+-    EXPECT_TRUE(rewriter.Rewrite(convreq, &segments));
+-    EXPECT_EQ(1, segment->candidates_size());  // No candidates were inserted.
+-    EXPECT_EQ(segment->candidate(0).description, "亜の旧字体");
+-  }
++  EXPECT_EQ(segment->candidates_size(), 1);
++  EXPECT_TRUE(segment->candidate(0).description.empty());
++  EXPECT_TRUE(rewriter.Rewrite(default_request_, &segments));
++  EXPECT_LT(1, segment->candidates_size());  // Some candidates were inserted.
++  EXPECT_EQ(segment->candidate(0).description, "亜の旧字体");
+ }
+ 
+ TEST_F(SingleKanjiRewriterTest, TriggerConditionForPrediction) {
+@@ -279,7 +255,7 @@ TEST_F(SingleKanjiRewriterTest, TriggerConditionForPrediction) {
+     const ConversionRequest convreq =
+         ConvReq(request, ConversionRequest::PREDICTION);
+     ASSERT_TRUE(rewriter.capability(convreq) & RewriterInterface::PREDICTION);
+-    EXPECT_TRUE(rewriter.Rewrite(convreq, &segments));
++    EXPECT_FALSE(rewriter.Rewrite(convreq, &segments));
+   }
+ 
+   {
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 6ed8949..a86d6b0 100644
+index a03b7cb..a86d6b0 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
-@@ -158,6 +158,7 @@ mozc_cc_library(
+@@ -48,7 +48,12 @@ mozc_cc_library(
+     name = "session",
+     srcs = ["session.cc"],
+     hdrs = ["session.h"],
+-    visibility = ["//evaluation/candidates_diff_checker:__pkg__"],
++    visibility = [
++        "//android/jni:__pkg__",
++        "//evaluation/candidates_diff_checker:__pkg__",
++        "//ios:__pkg__",
++        "//server:__pkg__",
++    ],
+     deps = [
+         ":ime_context",
+         ":key_event_transformer",
+@@ -152,6 +157,8 @@ mozc_cc_library(
+     visibility = [
          "//android/jni:__pkg__",
          "//ios:__pkg__",
-         "//server:__pkg__",
++        "//server:__pkg__",
 +        "//unix/fcitx5:__pkg__",
      ],
      deps = [
          ":keymap",
-@@ -355,6 +356,7 @@ mozc_cc_library(
+@@ -349,6 +356,7 @@ mozc_cc_library(
      hdrs = ["key_info_util.h"],
      visibility = [
          "//client:__pkg__",
@@ -386,6 +2415,31 @@ index 6ed8949..a86d6b0 100644
          "//win32/base:__pkg__",
      ],
      deps = [
+@@ -406,7 +414,10 @@ mozc_cc_library(
+         ":session_stress_test_data",
+     ],
+     hdrs = ["random_keyevents_generator.h"],
+-    visibility = ["//client:__pkg__"],
++    visibility = [
++        "//client:__pkg__",
++        "//server:__pkg__",
++    ],
+     deps = [
+         ":keymap",
+         "//base:japanese_util",
+diff --git a/src/session/session.gyp b/src/session/session.gyp
+index 9b562e9..af7ae97 100644
+--- a/src/session/session.gyp
++++ b/src/session/session.gyp
+@@ -48,7 +48,7 @@
+         '<(mozc_oss_src_dir)/composer/composer.gyp:key_parser',
+         '<(mozc_oss_src_dir)/config/config.gyp:config_handler',
+         '<(mozc_oss_src_dir)/converter/converter_base.gyp:segments',
+-        '<(mozc_oss_src_dir)/dictionary/pos_matcher.gyp:pos_matcher',
++        '<(mozc_oss_src_dir)/dictionary/dictionary_base.gyp:pos_matcher',
+         '<(mozc_oss_src_dir)/engine/engine.gyp:engine_converter',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:commands_proto',
+         '<(mozc_oss_src_dir)/protocol/protocol.gyp:config_proto',
 diff --git a/src/unix/fcitx/BUILD.bazel b/src/unix/fcitx/BUILD.bazel
 new file mode 100644
 index 0000000..76beb76
@@ -10632,3 +12686,31 @@ index 0000000..8370b74
 +}  // namespace fcitx
 +
 +#endif  // MOZC_UNIX_FCITX_SURROUNDING_TEXT_URIL_H_
+diff --git a/src/win32/tip/BUILD.bazel b/src/win32/tip/BUILD.bazel
+index 7aa084e..ce5d3e8 100644
+--- a/src/win32/tip/BUILD.bazel
++++ b/src/win32/tip/BUILD.bazel
+@@ -231,9 +231,9 @@ mozc_cc_library(
+     target_compatible_with = ["@platforms//os:windows"],
+     deps = [
+         ":tip_compartment_util",
++        "//base:absl_nullability",
+         "//base/win32:com",
+         "//base/win32:hresultor",
+-        "@com_google_absl//absl/base:nullability",
+         "@com_microsoft_wil//:wil",
+     ],
+ )
+diff --git a/src/win32/tip/tip_transitory_extension.cc b/src/win32/tip/tip_transitory_extension.cc
+index 39fd2d4..a481eae 100644
+--- a/src/win32/tip/tip_transitory_extension.cc
++++ b/src/win32/tip/tip_transitory_extension.cc
+@@ -34,7 +34,7 @@
+ #include <wil/resource.h>
+ #include <windows.h>
+ 
+-#include "absl/base/nullability.h"
++#include "base/absl_nullability.h"
+ #include "base/win32/com.h"
+ #include "base/win32/hresultor.h"
+ #include "win32/tip/tip_compartment_util.h"
