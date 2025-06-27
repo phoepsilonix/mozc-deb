@@ -367,10 +367,10 @@ index 6e17812..3efd3af 100755
    return gyp_file_names
  
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index a03b7cb..a60e06c 100644
+index 1c4387a..1149862 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
-@@ -152,6 +152,7 @@ mozc_cc_library(
+@@ -154,6 +154,7 @@ mozc_cc_library(
      visibility = [
          "//android/jni:__pkg__",
          "//ios:__pkg__",
@@ -378,7 +378,7 @@ index a03b7cb..a60e06c 100644
      ],
      deps = [
          ":keymap",
-@@ -349,6 +350,7 @@ mozc_cc_library(
+@@ -350,6 +351,7 @@ mozc_cc_library(
      hdrs = ["key_info_util.h"],
      visibility = [
          "//client:__pkg__",
