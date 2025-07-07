@@ -6163,7 +6163,7 @@ index 0000000..9a00f25
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..d25851b
+index 0000000..85129bf
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
 @@ -0,0 +1,280 @@
@@ -6195,8 +6195,8 @@ index 0000000..d25851b
 +namespace {
 +
 +std::unique_ptr<mozc::SessionHandler> CreateSessionHandler() {
-+  auto engine = mozc::Engine::CreateDesktopEngine(
-+      std::make_unique<mozc::oss::OssDataManager>());
++  auto engine =
++      mozc::Engine::CreateEngine(std::make_unique<mozc::oss::OssDataManager>());
 +  DCHECK_OK(engine);
 +  auto result =
 +      std::make_unique<mozc::SessionHandler>(std::move(engine.value()));
