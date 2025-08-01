@@ -367,7 +367,7 @@ index 6e17812..3efd3af 100755
    return gyp_file_names
  
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 1c4387a..1149862 100644
+index f107709..ce5aa03 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -154,6 +154,7 @@ mozc_cc_library(
