@@ -121,7 +121,7 @@ jobs:
           sudo git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
         env:
-          USE_BAZEL_VERSION: "8.2.1"
+          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
@@ -290,7 +290,7 @@ jobs:
 
       - name: Install bazel
         env:
-          USE_BAZEL_VERSION: "8.2.1"
+          USE_BAZEL_VERSION: "8.3.1"
         run: |
           # cache cleanup
           sudo rm -rf /github/workspace/.cache/bazel/*
@@ -298,7 +298,7 @@ jobs:
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
           #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
-          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.2.1/bazel-8.2.1-linux-x86_64
+          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.3.1/bazel-8.3.1-linux-x86_64
           sudo chmod +x /usr/local/bin/bazel
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
@@ -320,7 +320,7 @@ jobs:
 
       - name: Build(normal)
         env:
-          USE_BAZEL_VERSION: "8.2.1"
+          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           #sudo cp -af ${{ github.workspace }}/.cache/bazel ${{ env.XDG_CACHE_HOME }}/
@@ -426,7 +426,7 @@ jobs:
           grep "みにおぼえ" ./dictionary*.txt
       - name: Build(-with-jp-dict)
         env:
-          USE_BAZEL_VERSION: "8.2.1"
+          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
@@ -441,7 +441,7 @@ jobs:
           #sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
           . /github/workspace/.bashrc
           sudo chown -R ${NON_ROOT}:${NON_ROOT} .
-          sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
+          sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign || sudo rm -rf ${{ env.XDG_CACHE_HOME }}/* && sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release_2
           sudo -u ${NON_ROOT} mv *deb mozc_* release_2/
