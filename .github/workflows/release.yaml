@@ -120,8 +120,6 @@ jobs:
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
           sudo git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Setup non-root user
-        env:
-          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
@@ -142,11 +140,9 @@ jobs:
           DEFAULT_USER=$(whoami)
           # bazel cache
           export XDG_CACHE_HOME=/github/workspace/.cache/
-          export USE_BAZEL_VERSION=${{ env.USE_BAZEL_VERSION }}
           sudo mkdir -p ${XDG_CACHE_HOME}/bazel
           echo "XDG_CACHE_HOME=${XDG_CACHE_HOME}" >> $GITHUB_ENV
           echo "export XDG_CACHE_HOME=${XDG_CACHE_HOME}" | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
-          echo "export USE_BAZEL_VERSION=${USE_BAZEL_VERSION}" | sudo -u ${NON_ROOT} tee -a /github/workspace/.bashrc
           sudo cat /github/workspace/.bashrc
 
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} ${XDG_CACHE_HOME}
@@ -289,16 +285,14 @@ jobs:
           make-default: true
 
       - name: Install bazel
-        env:
-          USE_BAZEL_VERSION: "8.3.1"
         run: |
           # cache cleanup
           sudo rm -rf /github/workspace/.cache/bazel/*
           
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
           sudo mkdir -p /usr/local/bin
-          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
-          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.3.1/bazel-8.3.1-linux-x86_64
+          sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
+          #sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.4.1/bazel-8.4.1-linux-x86_64
           sudo chmod +x /usr/local/bin/bazel
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
@@ -319,8 +313,6 @@ jobs:
             bazel-${{ steps.startup.outputs.container_name }}-
 
       - name: Build(normal)
-        env:
-          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           #sudo cp -af ${{ github.workspace }}/.cache/bazel ${{ env.XDG_CACHE_HOME }}/
@@ -425,8 +417,6 @@ jobs:
           sync
           grep "みにおぼえ" ./dictionary*.txt
       - name: Build(-with-jp-dict)
-        env:
-          USE_BAZEL_VERSION: "8.3.1"
         shell: bash
         run: |
           NON_ROOT="${{ steps.startup.outputs.non_root }}"
