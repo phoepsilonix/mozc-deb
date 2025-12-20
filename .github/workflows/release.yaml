@@ -17,7 +17,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [debian-12, ubuntu-24.04, ubuntu-25.04, Rhino]
+        os: [debian-12, ubuntu-24.04, ubuntu-25.04] #,Rhino]
         include:
           - os: debian-12
             container: debian:bookworm
@@ -27,8 +27,8 @@ jobs:
             container: ubuntu:noble
           - os: ubuntu-25.04
             container: ubuntu:plucky
-          - os: Rhino
-            container: ghcr.io/rhino-linux/docker:latest
+          #- os: Rhino
+            #container: ghcr.io/rhino-linux/docker:latest
           # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
           # NON_ROOT is builduser
 
