@@ -367,7 +367,7 @@ index 6e17812..3efd3af 100755
    return gyp_file_names
  
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 93d3cd1..49ca2f3 100644
+index 090eae4..8da0728 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -155,6 +155,7 @@ mozc_cc_library(
@@ -1771,7 +1771,7 @@ index 0000000..ca90895
 +#endif  // MOZC_UNIX_FCITX_FCITX_KEY_TRANSLATOR_H_
 diff --git a/src/unix/fcitx/fcitx_mozc.cc b/src/unix/fcitx/fcitx_mozc.cc
 new file mode 100644
-index 0000000..6b4c155
+index 0000000..747a41d
 --- /dev/null
 +++ b/src/unix/fcitx/fcitx_mozc.cc
 @@ -0,0 +1,553 @@
@@ -2085,7 +2085,7 @@ index 0000000..6b4c155
 +
 +void FcitxMozc::SendCompositionMode(mozc::commands::CompositionMode mode)
 +{
-+    // Send the SWITCH_INPUT_MODE command.
++    // Send the SWITCH_COMPOSITION_MODE command.
 +    std::string error;
 +    mozc::commands::Output raw_response;
 +    if (connection_->TrySendCompositionMode(
@@ -2541,7 +2541,7 @@ index 0000000..ad19230
 +Parent=fcitx-mozc
 diff --git a/src/unix/fcitx/mozc_connection.cc b/src/unix/fcitx/mozc_connection.cc
 new file mode 100755
-index 0000000..0adcbb6
+index 0000000..c25a47b
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_connection.cc
 @@ -0,0 +1,205 @@
@@ -2704,7 +2704,7 @@ index 0000000..0adcbb6
 +    command.set_type(mozc::commands::SessionCommand::TURN_OFF_IME);
 +    command.set_composition_mode(old_mode);
 +  } else {
-+    command.set_type(mozc::commands::SessionCommand::SWITCH_INPUT_MODE);
++    command.set_type(mozc::commands::SessionCommand::SWITCH_COMPOSITION_MODE);
 +    command.set_composition_mode(mode);
 +  }
 +  return TrySendRawCommand(command, out, out_error);
@@ -2904,7 +2904,7 @@ index 0000000..cb6ab25
 +#endif  // MOZC_UNIX_SCIM_MOZC_CONNECTION_H_
 diff --git a/src/unix/fcitx/mozc_response_parser.cc b/src/unix/fcitx/mozc_response_parser.cc
 new file mode 100755
-index 0000000..400374b
+index 0000000..4321b20
 --- /dev/null
 +++ b/src/unix/fcitx/mozc_response_parser.cc
 @@ -0,0 +1,448 @@
@@ -3090,7 +3090,7 @@ index 0000000..400374b
 +    UpdateDeletionRange(response, fcitx_mozc);
 +
 +    // We should check the mode field first since the response for a
-+    // SWITCH_INPUT_MODE request only contains mode and id fields.
++    // SWITCH_COMPOSITION_MODE request only contains mode and id fields.
 +    if (response.has_mode()) {
 +        fcitx_mozc->SetCompositionMode(response.mode());
 +    }
@@ -4965,7 +4965,7 @@ index 0000000..28ce73f
 +}
 diff --git a/src/unix/fcitx5/fcitx_key_event_handler.cc b/src/unix/fcitx5/fcitx_key_event_handler.cc
 new file mode 100644
-index 0000000..3370a67
+index 0000000..f03f175
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx_key_event_handler.cc
 @@ -0,0 +1,273 @@
@@ -5036,7 +5036,7 @@ index 0000000..3370a67
 +    data_[mozc::commands::KeyEvent::RIGHT_SHIFT] =
 +        mozc::commands::KeyEvent::SHIFT;
 +  }
-+  const std::map<uint32_t, mozc::commands::KeyEvent::ModifierKey> &data() {
++  const std::map<uint32_t, mozc::commands::KeyEvent::ModifierKey>& data() {
 +    return data_;
 +  }
 +
@@ -5047,10 +5047,10 @@ index 0000000..3370a67
 +// TODO(hsumita): Moves this function into member functions of
 +// KeyEventHandler.
 +void AddAdditionalModifiers(
-+    std::set<mozc::commands::KeyEvent::ModifierKey> *modifier_keys_set) {
++    std::set<mozc::commands::KeyEvent::ModifierKey>* modifier_keys_set) {
 +  DCHECK(modifier_keys_set);
 +
-+  const std::map<uint32_t, mozc::commands::KeyEvent::ModifierKey> &data =
++  const std::map<uint32_t, mozc::commands::KeyEvent::ModifierKey>& data =
 +      mozc::Singleton<AdditionalModifiersData>::get()->data();
 +
 +  // Adds MODIFIER if there are (LEFT|RIGHT)_MODIFIER like LEFT_SHIFT.
@@ -5063,7 +5063,7 @@ index 0000000..3370a67
 +  }
 +}
 +
-+bool IsModifierToBeSentOnKeyUp(const mozc::commands::KeyEvent &key_event) {
++bool IsModifierToBeSentOnKeyUp(const mozc::commands::KeyEvent& key_event) {
 +  if (key_event.modifier_keys_size() == 0) {
 +    return false;
 +  }
@@ -5085,7 +5085,7 @@ index 0000000..3370a67
 +bool KeyEventHandler::GetKeyEvent(
 +    KeySym keyval, uint32_t keycode, KeyStates modifiers,
 +    mozc::config::Config::PreeditMethod preedit_method, bool layout_is_jp,
-+    bool is_key_up, mozc::commands::KeyEvent *key) {
++    bool is_key_up, mozc::commands::KeyEvent* key) {
 +  DCHECK(key);
 +  key->Clear();
 +
@@ -5099,9 +5099,9 @@ index 0000000..3370a67
 +}
 +
 +bool KeyEventHandler::GetKeyEvent(
-+    const std::string &composeString,
++    const std::string& composeString,
 +    mozc::config::Config::PreeditMethod preedit_method, bool layout_is_jp,
-+    mozc::commands::KeyEvent *key) {
++    mozc::commands::KeyEvent* key) {
 +  key->Clear();
 +  auto length = utf8::length(composeString);
 +  if (length == 1) {
@@ -5123,7 +5123,7 @@ index 0000000..3370a67
 +}
 +
 +bool KeyEventHandler::ProcessModifiers(bool is_key_up, uint32_t keyval,
-+                                       mozc::commands::KeyEvent *key_event) {
++                                       mozc::commands::KeyEvent* key_event) {
 +  // Manage modifier key event.
 +  // Modifier key event is sent on key up if non-modifier key has not been
 +  // pressed since key down of modifier keys and no modifier keys are pressed
@@ -5244,7 +5244,7 @@ index 0000000..3370a67
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/fcitx_key_event_handler.h b/src/unix/fcitx5/fcitx_key_event_handler.h
 new file mode 100644
-index 0000000..7421fc6
+index 0000000..c62f954
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx_key_event_handler.h
 @@ -0,0 +1,83 @@
@@ -5297,7 +5297,7 @@ index 0000000..7421fc6
 +class KeyEventHandler {
 + public:
 +  KeyEventHandler();
-+  KeyEventHandler(const KeyEventHandler &) = delete;
++  KeyEventHandler(const KeyEventHandler&) = delete;
 +
 +  // Converts a key event came from fcitx to commands::KeyEvent. This is a
 +  // stateful method. It stores modifier keys states since ibus doesn't send
@@ -5305,11 +5305,11 @@ index 0000000..7421fc6
 +  bool GetKeyEvent(KeySym keyval, uint32_t keycode, KeyStates modifiers,
 +                   mozc::config::Config::PreeditMethod preedit_method,
 +                   bool layout_is_jp, bool is_key_up,
-+                   mozc::commands::KeyEvent *key);
++                   mozc::commands::KeyEvent* key);
 +
-+  bool GetKeyEvent(const std::string &composeString,
++  bool GetKeyEvent(const std::string& composeString,
 +                   mozc::config::Config::PreeditMethod preedit_method,
-+                   bool layout_is_jp, mozc::commands::KeyEvent *key);
++                   bool layout_is_jp, mozc::commands::KeyEvent* key);
 +
 +  // Clears states.
 +  void Clear();
@@ -5317,7 +5317,7 @@ index 0000000..7421fc6
 + private:
 +  // Manages modifier keys. Returns false if it should not be sent to server.
 +  bool ProcessModifiers(bool is_key_up, uint32_t keyval,
-+                        mozc::commands::KeyEvent *key_event);
++                        mozc::commands::KeyEvent* key_event);
 +
 +  std::unique_ptr<KeyTranslator> key_translator_;
 +  // Non modifier key is pressed or not after all keys are released.
@@ -5333,7 +5333,7 @@ index 0000000..7421fc6
 +#endif  // UNIX_FCITX5_FCITX_KEY_EVENT_HANDLER_H_
 diff --git a/src/unix/fcitx5/fcitx_key_translator.cc b/src/unix/fcitx5/fcitx_key_translator.cc
 new file mode 100644
-index 0000000..6a95486
+index 0000000..86e63d4
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx_key_translator.cc
 @@ -0,0 +1,429 @@
@@ -5498,8 +5498,8 @@ index 0000000..6a95486
 +// '4' is mapped to Japanese 'Hiragana Letter U' (without Shift modifier) and
 +// 'Hiragana Letter Small U' (with Shift modifier).
 +// TODO(team): Add kana_map_dv to support Dvoraklayout.
-+using KanaMap = std::map<uint32_t, std::pair<const char *, const char *>>;
-+const KanaMap *kKanaJpMap = new KanaMap({
++using KanaMap = std::map<uint32_t, std::pair<const char*, const char*>>;
++const KanaMap* kKanaJpMap = new KanaMap({
 +    {'1', {"ぬ", "ぬ"}},
 +    {'!', {"ぬ", "ぬ"}},
 +    {'2', {"ふ", "ふ"}},
@@ -5600,7 +5600,7 @@ index 0000000..6a95486
 +    {U'¥', {"ー", "ー"}},  // U+00A5
 +});
 +
-+const KanaMap *kKanaUsMap = new KanaMap({
++const KanaMap* kKanaUsMap = new KanaMap({
 +    {'`', {"ろ", "ろ"}},  {'~', {"ろ", "ろ"}},  {'1', {"ぬ", "ぬ"}},
 +    {'!', {"ぬ", "ぬ"}},  {'2', {"ふ", "ふ"}},  {'@', {"ふ", "ふ"}},
 +    {'3', {"あ", "ぁ"}},  {'#', {"あ", "ぁ"}},  {'4', {"う", "ぅ"}},
@@ -5635,7 +5635,7 @@ index 0000000..6a95486
 +    {'?', {"め", "・"}},
 +});
 +
-+const char *GetKanaValue(const KanaMap &kana_map, uint32_t keyval,
++const char* GetKanaValue(const KanaMap& kana_map, uint32_t keyval,
 +                         bool is_shift) {
 +  KanaMap::const_iterator iter = kana_map.find(keyval);
 +  if (iter == kana_map.end()) {
@@ -5651,7 +5651,7 @@ index 0000000..6a95486
 +                              KeyStates modifiers,
 +                              mozc::config::Config::PreeditMethod method,
 +                              bool layout_is_jp,
-+                              mozc::commands::KeyEvent *out_event) const {
++                              mozc::commands::KeyEvent* out_event) const {
 +  DCHECK(out_event) << "out_event is NULL";
 +  out_event->Clear();
 +
@@ -5718,11 +5718,11 @@ index 0000000..6a95486
 +
 +bool KeyTranslator::IsKanaAvailable(KeySym keyval, uint32_t keycode,
 +                                    KeyStates modifiers, bool layout_is_jp,
-+                                    std::string *out) const {
++                                    std::string* out) const {
 +  if ((modifiers & KeyState::Ctrl) || (modifiers & KeyState::Alt)) {
 +    return false;
 +  }
-+  const KanaMap &kana_map = layout_is_jp ? *kKanaJpMap : *kKanaUsMap;
++  const KanaMap& kana_map = layout_is_jp ? *kKanaJpMap : *kKanaUsMap;
 +
 +  // When a Japanese keyboard is in use, the yen-sign key and the backslash
 +  // key generate the same |keyval|. In this case, we have to check |keycode|
@@ -5736,7 +5736,7 @@ index 0000000..6a95486
 +  }
 +
 +  const bool is_shift = (modifiers & KeyState::Shift);
-+  const char *kana = GetKanaValue(kana_map, keyval, is_shift);
++  const char* kana = GetKanaValue(kana_map, keyval, is_shift);
 +
 +  if (kana == nullptr) {
 +    return false;
@@ -5768,7 +5768,7 @@ index 0000000..6a95486
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/fcitx_key_translator.h b/src/unix/fcitx5/fcitx_key_translator.h
 new file mode 100644
-index 0000000..0991b38
+index 0000000..380abb9
 --- /dev/null
 +++ b/src/unix/fcitx5/fcitx_key_translator.h
 @@ -0,0 +1,76 @@
@@ -5820,19 +5820,19 @@ index 0000000..0991b38
 +class KeyTranslator {
 + public:
 +  KeyTranslator() = default;
-+  KeyTranslator(const KeyTranslator &) = delete;
-+  KeyTranslator &operator=(const KeyTranslator &) = delete;
++  KeyTranslator(const KeyTranslator&) = delete;
++  KeyTranslator& operator=(const KeyTranslator&) = delete;
 +  virtual ~KeyTranslator() = default;
 +
 +  // Converts fcitx key into Mozc key code and stores them on out_translated.
 +  bool Translate(KeySym keyval, uint32_t keycode, KeyStates modifiers,
 +                 mozc::config::Config::PreeditMethod method, bool layout_is_jp,
-+                 mozc::commands::KeyEvent *out_event) const;
++                 mozc::commands::KeyEvent* out_event) const;
 +
 + private:
 +  // Returns true iff |keyval| is a key with a kana assigned.
 +  bool IsKanaAvailable(KeySym keyval, uint32_t keycode, KeyStates modifiers,
-+                       bool layout_is_jp, std::string *out) const;
++                       bool layout_is_jp, std::string* out) const;
 +
 +  // Returns true iff key is ASCII such as '0', 'A', or '!'.
 +  static bool IsAscii(KeySym keyval, uint32_t keycode, KeyStates modifiers);
@@ -5912,7 +5912,7 @@ index 0000000..40725d7
 +Configurable=True
 diff --git a/src/unix/fcitx5/mozc_client_interface.h b/src/unix/fcitx5/mozc_client_interface.h
 new file mode 100644
-index 0000000..27e075e
+index 0000000..3a885be
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_client_interface.h
 @@ -0,0 +1,44 @@
@@ -5934,26 +5934,26 @@ index 0000000..27e075e
 + public:
 +  virtual ~MozcClientInterface() = default;
 +  virtual bool EnsureConnection() = 0;
-+  bool SendCommand(const mozc::commands::SessionCommand &command,
-+                   mozc::commands::Output *output) {
++  bool SendCommand(const mozc::commands::SessionCommand& command,
++                   mozc::commands::Output* output) {
 +    return SendCommandWithContext(
 +        command, mozc::commands::Context::default_instance(), output);
 +  }
-+  virtual bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
-+                                  const mozc::commands::Context &context,
-+                                  mozc::commands::Output *output) = 0;
++  virtual bool SendKeyWithContext(const mozc::commands::KeyEvent& key,
++                                  const mozc::commands::Context& context,
++                                  mozc::commands::Output* output) = 0;
 +  virtual bool SendCommandWithContext(
-+      const mozc::commands::SessionCommand &command,
-+      const mozc::commands::Context &context,
-+      mozc::commands::Output *output) = 0;
++      const mozc::commands::SessionCommand& command,
++      const mozc::commands::Context& context,
++      mozc::commands::Output* output) = 0;
 +  virtual bool IsDirectModeCommand(
-+      const mozc::commands::KeyEvent &key) const = 0;
-+  virtual bool GetConfig(mozc::config::Config *config) = 0;
++      const mozc::commands::KeyEvent& key) const = 0;
++  virtual bool GetConfig(mozc::config::Config* config) = 0;
 +  virtual void set_client_capability(
-+      const mozc::commands::Capability &capability) = 0;
++      const mozc::commands::Capability& capability) = 0;
 +  virtual bool SyncData() = 0;
-+  virtual bool LaunchTool(const std::string &mode, std::string_view arg) = 0;
-+  virtual bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) = 0;
++  virtual bool LaunchTool(const std::string& mode, std::string_view arg) = 0;
++  virtual bool LaunchToolWithProtoBuf(const mozc::commands::Output& output) = 0;
 +};
 +
 +std::unique_ptr<MozcClientInterface> createClient();
@@ -5962,7 +5962,7 @@ index 0000000..27e075e
 +#endif
 diff --git a/src/unix/fcitx5/mozc_client_pool.cc b/src/unix/fcitx5/mozc_client_pool.cc
 new file mode 100644
-index 0000000..b7fedd4
+index 0000000..81af343
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_client_pool.cc
 @@ -0,0 +1,123 @@
@@ -6025,7 +6025,7 @@ index 0000000..b7fedd4
 +  policy_ = policy;
 +}
 +
-+std::string uuidKey(InputContext *ic) {
++std::string uuidKey(InputContext* ic) {
 +  std::string key = "u:";
 +  for (auto v : ic->uuid()) {
 +    auto lower = v % 16;
@@ -6037,7 +6037,7 @@ index 0000000..b7fedd4
 +}
 +
 +std::shared_ptr<MozcClientInterface> MozcClientPool::requestClient(
-+    InputContext *ic) {
++    InputContext* ic) {
 +  std::string key;
 +  switch (policy_) {
 +    case PropertyPropagatePolicy::No:
@@ -6068,12 +6068,12 @@ index 0000000..b7fedd4
 +}
 +
 +std::shared_ptr<MozcClientInterface> MozcClientPool::registerClient(
-+    const std::string &key, std::unique_ptr<MozcClientInterface> client) {
++    const std::string& key, std::unique_ptr<MozcClientInterface> client) {
 +  assert(!key.empty());
 +  std::shared_ptr<MozcClientInterface> managedClient(
 +      client.release(),
-+      [key, ref = this->watch()](MozcClientInterface *client) {
-+        if (auto *that = ref.get()) {
++      [key, ref = this->watch()](MozcClientInterface* client) {
++        if (auto* that = ref.get()) {
 +          that->unregisterClient(key);
 +        }
 +        delete client;
@@ -6084,14 +6084,14 @@ index 0000000..b7fedd4
 +  return managedClient;
 +}
 +
-+void MozcClientPool::unregisterClient(const std::string &key) {
++void MozcClientPool::unregisterClient(const std::string& key) {
 +  clients_.erase(key);
 +}
 +
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_client_pool.h b/src/unix/fcitx5/mozc_client_pool.h
 new file mode 100644
-index 0000000..9a00f25
+index 0000000..9299698
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_client_pool.h
 @@ -0,0 +1,66 @@
@@ -6148,12 +6148,12 @@ index 0000000..9a00f25
 +  void setPolicy(PropertyPropagatePolicy policy);
 +  PropertyPropagatePolicy policy() const { return policy_; }
 +
-+  std::shared_ptr<MozcClientInterface> requestClient(InputContext *ic);
++  std::shared_ptr<MozcClientInterface> requestClient(InputContext* ic);
 +
 + private:
 +  std::shared_ptr<MozcClientInterface> registerClient(
-+      const std::string &key, std::unique_ptr<MozcClientInterface> client);
-+  void unregisterClient(const std::string &key);
++      const std::string& key, std::unique_ptr<MozcClientInterface> client);
++  void unregisterClient(const std::string& key);
 +  PropertyPropagatePolicy policy_;
 +  std::unordered_map<std::string, std::weak_ptr<MozcClientInterface>> clients_;
 +};
@@ -6163,7 +6163,7 @@ index 0000000..9a00f25
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..85129bf
+index 0000000..acc691a
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
 @@ -0,0 +1,280 @@
@@ -6203,7 +6203,7 @@ index 0000000..85129bf
 +  return result;
 +}
 +
-+mozc::SessionHandler *GetSessionHandler() {
++mozc::SessionHandler* GetSessionHandler() {
 +  static std::unique_ptr<mozc::SessionHandler> g_session_handler =
 +      CreateSessionHandler();
 +  return g_session_handler.get();
@@ -6258,8 +6258,8 @@ index 0000000..85129bf
 +}
 +
 +bool MozcDirectClient::SendKeyWithContext(
-+    const mozc::commands::KeyEvent &key, const mozc::commands::Context &context,
-+    mozc::commands::Output *output) {
++    const mozc::commands::KeyEvent& key, const mozc::commands::Context& context,
++    mozc::commands::Output* output) {
 +  mozc::commands::Input input;
 +  input.set_type(mozc::commands::Input::SEND_KEY);
 +  *input.mutable_key() = key;
@@ -6271,8 +6271,8 @@ index 0000000..85129bf
 +}
 +
 +bool MozcDirectClient::SendCommandWithContext(
-+    const mozc::commands::SessionCommand &command,
-+    const mozc::commands::Context &context, mozc::commands::Output *output) {
++    const mozc::commands::SessionCommand& command,
++    const mozc::commands::Context& context, mozc::commands::Output* output) {
 +  mozc::commands::Input input;
 +  input.set_type(mozc::commands::Input::SEND_COMMAND);
 +  *input.mutable_command() = command;
@@ -6283,8 +6283,8 @@ index 0000000..85129bf
 +  return EnsureCallCommand(&input, output);
 +}
 +
-+bool MozcDirectClient::EnsureCallCommand(mozc::commands::Input *input,
-+                                         mozc::commands::Output *output) {
++bool MozcDirectClient::EnsureCallCommand(mozc::commands::Input* input,
++                                         mozc::commands::Output* output) {
 +  if (!EnsureSession()) {
 +    LOG(ERROR) << "EnsureSession failed";
 +    return false;
@@ -6300,7 +6300,7 @@ index 0000000..85129bf
 +}
 +
 +void MozcDirectClient::set_client_capability(
-+    const mozc::commands::Capability &capability) {
++    const mozc::commands::Capability& capability) {
 +  client_capability_ = capability;
 +}
 +
@@ -6346,11 +6346,11 @@ index 0000000..85129bf
 +}
 +
 +bool MozcDirectClient::IsDirectModeCommand(
-+    const mozc::commands::KeyEvent &key) const {
++    const mozc::commands::KeyEvent& key) const {
 +  return mozc::KeyInfoUtil::ContainsKey(direct_mode_keys_, key);
 +}
 +
-+bool MozcDirectClient::GetConfig(mozc::config::Config *config) {
++bool MozcDirectClient::GetConfig(mozc::config::Config* config) {
 +  mozc::commands::Input input;
 +  InitInput(&input);
 +  input.set_type(mozc::commands::Input::GET_CONFIG);
@@ -6381,8 +6381,8 @@ index 0000000..85129bf
 +  return Call(input, &output);
 +}
 +
-+bool MozcDirectClient::Call(const mozc::commands::Input &input,
-+                            mozc::commands::Output *output) {
++bool MozcDirectClient::Call(const mozc::commands::Input& input,
++                            mozc::commands::Output* output) {
 +  mozc::commands::Command command;
 +  *command.mutable_input() = input;
 +  if (!GetSessionHandler()->EvalCommand(&command)) {
@@ -6392,12 +6392,12 @@ index 0000000..85129bf
 +  return true;
 +}
 +
-+void MozcDirectClient::InitInput(mozc::commands::Input *input) const {
++void MozcDirectClient::InitInput(mozc::commands::Input* input) const {
 +  input->set_id(id_);
 +}
 +
 +bool MozcDirectClient::TranslateProtoBufToMozcToolArg(
-+    const mozc::commands::Output &output, std::string *mode) {
++    const mozc::commands::Output& output, std::string* mode) {
 +  if (!output.has_launch_tool_mode() || mode == nullptr) {
 +    return false;
 +  }
@@ -6423,7 +6423,7 @@ index 0000000..85129bf
 +}
 +
 +bool MozcDirectClient::LaunchToolWithProtoBuf(
-+    const mozc::commands::Output &output) {
++    const mozc::commands::Output& output) {
 +  std::string mode;
 +  if (!TranslateProtoBufToMozcToolArg(output, &mode)) {
 +    return false;
@@ -6433,7 +6433,7 @@ index 0000000..85129bf
 +  return LaunchTool(mode, "");
 +}
 +
-+bool MozcDirectClient::LaunchTool(const std::string &mode,
++bool MozcDirectClient::LaunchTool(const std::string& mode,
 +                                  const std::string_view extra_arg) {
 +  FCITX_UNUSED(mode);
 +  FCITX_UNUSED(extra_arg);
@@ -6449,7 +6449,7 @@ index 0000000..85129bf
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_direct_client.h b/src/unix/fcitx5/mozc_direct_client.h
 new file mode 100644
-index 0000000..fc4e188
+index 0000000..82884ee
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.h
 @@ -0,0 +1,77 @@
@@ -6475,19 +6475,19 @@ index 0000000..fc4e188
 +  ~MozcDirectClient();
 +
 +  bool EnsureConnection() override { return true; }
-+  bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
-+                          const mozc::commands::Context &context,
-+                          mozc::commands::Output *output) override;
-+  bool SendCommandWithContext(const mozc::commands::SessionCommand &command,
-+                              const mozc::commands::Context &context,
-+                              mozc::commands::Output *output) override;
-+  bool IsDirectModeCommand(const mozc::commands::KeyEvent &key) const override;
-+  bool GetConfig(mozc::config::Config *config) override;
++  bool SendKeyWithContext(const mozc::commands::KeyEvent& key,
++                          const mozc::commands::Context& context,
++                          mozc::commands::Output* output) override;
++  bool SendCommandWithContext(const mozc::commands::SessionCommand& command,
++                              const mozc::commands::Context& context,
++                              mozc::commands::Output* output) override;
++  bool IsDirectModeCommand(const mozc::commands::KeyEvent& key) const override;
++  bool GetConfig(mozc::config::Config* config) override;
 +  void set_client_capability(
-+      const mozc::commands::Capability &capability) override;
++      const mozc::commands::Capability& capability) override;
 +  bool SyncData() override;
-+  bool LaunchTool(const std::string &mode, std::string_view arg) override;
-+  bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) override;
++  bool LaunchTool(const std::string& mode, std::string_view arg) override;
++  bool LaunchToolWithProtoBuf(const mozc::commands::Output& output) override;
 +
 + private:
 +  // Initializes `request_` with the flag.
@@ -6497,7 +6497,7 @@ index 0000000..fc4e188
 +  // If launch_tool_mode is not set or NO_TOOL is set or an invalid value is
 +  // set, this function will return false and do nothing.
 +  static bool TranslateProtoBufToMozcToolArg(
-+      const mozc::commands::Output &output, std::string *mode);
++      const mozc::commands::Output& output, std::string* mode);
 +
 +  bool EnsureSession();
 +
@@ -6507,18 +6507,18 @@ index 0000000..fc4e188
 +  };
 +
 +  // Initialize input filling id and preferences.
-+  void InitInput(mozc::commands::Input *input) const;
++  void InitInput(mozc::commands::Input* input) const;
 +
 +  bool CreateSession();
 +  bool DeleteSession();
 +  bool CallCommand(mozc::commands::Input::CommandType type);
 +
 +  // This method re-issue session id if it is not available.
-+  bool EnsureCallCommand(mozc::commands::Input *input,
-+                         mozc::commands::Output *output);
++  bool EnsureCallCommand(mozc::commands::Input* input,
++                         mozc::commands::Output* output);
 +
 +  // The most primitive Call method
-+  bool Call(const mozc::commands::Input &input, mozc::commands::Output *output);
++  bool Call(const mozc::commands::Input& input, mozc::commands::Output* output);
 +
 +  uint64_t id_;
 +  std::unique_ptr<mozc::commands::Request> request_;
@@ -6532,7 +6532,7 @@ index 0000000..fc4e188
 +#endif
 diff --git a/src/unix/fcitx5/mozc_engine.cc b/src/unix/fcitx5/mozc_engine.cc
 new file mode 100644
-index 0000000..b2e3f8e
+index 0000000..06df2a9
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.cc
 @@ -0,0 +1,341 @@
@@ -6590,10 +6590,10 @@ index 0000000..b2e3f8e
 +namespace fcitx {
 +
 +const struct CompositionModeInfo {
-+  const char *name;
-+  const char *icon;
-+  const char *label;
-+  const char *description;
++  const char* name;
++  const char* icon;
++  const char* label;
++  const char* description;
 +  mozc::commands::CompositionMode mode;
 +} kPropCompositionModes[] = {
 +    {
@@ -6643,7 +6643,7 @@ index 0000000..b2e3f8e
 +};
 +const size_t kNumCompositionModes = FCITX_ARRAY_SIZE(kPropCompositionModes);
 +
-+MozcModeSubAction::MozcModeSubAction(MozcEngine *engine,
++MozcModeSubAction::MozcModeSubAction(MozcEngine* engine,
 +                                     mozc::commands::CompositionMode mode)
 +    : engine_(engine), mode_(mode) {
 +  setShortText(_(kPropCompositionModes[mode].description));
@@ -6652,13 +6652,13 @@ index 0000000..b2e3f8e
 +  setCheckable(true);
 +}
 +
-+bool MozcModeSubAction::isChecked(InputContext *ic) const {
-+  auto *mozc_state = engine_->mozcState(ic);
++bool MozcModeSubAction::isChecked(InputContext* ic) const {
++  auto* mozc_state = engine_->mozcState(ic);
 +  return mozc_state->GetCompositionMode() == mode_;
 +}
 +
-+void MozcModeSubAction::activate(InputContext *ic) {
-+  auto *mozc_state = engine_->mozcState(ic);
++void MozcModeSubAction::activate(InputContext* ic) {
++  auto* mozc_state = engine_->mozcState(ic);
 +  mozc_state->SendCompositionMode(mode_);
 +}
 +
@@ -6667,20 +6667,20 @@ index 0000000..b2e3f8e
 +static_assert(mozc::commands::NUM_OF_COMPOSITIONS == kNumCompositionModes,
 +              "number of modes must match");
 +
-+Instance *Init(Instance *instance) {
++Instance* Init(Instance* instance) {
 +  int argc = 1;
 +  char argv0[] = "fcitx_mozc";
-+  char *_argv[] = {argv0};
-+  char **argv = _argv;
++  char* _argv[] = {argv0};
++  char** argv = _argv;
 +  mozc::InitMozc(argv[0], &argc, &argv);
 +  return instance;
 +}
 +
-+MozcEngine::MozcEngine(Instance *instance)
++MozcEngine::MozcEngine(Instance* instance)
 +    : instance_(Init(instance)),
 +      parser_(std::make_unique<MozcResponseParser>(this)),
 +      client_(createClient()),
-+      factory_([this](InputContext &ic) { return new MozcState(&ic, this); }) {
++      factory_([this](InputContext& ic) { return new MozcState(&ic, this); }) {
 +  pool_ = std::make_unique<MozcClientPool>(GetSharedStatePolicy());
 +  for (auto command :
 +       {mozc::commands::DIRECT, mozc::commands::HIRAGANA,
@@ -6696,7 +6696,7 @@ index 0000000..b2e3f8e
 +  toolAction_.setIcon("fcitx_mozc_tool");
 +
 +  int i = 0;
-+  for (auto &modeAction : modeActions_) {
++  for (auto& modeAction : modeActions_) {
 +    instance_->userInterfaceManager().registerAction(
 +        kPropCompositionModes[i].name, modeAction.get());
 +    toolMenu_.addAction(modeAction.get());
@@ -6721,7 +6721,7 @@ index 0000000..b2e3f8e
 +                                                   &configToolAction_);
 +  configToolAction_.setShortText(_("Configuration Tool"));
 +  configToolAction_.setIcon("fcitx_mozc_tool");
-+  configToolAction_.connect<SimpleAction::Activated>([](InputContext *) {
++  configToolAction_.connect<SimpleAction::Activated>([](InputContext*) {
 +    mozc::Process::SpawnMozcProcess("mozc_tool", "--mode=config_dialog");
 +  });
 +
@@ -6729,21 +6729,21 @@ index 0000000..b2e3f8e
 +                                                   &dictionaryToolAction_);
 +  dictionaryToolAction_.setShortText(_("Dictionary Tool"));
 +  dictionaryToolAction_.setIcon("fcitx_mozc_dictionary");
-+  dictionaryToolAction_.connect<SimpleAction::Activated>([](InputContext *) {
++  dictionaryToolAction_.connect<SimpleAction::Activated>([](InputContext*) {
 +    mozc::Process::SpawnMozcProcess("mozc_tool", "--mode=dictionary_tool");
 +  });
 +
 +  instance_->userInterfaceManager().registerAction("mozc-tool-add",
 +                                                   &addWordAction_);
 +  addWordAction_.setShortText(_("Add Word"));
-+  addWordAction_.connect<SimpleAction::Activated>([](InputContext *) {
++  addWordAction_.connect<SimpleAction::Activated>([](InputContext*) {
 +    mozc::Process::SpawnMozcProcess("mozc_tool", "--mode=word_register_dialog");
 +  });
 +
 +  instance_->userInterfaceManager().registerAction("mozc-tool-about",
 +                                                   &aboutAction_);
 +  aboutAction_.setShortText(_("About Mozc"));
-+  aboutAction_.connect<SimpleAction::Activated>([](InputContext *) {
++  aboutAction_.connect<SimpleAction::Activated>([](InputContext*) {
 +    mozc::Process::SpawnMozcProcess("mozc_tool", "--mode=about_dialog");
 +  });
 +
@@ -6756,7 +6756,7 @@ index 0000000..b2e3f8e
 +
 +  globalConfigReloadHandle_ =
 +      instance_->watchEvent(EventType::GlobalConfigReloaded,
-+                            EventWatcherPhase::Default, [this](Event &) {
++                            EventWatcherPhase::Default, [this](Event&) {
 +                              ResetClientPool();
 +                              return true;
 +                            });
@@ -6766,7 +6766,7 @@ index 0000000..b2e3f8e
 +
 +MozcEngine::~MozcEngine() {}
 +
-+void MozcEngine::setConfig(const RawConfig &config) {
++void MozcEngine::setConfig(const RawConfig& config) {
 +  config_.load(config, true);
 +  safeSaveAsIni(config_, "conf/mozc.conf");
 +  ResetClientPool();
@@ -6776,28 +6776,28 @@ index 0000000..b2e3f8e
 +  readAsIni(config_, "conf/mozc.conf");
 +  ResetClientPool();
 +}
-+void MozcEngine::activate(const fcitx::InputMethodEntry & /*entry*/,
-+                          fcitx::InputContextEvent &event) {
++void MozcEngine::activate(const fcitx::InputMethodEntry& /*entry*/,
++                          fcitx::InputContextEvent& event) {
 +  if (client_) {
 +    client_->EnsureConnection();
 +  }
-+  auto *ic = event.inputContext();
-+  auto *mozc_state = mozcState(ic);
++  auto* ic = event.inputContext();
++  auto* mozc_state = mozcState(ic);
 +  mozc_state->FocusIn();
 +  ic->statusArea().addAction(StatusGroup::InputMethod, &toolAction_);
 +}
-+void MozcEngine::deactivate(const fcitx::InputMethodEntry & /*entry*/,
-+                            fcitx::InputContextEvent &event) {
-+  auto *ic = event.inputContext();
++void MozcEngine::deactivate(const fcitx::InputMethodEntry& /*entry*/,
++                            fcitx::InputContextEvent& event) {
++  auto* ic = event.inputContext();
 +  deactivating_ = true;
-+  auto *mozc_state = mozcState(ic);
++  auto* mozc_state = mozcState(ic);
 +  mozc_state->FocusOut(event);
 +  deactivating_ = false;
 +}
-+void MozcEngine::keyEvent(const InputMethodEntry &entry, KeyEvent &event) {
-+  auto *mozc_state = mozcState(event.inputContext());
++void MozcEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& event) {
++  auto* mozc_state = mozcState(event.inputContext());
 +
-+  const auto &group = instance_->inputMethodManager().currentGroup();
++  const auto& group = instance_->inputMethodManager().currentGroup();
 +  std::string layout = group.layoutFor(entry.uniqueName());
 +  if (layout.empty()) {
 +    layout = group.defaultLayout();
@@ -6812,9 +6812,9 @@ index 0000000..b2e3f8e
 +  }
 +}
 +
-+void MozcEngine::reset(const InputMethodEntry & /*entry*/,
-+                       InputContextEvent &event) {
-+  auto *mozc_state = mozcState(event.inputContext());
++void MozcEngine::reset(const InputMethodEntry& /*entry*/,
++                       InputContextEvent& event) {
++  auto* mozc_state = mozcState(event.inputContext());
 +  mozc_state->Reset();
 +}
 +
@@ -6825,35 +6825,35 @@ index 0000000..b2e3f8e
 +  client_->SyncData();
 +}
 +
-+std::string MozcEngine::subMode(const fcitx::InputMethodEntry & /*entry*/,
-+                                fcitx::InputContext &ic) {
-+  auto *mozc_state = mozcState(&ic);
++std::string MozcEngine::subMode(const fcitx::InputMethodEntry& /*entry*/,
++                                fcitx::InputContext& ic) {
++  auto* mozc_state = mozcState(&ic);
 +  return _(kPropCompositionModes[mozc_state->GetCompositionMode()].description);
 +}
 +
 +std::string MozcEngine::subModeIconImpl(
-+    const fcitx::InputMethodEntry & /*unused*/, fcitx::InputContext &ic) {
-+  auto *mozc_state = mozcState(&ic);
++    const fcitx::InputMethodEntry& /*unused*/, fcitx::InputContext& ic) {
++  auto* mozc_state = mozcState(&ic);
 +  return _(kPropCompositionModes[mozc_state->GetCompositionMode()].icon);
 +}
 +
-+MozcState *MozcEngine::mozcState(InputContext *ic) {
++MozcState* MozcEngine::mozcState(InputContext* ic) {
 +  return ic->propertyFor(&factory_);
 +}
 +
-+void MozcEngine::compositionModeUpdated(InputContext *ic) {
-+  for (const auto &modeAction : modeActions_) {
++void MozcEngine::compositionModeUpdated(InputContext* ic) {
++  for (const auto& modeAction : modeActions_) {
 +    modeAction->update(ic);
 +  }
 +  ic->updateUserInterface(UserInterfaceComponent::StatusArea);
 +}
 +
-+AddonInstance *MozcEngine::clipboardAddon() { return clipboard(); }
++AddonInstance* MozcEngine::clipboardAddon() { return clipboard(); }
 +
 +void MozcEngine::ResetClientPool() {
 +  if (pool_->policy() != GetSharedStatePolicy()) {
-+    instance_->inputContextManager().foreach ([this](InputContext *ic) {
-+      if (auto *state = this->mozcState(ic)) {
++    instance_->inputContextManager().foreach ([this](InputContext* ic) {
++      if (auto* state = this->mozcState(ic)) {
 +        state->ReleaseClient();
 +      }
 +      return true;
@@ -6879,7 +6879,7 @@ index 0000000..b2e3f8e
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_engine.h b/src/unix/fcitx5/mozc_engine.h
 new file mode 100644
-index 0000000..1f06934
+index 0000000..f3a7c49
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.h
 @@ -0,0 +1,180 @@
@@ -6959,7 +6959,7 @@ index 0000000..1f06934
 +FCITX_CONFIGURATION(
 +    MozcEngineConfig, const std::string toolPath_ = mozc::FileUtil::JoinPath(
 +                          mozc::SystemUtil::GetServerDirectory(), "mozc_tool");
-+    std::string toolCommand(const char *arg) {
++    std::string toolCommand(const char* arg) {
 +      return stringutils::concat(toolPath_, " ", arg);
 +    }
 +
@@ -6993,55 +6993,55 @@ index 0000000..1f06934
 +
 +class MozcModeSubAction : public SimpleAction {
 + public:
-+  MozcModeSubAction(MozcEngine *engine, mozc::commands::CompositionMode mode);
-+  bool isChecked(fcitx::InputContext *ic) const override;
-+  void activate(fcitx::InputContext *ic) override;
++  MozcModeSubAction(MozcEngine* engine, mozc::commands::CompositionMode mode);
++  bool isChecked(fcitx::InputContext* ic) const override;
++  void activate(fcitx::InputContext* ic) override;
 +
 + private:
-+  MozcEngine *engine_;
++  MozcEngine* engine_;
 +  mozc::commands::CompositionMode mode_;
 +};
 +
 +class MozcEngine final : public InputMethodEngineV2 {
 + public:
-+  MozcEngine(Instance *instance);
++  MozcEngine(Instance* instance);
 +  ~MozcEngine();
-+  Instance *instance() { return instance_; }
-+  void activate(const InputMethodEntry &entry,
-+                InputContextEvent &event) override;
-+  void deactivate(const fcitx::InputMethodEntry &entry,
-+                  fcitx::InputContextEvent &event) override;
-+  void keyEvent(const InputMethodEntry &entry, KeyEvent &keyEvent) override;
++  Instance* instance() { return instance_; }
++  void activate(const InputMethodEntry& entry,
++                InputContextEvent& event) override;
++  void deactivate(const fcitx::InputMethodEntry& entry,
++                  fcitx::InputContextEvent& event) override;
++  void keyEvent(const InputMethodEntry& entry, KeyEvent& keyEvent) override;
 +  void reloadConfig() override;
-+  void reset(const InputMethodEntry &entry, InputContextEvent &event) override;
++  void reset(const InputMethodEntry& entry, InputContextEvent& event) override;
 +  void save() override;
-+  std::string subMode(const fcitx::InputMethodEntry & /*entry*/,
-+                      fcitx::InputContext &ic) override;
-+  std::string subModeIconImpl(const InputMethodEntry &entry,
-+                              InputContext &ic) override;
++  std::string subMode(const fcitx::InputMethodEntry& /*entry*/,
++                      fcitx::InputContext& ic) override;
++  std::string subModeIconImpl(const InputMethodEntry& entry,
++                              InputContext& ic) override;
 +
-+  const Configuration *getConfig() const override { return &config_; }
-+  void setConfig(const RawConfig &config) override;
++  const Configuration* getConfig() const override { return &config_; }
++  void setConfig(const RawConfig& config) override;
 +
-+  auto &config() const { return config_; }
++  auto& config() const { return config_; }
 +  auto factory() const { return &factory_; }
 +
-+  MozcState *mozcState(InputContext *ic);
-+  AddonInstance *clipboardAddon();
++  MozcState* mozcState(InputContext* ic);
++  AddonInstance* clipboardAddon();
 +
-+  void compositionModeUpdated(InputContext *ic);
++  void compositionModeUpdated(InputContext* ic);
 +
 +  void SyncData(bool force);
 +
 +  bool deactivating() const { return deactivating_; }
-+  auto *parser() const { return parser_.get(); }
-+  auto *pool() const { return pool_.get(); }
++  auto* parser() const { return parser_.get(); }
++  auto* pool() const { return pool_.get(); }
 +
 + private:
 +  void ResetClientPool();
 +  PropertyPropagatePolicy GetSharedStatePolicy();
 +
-+  Instance *instance_;
++  Instance* instance_;
 +  const std::unique_ptr<MozcResponseParser> parser_;
 +  std::unique_ptr<MozcClientInterface> client_;
 +  std::unique_ptr<MozcClientPool> pool_;
@@ -7065,7 +7065,7 @@ index 0000000..1f06934
 +#endif  // _FCITX_UNIX_FCITX5_MOZC_ENGINE_H_
 diff --git a/src/unix/fcitx5/mozc_engine_factory.cc b/src/unix/fcitx5/mozc_engine_factory.cc
 new file mode 100644
-index 0000000..69bf94b
+index 0000000..7b51b3d
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine_factory.cc
 @@ -0,0 +1,79 @@
@@ -7103,7 +7103,7 @@ index 0000000..69bf94b
 +namespace fcitx {
 +class MozcEngineFactory : public AddonFactory {
 + public:
-+  AddonInstance *create(AddonManager *manager) override {
++  AddonInstance* create(AddonManager* manager) override {
 +    // We don't have a direct way to detect, so we simply try.
 +    auto baseDirectory = makeUniqueCPtr(
 +        realpath(mozc::SystemUtil::GetServerDirectory().data(), nullptr));
@@ -7136,7 +7136,7 @@ index 0000000..69bf94b
 +  }
 +
 + private:
-+  UniqueCPtr<char> cdUp(const char *path) {
++  UniqueCPtr<char> cdUp(const char* path) {
 +    return makeUniqueCPtr(
 +        realpath(stringutils::joinPath(path, "..").data(), nullptr));
 +  }
@@ -7150,7 +7150,7 @@ index 0000000..69bf94b
 +#endif
 diff --git a/src/unix/fcitx5/mozc_ipc_client.cc b/src/unix/fcitx5/mozc_ipc_client.cc
 new file mode 100644
-index 0000000..283187a
+index 0000000..a8161ef
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_ipc_client.cc
 @@ -0,0 +1,56 @@
@@ -7174,34 +7174,34 @@ index 0000000..283187a
 +
 +bool MozcIPCClient::EnsureConnection() { return client_->EnsureConnection(); }
 +
-+bool MozcIPCClient::SendKeyWithContext(const mozc::commands::KeyEvent &key,
-+                                       const mozc::commands::Context &context,
-+                                       mozc::commands::Output *output) {
++bool MozcIPCClient::SendKeyWithContext(const mozc::commands::KeyEvent& key,
++                                       const mozc::commands::Context& context,
++                                       mozc::commands::Output* output) {
 +  return client_->SendKeyWithContext(key, context, output);
 +}
 +
 +bool MozcIPCClient::SendCommandWithContext(
-+    const mozc::commands::SessionCommand &command,
-+    const mozc::commands::Context &context, mozc::commands::Output *output) {
++    const mozc::commands::SessionCommand& command,
++    const mozc::commands::Context& context, mozc::commands::Output* output) {
 +  return client_->SendCommandWithContext(command, context, output);
 +}
 +bool MozcIPCClient::IsDirectModeCommand(
-+    const mozc::commands::KeyEvent &key) const {
++    const mozc::commands::KeyEvent& key) const {
 +  return client_->IsDirectModeCommand(key);
 +}
-+bool MozcIPCClient::GetConfig(mozc::config::Config *config) {
++bool MozcIPCClient::GetConfig(mozc::config::Config* config) {
 +  return client_->GetConfig(config);
 +}
 +void MozcIPCClient::set_client_capability(
-+    const mozc::commands::Capability &capability) {
++    const mozc::commands::Capability& capability) {
 +  return client_->set_client_capability(capability);
 +}
 +bool MozcIPCClient::SyncData() { return client_->SyncData(); }
-+bool MozcIPCClient::LaunchTool(const std::string &mode, std::string_view arg) {
++bool MozcIPCClient::LaunchTool(const std::string& mode, std::string_view arg) {
 +  return client_->LaunchTool(mode, arg);
 +}
 +bool MozcIPCClient::LaunchToolWithProtoBuf(
-+    const mozc::commands::Output &output) {
++    const mozc::commands::Output& output) {
 +  return client_->LaunchToolWithProtoBuf(output);
 +}
 +
@@ -7212,7 +7212,7 @@ index 0000000..283187a
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_ipc_client.h b/src/unix/fcitx5/mozc_ipc_client.h
 new file mode 100644
-index 0000000..b91b355
+index 0000000..88ce29f
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_ipc_client.h
 @@ -0,0 +1,43 @@
@@ -7234,24 +7234,24 @@ index 0000000..b91b355
 + public:
 +  MozcIPCClient();
 +
-+  MozcIPCClient(MozcIPCClient &&) = delete;
++  MozcIPCClient(MozcIPCClient&&) = delete;
 +
 +  ~MozcIPCClient();
 +
 +  bool EnsureConnection() override;
-+  bool SendKeyWithContext(const mozc::commands::KeyEvent &key,
-+                          const mozc::commands::Context &context,
-+                          mozc::commands::Output *output) override;
-+  bool SendCommandWithContext(const mozc::commands::SessionCommand &command,
-+                              const mozc::commands::Context &context,
-+                              mozc::commands::Output *output) override;
-+  bool IsDirectModeCommand(const mozc::commands::KeyEvent &key) const override;
-+  bool GetConfig(mozc::config::Config *config) override;
++  bool SendKeyWithContext(const mozc::commands::KeyEvent& key,
++                          const mozc::commands::Context& context,
++                          mozc::commands::Output* output) override;
++  bool SendCommandWithContext(const mozc::commands::SessionCommand& command,
++                              const mozc::commands::Context& context,
++                              mozc::commands::Output* output) override;
++  bool IsDirectModeCommand(const mozc::commands::KeyEvent& key) const override;
++  bool GetConfig(mozc::config::Config* config) override;
 +  void set_client_capability(
-+      const mozc::commands::Capability &capability) override;
++      const mozc::commands::Capability& capability) override;
 +  bool SyncData() override;
-+  bool LaunchTool(const std::string &mode, std::string_view arg) override;
-+  bool LaunchToolWithProtoBuf(const mozc::commands::Output &output) override;
++  bool LaunchTool(const std::string& mode, std::string_view arg) override;
++  bool LaunchToolWithProtoBuf(const mozc::commands::Output& output) override;
 +
 + private:
 +  std::unique_ptr<mozc::client::ClientInterface> client_;
@@ -7261,7 +7261,7 @@ index 0000000..b91b355
 +#endif
 diff --git a/src/unix/fcitx5/mozc_response_parser.cc b/src/unix/fcitx5/mozc_response_parser.cc
 new file mode 100644
-index 0000000..e989948
+index 0000000..189e6c5
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.cc
 @@ -0,0 +1,498 @@
@@ -7332,7 +7332,7 @@ index 0000000..e989948
 +// Returns a position that determines a preedit cursor position _AND_ top-left
 +// position of a candidate window. Note that we can't set these two positions
 +// independently. That's a SCIM's limitation.
-+uint32_t GetCursorPosition(const mozc::commands::Output &response) {
++uint32_t GetCursorPosition(const mozc::commands::Output& response) {
 +  if (!response.has_preedit()) {
 +    return 0;
 +  }
@@ -7342,36 +7342,36 @@ index 0000000..e989948
 +  return response.preedit().cursor();
 +}
 +
-+std::string CreateDescriptionString(const std::string &description) {
++std::string CreateDescriptionString(const std::string& description) {
 +  return " [" + description + "]";
 +}
 +
 +class MozcCandidateWord final : public CandidateWord {
 + public:
-+  MozcCandidateWord(int id, std::string text, MozcEngine *engine)
++  MozcCandidateWord(int id, std::string text, MozcEngine* engine)
 +      : CandidateWord(Text(std::move(text))), id_(id), engine_(engine) {}
 +
-+  void select(InputContext *inputContext) const override {
-+    MozcState *mozc_state = engine_->mozcState(inputContext);
++  void select(InputContext* inputContext) const override {
++    MozcState* mozc_state = engine_->mozcState(inputContext);
 +    mozc_state->SelectCandidate(id_);
 +  }
 +
 + private:
 +  int id_;
-+  MozcEngine *engine_;
++  MozcEngine* engine_;
 +};
 +
 +class MozcCandidateList final : public CandidateList,
 +                                public PageableCandidateList {
 + public:
-+  MozcCandidateList(const mozc::commands::CandidateWindow &candidates,
-+                    InputContext *ic, MozcEngine *engine, bool use_annotation)
++  MozcCandidateList(const mozc::commands::CandidateWindow& candidates,
++                    InputContext* ic, MozcEngine* engine, bool use_annotation)
 +      : ic_(ic), engine_(engine) {
-+    auto *state = engine_->mozcState(ic);
++    auto* state = engine_->mozcState(ic);
 +    setPageable(this);
 +    bool index_visible = false;
 +    if (candidates.has_footer()) {
-+      const auto &footer = candidates.footer();
++      const auto& footer = candidates.footer();
 +      index_visible = footer.has_index_visible() && footer.index_visible();
 +    }
 +
@@ -7398,9 +7398,9 @@ index 0000000..e989948
 +
 +    std::map<int32_t, std::pair<std::string, std::string>> usage_map;
 +    if (candidates.has_usages()) {
-+      const mozc::commands::InformationList &usages = candidates.usages();
++      const mozc::commands::InformationList& usages = candidates.usages();
 +      for (size_t i = 0; i < usages.information().size(); ++i) {
-+        const mozc::commands::Information &information = usages.information(i);
++        const mozc::commands::Information& information = usages.information(i);
 +        if (!information.has_id() || !information.has_description()) {
 +          continue;
 +        }
@@ -7412,7 +7412,7 @@ index 0000000..e989948
 +    labels_.reserve(candidates.candidate_size());
 +
 +    for (int i = 0; i < candidates.candidate_size(); ++i) {
-+      const mozc::commands::CandidateWindow::Candidate &candidate =
++      const mozc::commands::CandidateWindow::Candidate& candidate =
 +          candidates.candidate(i);
 +      const uint32_t index = candidate.index();
 +
@@ -7479,12 +7479,12 @@ index 0000000..e989948
 +    }
 +  }
 +
-+  const Text &label(int idx) const override {
++  const Text& label(int idx) const override {
 +    checkIndex(idx);
 +    return labels_[idx];
 +  }
 +
-+  const CandidateWord &candidate(int idx) const override {
++  const CandidateWord& candidate(int idx) const override {
 +    checkIndex(idx);
 +    return *candidateWords_[idx];
 +  }
@@ -7497,11 +7497,11 @@ index 0000000..e989948
 +  bool hasPrev() const override { return hasPrev_; }
 +  bool hasNext() const override { return hasNext_; }
 +  void prev() override {
-+    auto *mozc_state = engine_->mozcState(ic_);
++    auto* mozc_state = engine_->mozcState(ic_);
 +    mozc_state->Paging(true);
 +  }
 +  void next() override {
-+    auto *mozc_state = engine_->mozcState(ic_);
++    auto* mozc_state = engine_->mozcState(ic_);
 +    mozc_state->Paging(false);
 +  }
 +
@@ -7514,8 +7514,8 @@ index 0000000..e989948
 +    }
 +  }
 +
-+  InputContext *ic_;
-+  MozcEngine *engine_;
++  InputContext* ic_;
++  MozcEngine* engine_;
 +  std::vector<Text> labels_;
 +  bool hasPrev_ = false;
 +  bool hasNext_ = false;
@@ -7526,12 +7526,12 @@ index 0000000..e989948
 +
 +}  // namespace
 +
-+MozcResponseParser::MozcResponseParser(MozcEngine *engine) : engine_(engine) {}
++MozcResponseParser::MozcResponseParser(MozcEngine* engine) : engine_(engine) {}
 +
 +MozcResponseParser::~MozcResponseParser() {}
 +
 +void MozcResponseParser::UpdateDeletionRange(
-+    const mozc::commands::Output &response, InputContext *ic) const {
++    const mozc::commands::Output& response, InputContext* ic) const {
 +  if (response.has_deletion_range() &&
 +      response.deletion_range().offset() <= 0 &&
 +      response.deletion_range().offset() + response.deletion_range().length() >=
@@ -7541,16 +7541,16 @@ index 0000000..e989948
 +  }
 +}
 +
-+void MozcResponseParser::LaunchTool(const mozc::commands::Output &response,
-+                                    InputContext *ic) const {
++void MozcResponseParser::LaunchTool(const mozc::commands::Output& response,
++                                    InputContext* ic) const {
 +  if (response.has_launch_tool_mode()) {
-+    auto *mozc_state = engine_->mozcState(ic);
++    auto* mozc_state = engine_->mozcState(ic);
 +    mozc_state->GetClient()->LaunchToolWithProtoBuf(response);
 +  }
 +}
 +
-+void MozcResponseParser::ExecuteCallback(const mozc::commands::Output &response,
-+                                         InputContext *ic) const {
++void MozcResponseParser::ExecuteCallback(const mozc::commands::Output& response,
++                                         InputContext* ic) const {
 +  if (!response.has_callback()) {
 +    return;
 +  }
@@ -7560,7 +7560,7 @@ index 0000000..e989948
 +    return;
 +  }
 +
-+  const mozc::commands::SessionCommand &callback_command =
++  const mozc::commands::SessionCommand& callback_command =
 +      response.callback().session_command();
 +
 +  if (!callback_command.has_type()) {
@@ -7597,7 +7597,7 @@ index 0000000..e989948
 +      return;
 +  }
 +
-+  auto *mozc_state = engine_->mozcState(ic);
++  auto* mozc_state = engine_->mozcState(ic);
 +  mozc::commands::Output new_output;
 +  if (!mozc_state->SendCommand(session_command, &new_output)) {
 +    LOG(ERROR) << "Callback Command Failed";
@@ -7607,7 +7607,7 @@ index 0000000..e989948
 +  if (callback_command.type() ==
 +      mozc::commands::SessionCommand::CONVERT_REVERSE) {
 +    // We need to remove selected text as a first step of reconversion.
-+    mozc::commands::DeletionRange *range = new_output.mutable_deletion_range();
++    mozc::commands::DeletionRange* range = new_output.mutable_deletion_range();
 +    // Use DeletionRange field to remove the selected text.
 +    // For forward selection (that is, |relative_selected_length > 0|), the
 +    // offset should be a negative value to delete preceding text.
@@ -7627,15 +7627,15 @@ index 0000000..e989948
 +  ParseResponse(new_output, ic);
 +}
 +
-+bool MozcResponseParser::ParseResponse(const mozc::commands::Output &response,
-+                                       InputContext *ic) const {
-+  auto *mozc_state = engine_->mozcState(ic);
++bool MozcResponseParser::ParseResponse(const mozc::commands::Output& response,
++                                       InputContext* ic) const {
++  auto* mozc_state = engine_->mozcState(ic);
 +  mozc_state->SetUsage("", "");
 +
 +  UpdateDeletionRange(response, ic);
 +
 +  // We should check the mode field first since the response for a
-+  // SWITCH_INPUT_MODE request only contains mode and id fields.
++  // SWITCH_COMPOSITION_MODE request only contains mode and id fields.
 +  if (response.has_mode()) {
 +    mozc_state->SetCompositionMode(
 +        response.mode(), !engine_->deactivating() &&
@@ -7648,25 +7648,25 @@ index 0000000..e989948
 +  }
 +
 +  if (response.has_result()) {
-+    const mozc::commands::Result &result = response.result();
++    const mozc::commands::Result& result = response.result();
 +    ParseResult(result, ic);
 +  }
 +
 +  // First, determine the cursor position.
 +  if (response.has_preedit()) {
-+    const mozc::commands::Preedit &preedit = response.preedit();
++    const mozc::commands::Preedit& preedit = response.preedit();
 +    ParsePreedit(preedit, GetCursorPosition(response), ic);
 +  }
 +
 +  // Then show the candidate window.
 +  if (response.has_candidate_window()) {
-+    const mozc::commands::CandidateWindow &candidates =
++    const mozc::commands::CandidateWindow& candidates =
 +        response.candidate_window();
 +    ParseCandidates(candidates, ic);
 +  }
 +
 +  if (response.has_url()) {
-+    const std::string &url = response.url();
++    const std::string& url = response.url();
 +    mozc_state->SetUrl(url);
 +  }
 +  LaunchTool(response, ic);
@@ -7675,9 +7675,9 @@ index 0000000..e989948
 +  return true;  // mozc consumed the key.
 +}
 +
-+void MozcResponseParser::ParseResult(const mozc::commands::Result &result,
-+                                     InputContext *ic) const {
-+  auto *mozc_state = engine_->mozcState(ic);
++void MozcResponseParser::ParseResult(const mozc::commands::Result& result,
++                                     InputContext* ic) const {
++  auto* mozc_state = engine_->mozcState(ic);
 +  switch (result.type()) {
 +    case mozc::commands::Result::NONE: {
 +      mozc_state->SetAuxString("No result");  // not a fatal error.
@@ -7691,9 +7691,9 @@ index 0000000..e989948
 +}
 +
 +void MozcResponseParser::ParseCandidates(
-+    const mozc::commands::CandidateWindow &candidates, InputContext *ic) const {
-+  auto *mozc_state = engine_->mozcState(ic);
-+  const mozc::commands::Footer &footer = candidates.footer();
++    const mozc::commands::CandidateWindow& candidates, InputContext* ic) const {
++  auto* mozc_state = engine_->mozcState(ic);
++  const mozc::commands::Footer& footer = candidates.footer();
 +  if (candidates.has_footer()) {
 +    std::string auxString;
 +    if (footer.has_label()) {
@@ -7722,16 +7722,16 @@ index 0000000..e989948
 +      candidates, ic, engine_, *engine_->config().verticalList));
 +}
 +
-+void MozcResponseParser::ParsePreedit(const mozc::commands::Preedit &preedit,
++void MozcResponseParser::ParsePreedit(const mozc::commands::Preedit& preedit,
 +                                      uint32_t position,
-+                                      InputContext *ic) const {
-+  auto *mozc_state = engine_->mozcState(ic);
++                                      InputContext* ic) const {
++  auto* mozc_state = engine_->mozcState(ic);
 +  Text preedit_text;
 +  std::string s;
 +
 +  for (int i = 0; i < preedit.segment_size(); ++i) {
-+    const mozc::commands::Preedit_Segment &segment = preedit.segment(i);
-+    const std::string &str = segment.value();
++    const mozc::commands::Preedit_Segment& segment = preedit.segment(i);
++    const std::string& str = segment.value();
 +    if (!utf8::validate(str)) {
 +      continue;
 +    }
@@ -7765,7 +7765,7 @@ index 0000000..e989948
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_response_parser.h b/src/unix/fcitx5/mozc_response_parser.h
 new file mode 100644
-index 0000000..2fabef0
+index 0000000..42f0c66
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.h
 @@ -0,0 +1,78 @@
@@ -7816,32 +7816,32 @@ index 0000000..2fabef0
 +// updates the FCITX UI.
 +class MozcResponseParser {
 + public:
-+  MozcResponseParser(MozcEngine *engine);
-+  MozcResponseParser(const MozcResponseParser &) = delete;
++  MozcResponseParser(MozcEngine* engine);
++  MozcResponseParser(const MozcResponseParser&) = delete;
 +  ~MozcResponseParser();
 +
 +  // Parses a response from Mozc server and sets persed information on
 +  // fcitx_mozc
 +  // object. Returns true if response.consumed() is true. fcitx_mozc must be non
 +  // NULL. This function does not take ownership of fcitx_mozc.
-+  bool ParseResponse(const mozc::commands::Output &response,
-+                     InputContext *ic) const;
++  bool ParseResponse(const mozc::commands::Output& response,
++                     InputContext* ic) const;
 +
 + private:
-+  void UpdateDeletionRange(const mozc::commands::Output &response,
-+                           InputContext *ic) const;
-+  void LaunchTool(const mozc::commands::Output &response,
-+                  InputContext *ic) const;
-+  void ExecuteCallback(const mozc::commands::Output &response,
-+                       InputContext *ic) const;
-+  void ParseResult(const mozc::commands::Result &result,
-+                   InputContext *ic) const;
-+  void ParseCandidates(const mozc::commands::CandidateWindow &candidates,
-+                       InputContext *ic) const;
-+  void ParsePreedit(const mozc::commands::Preedit &preedit, uint32_t position,
-+                    InputContext *ic) const;
++  void UpdateDeletionRange(const mozc::commands::Output& response,
++                           InputContext* ic) const;
++  void LaunchTool(const mozc::commands::Output& response,
++                  InputContext* ic) const;
++  void ExecuteCallback(const mozc::commands::Output& response,
++                       InputContext* ic) const;
++  void ParseResult(const mozc::commands::Result& result,
++                   InputContext* ic) const;
++  void ParseCandidates(const mozc::commands::CandidateWindow& candidates,
++                       InputContext* ic) const;
++  void ParsePreedit(const mozc::commands::Preedit& preedit, uint32_t position,
++                    InputContext* ic) const;
 +
-+  MozcEngine *engine_;
++  MozcEngine* engine_;
 +};
 +
 +}  // namespace fcitx
@@ -7849,7 +7849,7 @@ index 0000000..2fabef0
 +#endif  // MOZC_UNIX_FCITX_MOZC_RESPONSE_PARSER_H_
 diff --git a/src/unix/fcitx5/mozc_state.cc b/src/unix/fcitx5/mozc_state.cc
 new file mode 100644
-index 0000000..a926c8b
+index 0000000..198eb34
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.cc
 @@ -0,0 +1,475 @@
@@ -8026,7 +8026,7 @@ index 0000000..a926c8b
 +    command.set_type(mozc::commands::SessionCommand::TURN_OFF_IME);
 +    command.set_composition_mode(composition_mode_);
 +  } else {
-+    command.set_type(mozc::commands::SessionCommand::SWITCH_INPUT_MODE);
++    command.set_type(mozc::commands::SessionCommand::SWITCH_COMPOSITION_MODE);
 +    command.set_composition_mode(mode);
 +  }
 +  return TrySendRawCommand(command, out, out_error);
@@ -8234,7 +8234,7 @@ index 0000000..a926c8b
 +}
 +
 +void MozcState::SendCompositionMode(mozc::commands::CompositionMode mode) {
-+  // Send the SWITCH_INPUT_MODE command.
++  // Send the SWITCH_COMPOSITION_MODE command.
 +  std::string error;
 +  mozc::commands::Output raw_response;
 +  if (TrySendCompositionMode(mode, &raw_response, &error)) {
@@ -8330,7 +8330,7 @@ index 0000000..a926c8b
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_state.h b/src/unix/fcitx5/mozc_state.h
 new file mode 100644
-index 0000000..89b1a40
+index 0000000..cb112de
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.h
 @@ -0,0 +1,166 @@
@@ -8390,8 +8390,8 @@ index 0000000..89b1a40
 +class MozcState : public InputContextProperty {
 + public:
 +  // This constructor is used by unittests.
-+  MozcState(InputContext *ic, MozcEngine *engine);
-+  MozcState(const MozcState &) = delete;
++  MozcState(InputContext* ic, MozcEngine* engine);
++  MozcState(const MozcState&) = delete;
 +  virtual ~MozcState();
 +
 +  void UpdatePreeditMethod();
@@ -8401,13 +8401,13 @@ index 0000000..89b1a40
 +  void SelectCandidate(int idx);
 +  void Reset();
 +  void FocusIn();
-+  void FocusOut(const InputContextEvent &event);
++  void FocusOut(const InputContextEvent& event);
 +  bool Paging(bool prev);
 +
 +  // Functions called by the MozcResponseParser class to update UI.
 +
 +  // Displays a 'result' (aka 'commit string') on FCITX UI.
-+  void SetResultString(const std::string &result_string);
++  void SetResultString(const std::string& result_string);
 +  // Displays a 'preedit' string on FCITX UI. This function takes ownership
 +  // of preedit_info. If the parameter is NULL, hides the string currently
 +  // displayed.
@@ -8415,7 +8415,7 @@ index 0000000..89b1a40
 +  // Displays an auxiliary message (e.g., an error message, a title of
 +  // candidate window). If the string is empty (""), hides the message
 +  // currently being displayed.
-+  void SetAuxString(const std::string &str);
++  void SetAuxString(const std::string& str);
 +  // Sets a current composition mode (e.g., Hankaku Katakana).
 +  void SetCompositionMode(mozc::commands::CompositionMode mode,
 +                          bool updateUI = true);
@@ -8423,21 +8423,21 @@ index 0000000..89b1a40
 +  void SendCompositionMode(mozc::commands::CompositionMode mode);
 +
 +  // Sets the url to be opened by the default browser.
-+  void SetUrl(const std::string &url);
++  void SetUrl(const std::string& url);
 +
-+  const std::string &GetIconFile(std::string key);
++  const std::string& GetIconFile(std::string key);
 +
 +  mozc::commands::CompositionMode GetCompositionMode() {
 +    return composition_mode_;
 +  }
 +
-+  MozcClientInterface *GetClient() const;
++  MozcClientInterface* GetClient() const;
 +  void ReleaseClient();
 +
-+  bool SendCommand(const mozc::commands::SessionCommand &session_command,
-+                   mozc::commands::Output *new_output);
++  bool SendCommand(const mozc::commands::SessionCommand& session_command,
++                   mozc::commands::Output* new_output);
 +
-+  void SetUsage(const std::string &title, const std::string &description);
++  void SetUsage(const std::string& title, const std::string& description);
 +
 +  void DrawAll();
 +
@@ -8447,31 +8447,31 @@ index 0000000..89b1a40
 +  // response is stored on 'out' (and 'out_error' is not modified). If the IPC
 +  // fails, returns false and the error message is stored on 'out_error'. In
 +  // this case, 'out' is not modified.
-+  bool TrySendKeyEvent(InputContext *ic, const mozc::commands::KeyEvent &event,
-+                       mozc::commands::Output *out,
-+                       std::string *out_error) const;
++  bool TrySendKeyEvent(InputContext* ic, const mozc::commands::KeyEvent& event,
++                       mozc::commands::Output* out,
++                       std::string* out_error) const;
 +
 +  // Sends 'mouse click on the candidate window' event to the server.
-+  bool TrySendClick(int32_t unique_id, mozc::commands::Output *out,
-+                    std::string *out_error) const;
++  bool TrySendClick(int32_t unique_id, mozc::commands::Output* out,
++                    std::string* out_error) const;
 +
 +  // Sends composition mode to the server.
 +  bool TrySendCompositionMode(mozc::commands::CompositionMode mode,
-+                              mozc::commands::Output *out,
-+                              std::string *out_error) const;
++                              mozc::commands::Output* out,
++                              std::string* out_error) const;
 +
 +  // Sends a command to the server.
 +  bool TrySendCommand(mozc::commands::SessionCommand::CommandType type,
-+                      mozc::commands::Output *out,
-+                      std::string *out_error) const;
++                      mozc::commands::Output* out,
++                      std::string* out_error) const;
 +
-+  bool TrySendRawCommand(const mozc::commands::SessionCommand &command,
-+                         mozc::commands::Output *out,
-+                         std::string *out_error) const;
++  bool TrySendRawCommand(const mozc::commands::SessionCommand& command,
++                         mozc::commands::Output* out,
++                         std::string* out_error) const;
 +
 +  // Parses the response from mozc_server. Returns whether the server consumes
 +  // the input or not (true means 'consumed').
-+  bool ParseResponse(const mozc::commands::Output &raw_response);
++  bool ParseResponse(const mozc::commands::Output& raw_response);
 +
 +  void ClearAll();
 +  void DrawPreeditInfo();
@@ -8480,8 +8480,8 @@ index 0000000..89b1a40
 +  // Open url_ with a default browser.
 +  void OpenUrl();
 +
-+  InputContext *ic_;
-+  MozcEngine *engine_;
++  InputContext* ic_;
++  MozcEngine* engine_;
 +  mutable std::shared_ptr<MozcClientInterface> client_;
 +
 +  mozc::commands::CompositionMode composition_mode_ = mozc::commands::HIRAGANA;
@@ -10461,7 +10461,7 @@ index 0000000..a6d0845
 +msgstr "垂直候選字列表"
 diff --git a/src/unix/fcitx5/surrounding_text_util.cc b/src/unix/fcitx5/surrounding_text_util.cc
 new file mode 100644
-index 0000000..68bf40e
+index 0000000..b24c892
 --- /dev/null
 +++ b/src/unix/fcitx5/surrounding_text_util.cc
 @@ -0,0 +1,227 @@
@@ -10516,7 +10516,7 @@ index 0000000..68bf40e
 +using namespace mozc;
 +
 +bool SurroundingTextUtil::GetSafeDelta(unsigned int from, unsigned int to,
-+                                       int32_t *delta) {
++                                       int32_t* delta) {
 +  DCHECK(delta);
 +
 +  static_assert(sizeof(int64_t) >= sizeof(unsigned int),
@@ -10543,7 +10543,7 @@ index 0000000..68bf40e
 +// Moves |iter| with |skip_count| characters.
 +// Returns false if |iter| reaches to the end before skipping
 +// |skip_count| characters.
-+bool Skip(ConstChar32Iterator *iter, size_t skip_count) {
++bool Skip(ConstChar32Iterator* iter, size_t skip_count) {
 +  for (size_t i = 0; i < skip_count; ++i) {
 +    if (iter->Done()) {
 +      return false;
@@ -10558,7 +10558,7 @@ index 0000000..68bf40e
 +// Otherwise returns false.
 +// This function receives ConstChar32Iterator as pointer because
 +// ConstChar32Iterator is defined as non-copyable.
-+bool StartsWith(ConstChar32Iterator *iter, ConstChar32Iterator *prefix_iter) {
++bool StartsWith(ConstChar32Iterator* iter, ConstChar32Iterator* prefix_iter) {
 +  if (iter->Done() || prefix_iter->Done()) {
 +    return false;
 +  }
@@ -10581,10 +10581,10 @@ index 0000000..68bf40e
 +// Returns true if |surrounding_text| contains |selected_text|
 +// from |cursor_pos| to |*anchor_pos|.
 +// Otherwise returns false.
-+bool SearchAnchorPosForward(const std::string &surrounding_text,
-+                            const std::string &selected_text,
++bool SearchAnchorPosForward(const std::string& surrounding_text,
++                            const std::string& selected_text,
 +                            size_t selected_chars_len, unsigned int cursor_pos,
-+                            unsigned int *anchor_pos) {
++                            unsigned int* anchor_pos) {
 +  ConstChar32Iterator iter(surrounding_text);
 +  // Move |iter| to cursor pos.
 +  if (!Skip(&iter, cursor_pos)) {
@@ -10602,10 +10602,10 @@ index 0000000..68bf40e
 +// Returns true if |surrounding_text| contains |selected_text|
 +// from |*anchor_pos| to |cursor_pos|.
 +// Otherwise returns false.
-+bool SearchAnchorPosBackward(const std::string &surrounding_text,
-+                             const std::string &selected_text,
++bool SearchAnchorPosBackward(const std::string& surrounding_text,
++                             const std::string& selected_text,
 +                             size_t selected_chars_len, unsigned int cursor_pos,
-+                             unsigned int *anchor_pos) {
++                             unsigned int* anchor_pos) {
 +  if (cursor_pos < selected_chars_len) {
 +    return false;
 +  }
@@ -10629,8 +10629,8 @@ index 0000000..68bf40e
 +}  // namespace
 +
 +bool SurroundingTextUtil::GetAnchorPosFromSelection(
-+    const std::string &surrounding_text, const std::string &selected_text,
-+    unsigned int cursor_pos, unsigned int *anchor_pos) {
++    const std::string& surrounding_text, const std::string& selected_text,
++    unsigned int cursor_pos, unsigned int* anchor_pos) {
 +  DCHECK(anchor_pos);
 +
 +  if (surrounding_text.empty()) {
@@ -10652,8 +10652,8 @@ index 0000000..68bf40e
 +                                 selected_chars_len, cursor_pos, anchor_pos);
 +}
 +
-+bool GetSurroundingText(InputContext *ic, SurroundingTextInfo *info,
-+                        AddonInstance *clipboard) {
++bool GetSurroundingText(InputContext* ic, SurroundingTextInfo* info,
++                        AddonInstance* clipboard) {
 +  if (!ic->capabilityFlags().test(CapabilityFlag::SurroundingText) ||
 +      !ic->surroundingText().isValid()) {
 +    return false;
@@ -10694,7 +10694,7 @@ index 0000000..68bf40e
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/surrounding_text_util.h b/src/unix/fcitx5/surrounding_text_util.h
 new file mode 100644
-index 0000000..8370b74
+index 0000000..03cf487
 --- /dev/null
 +++ b/src/unix/fcitx5/surrounding_text_util.h
 @@ -0,0 +1,83 @@
@@ -10749,14 +10749,14 @@ index 0000000..8370b74
 +class SurroundingTextUtil {
 + public:
 +  SurroundingTextUtil() = delete;
-+  SurroundingTextUtil(const SurroundingTextUtil &) = delete;
-+  SurroundingTextUtil &operator=(const SurroundingTextUtil &) = delete;
++  SurroundingTextUtil(const SurroundingTextUtil&) = delete;
++  SurroundingTextUtil& operator=(const SurroundingTextUtil&) = delete;
 +  // Calculates |from| - |to| and stores the result into |delta| with
 +  // checking integer overflow.
 +  // Returns true when neither |abs(delta)| nor |-delta| does not cause
 +  // integer overflow, that is, |delta| is in a safe range.
 +  // Returns false otherwise.
-+  static bool GetSafeDelta(unsigned int from, unsigned int to, int32_t *delta);
++  static bool GetSafeDelta(unsigned int from, unsigned int to, int32_t* delta);
 +
 +  // Returns true if
 +  // 1. |surrounding_text| contains |selected_text|
@@ -10769,14 +10769,14 @@ index 0000000..8370b74
 +  // When both 1) and 2) are satisfied, this function calculates
 +  // |*anchor_pos| for case 1).
 +  // Otherwise returns false.
-+  static bool GetAnchorPosFromSelection(const std::string &surrounding_text,
-+                                        const std::string &selected_text,
++  static bool GetAnchorPosFromSelection(const std::string& surrounding_text,
++                                        const std::string& selected_text,
 +                                        unsigned int cursor_pos,
-+                                        unsigned int *anchor_pos);
++                                        unsigned int* anchor_pos);
 +};
 +
-+bool GetSurroundingText(InputContext *ic, SurroundingTextInfo *info,
-+                        AddonInstance *clipboard);
++bool GetSurroundingText(InputContext* ic, SurroundingTextInfo* info,
++                        AddonInstance* clipboard);
 +
 +}  // namespace fcitx
 +
