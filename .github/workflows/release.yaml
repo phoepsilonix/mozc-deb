@@ -274,7 +274,7 @@ jobs:
           fi
           sudo apt-get update
           sudo apt-get build-dep -y mozc
-          sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot
+          sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot p7zip-full
           #if [[ "${{ matrix.os }}" == "Rhino" ]]; then
           sudo apt-get install -y python3-six
           #fi
@@ -393,11 +393,11 @@ jobs:
           dict-to-mozc -s -i ./id.def -f all.csv > all-dict.txt
           echo '3. Convert Mecab-unidic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
-          xz -d mecab-unidic-user-dict-seed.20200910.csv.xz
+          7z x mecab-unidic-user-dict-seed.20200910.csv.xz
           dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
           echo '4. Convert Mecab-ipadic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
-          xz -d mecab-user-dict-seed.20200910.csv.xz
+          7z x mecab-user-dict-seed.20200910.csv.xz
           dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
           echo '5. Duplicate data will be removed.'
           # 読み、表記による重複チェック。件数を抑制するために、品詞IDを無視し、読みと表記のみで重複チェック。
