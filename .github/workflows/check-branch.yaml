@@ -78,7 +78,7 @@ jobs:
           echo "Resetting local master to FETCH_HEAD..."
           git checkout FETCH_HEAD
 
-          source <(grep = src/data/version/mozc_version_template.bzl| tr -d ' ')
+          source <(grep = src/data/version/mozc_version_template.bzl| tr -d ' ' | grep -v DEFAULT_BUILD_LABEL_MACOS)
           MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$((REVISION+2))")
           echo "$MOZC_TAG_1"
           echo "$MOZC_TAG_2"
