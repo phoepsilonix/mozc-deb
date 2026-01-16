@@ -77,9 +77,17 @@ jobs:
           MOZC_TAG_1="v""$(head -n1 debian/changelog|grep -Eo "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")"
           echo "Resetting local master to FETCH_HEAD..."
           git checkout FETCH_HEAD
-          #source <(grep = src/data/version/mozc_version_template.bzl | grep -E '^(MAJOR|MINOR|BUILD_OSS|REVISION)\s*=' | tr -d ' ')
-          source <(grep -E '^(MAJOR|MINOR|BUILD_OSS|REVISION)\s*=' src/data/version/mozc_version_template.bzl | tr -d ' ')
-          MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$((REVISION+2))")
+
+          # bazel install 
+          curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
+          #curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/8.5.1/bazel-8.5.1-linux-x86_64
+          chmod +x /usr/local/bin/bazel
+          # 
+          cd src/
+          bazel build --config oss_linux base:mozc_version_txt
+          source <(grep -E '^(MAJOR|MINOR|BUILD_OSS|REVISION)\s*=' bazel-bin/base/mozc_version.txt)
+          cd ..
+          MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$REVISION")
           echo "$MOZC_TAG_1"
           echo "$MOZC_TAG_2"
           if [[ "$MOZC_TAG_1" != "$MOZC_TAG_2" ]];then

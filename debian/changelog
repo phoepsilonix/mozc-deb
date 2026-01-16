@@ -1,4 +1,4 @@
-mozc (3.33.6079.102+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+mozc (3.33.6079.2+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
   * bazel build with github.com/google/mozc.git and patches of fcitx5
