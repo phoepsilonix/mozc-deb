@@ -226,6 +226,30 @@ jobs:
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(sudo git log -1 --pretty=%H ${TAG})" >> $GITHUB_OUTPUT
             echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" =~ ^v ]]; then
+            echo $TAG
+            tag=$TAG
+            base_tag="${tag%%-*}"
+            TAG=${base_tag}-${{ matrix.os }}
+            TAG2=${base_tag}-${{ matrix.os }}-with-jp-dict
+            TAG=${TAG%*-}
+            TAG2=${TAG2%*-}
+            sudo git tag $TAG -d ||true
+            sudo git tag $TAG2 -d ||true
+            sudo git push origin $TAG -d ||true
+            sudo git push origin $TAG2 -d ||true
+            sudo git tag $TAG
+            sudo git tag $TAG2
+            sudo git push origin $TAG
+            sudo git push origin $TAG2
+            cd source
+            COMMIT=$(git log -1 --pretty=%H $base_tag)
+            echo $COMMIT
+            git checkout $COMMIT
+            echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+            echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
+            echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
+            echo "base_tag=${base_tag}" >> $GITHUB_OUTPUT
           else
             echo $TAG
             tag=$TAG
