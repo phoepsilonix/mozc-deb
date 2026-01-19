@@ -39,11 +39,11 @@ override_dh_auto_configure:
 override_dh_auto_build: build_dynamic_link build_static_link
 build_static_link:
 	cd src; \
-	bazel build $(TARGET_STATIC) --config oss_linux --config release_build --define server=1 $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+	bazel build $(TARGET_STATIC) --config stable_channel --config oss_linux --config release_build --define server=1 $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
 
 build_dynamic_link:
 	cd src ; \
-	bazel build $(TARGETS) $(TARGET_FCITX5) $(TARGET_FCITX) --config oss_linux --config release_build --define server=1 $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
+	bazel build $(TARGETS) $(TARGET_FCITX5) $(TARGET_FCITX) --config stable_channel --config oss_linux --config release_build --define server=1 $(BAZEL_LDFLAGS) $(BAZEL_CFLAGS) $(BAZEL_CXXFLAGS)
 
 	# fcitx5
 	for pofile in src/unix/fcitx5/po/*.po ; do \
