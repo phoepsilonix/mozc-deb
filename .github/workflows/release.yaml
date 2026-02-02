@@ -320,7 +320,7 @@ jobs:
           sudo chmod +x /usr/local/bin/bazel
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
-          sudo -u ${NON_ROOT} bazel --version
+          #sudo -u ${NON_ROOT} bazel --version
           DEFAULT_USER=$(whoami)
           sudo mkdir -p /github/workspace/.cache/bazel/
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache/bazel/
