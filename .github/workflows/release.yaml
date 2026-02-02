@@ -182,7 +182,12 @@ jobs:
           fi
           if [[ "$TAG" =~ ^commit- ]]; then
             cd source
-            COMMIT=$(sudo git log -1 ${TAG#commit-} --pretty=%h)
+            # fcitx and master branch commit check
+            sudo git remote add upstream https://github.com/fcitx/mozc.git
+            sudo git fetch --filter=tree:0 upstream master
+            # Google Mozc last commit
+            MERGE_COMMIT=$(sudo git merge-base ${TAG#commit-} upstream/master)
+            COMMIT=$(sudo git log -1 --pretty=%h $MERGE_COMMIT)
             sudo git checkout $COMMIT
             echo $TAG
             cd ..
@@ -320,7 +325,7 @@ jobs:
           sudo chmod +x /usr/local/bin/bazel
           sudo mkdir -p /github/workspace/.cache/bazelisk
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
-          sudo -u ${NON_ROOT} bazel --version
+          #sudo -u ${NON_ROOT} bazel --version
           DEFAULT_USER=$(whoami)
           sudo mkdir -p /github/workspace/.cache/bazel/
           sudo chown -R ${DEFAULT_USER}:${DEFAULT_USER} /github/workspace/.cache/bazel/

@@ -7,6 +7,7 @@ on:
 
 env:
   ORIGINAL_REPO: "phoepsilonix/mozc"
+  UPSTREAM_REPO: "fcitx/mozc"
 
 jobs:
   sync-master:
@@ -46,7 +47,7 @@ jobs:
         run: |
           echo "Fetch api of head commits from original repository..."
 
-          MOZC_COMMIT=$(curl -s https://api.github.com/repos/$ORIGINAL_REPO/commits/master|jq -r ".sha")
+          MOZC_COMMIT=$(curl -s https://api.github.com/repos/$UPSTREAM_REPO/commits/fcitx|jq -r ".sha")
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
@@ -62,9 +63,11 @@ jobs:
         run: |
           echo "Changes detected."
           echo
-          echo "Fetching from original repository..."
-          git fetch --filter=tree:0 https://github.com/$ORIGINAL_REPO.git master
-          MOZC_COMMIT=$(git log -1 --pretty=%H FETCH_HEAD)
+          echo "Fetching from upstream repository..."
+          git remote add upstream https://github.com/$UPSTREAM_REPO.git
+          git fetch --filter=tree:0 upstream fcitx
+          #git fetch --filter=tree:0 upstream master
+          MOZC_COMMIT=$(git log -1 --pretty=%H upstream/fcitx)
           DEB_COMMIT=$(cat last_commit.txt)
           echo $MOZC_COMMIT
           echo $DEB_COMMIT
@@ -76,7 +79,7 @@ jobs:
           echo "Mozc version(tag) check"
           MOZC_TAG_1="v""$(head -n1 debian/changelog|grep -Eo "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")"
           echo "Resetting local master to FETCH_HEAD..."
-          git checkout FETCH_HEAD
+          git checkout upstream/fcitx
 
           # bazel install 
           sudo curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.28.0/bazelisk-linux-amd64
@@ -84,7 +87,7 @@ jobs:
           sudo chmod +x /usr/local/bin/bazel
           # 
           cd src/
-          bazel build --config stable_channel --config oss_linux base:mozc_version_txt
+          bazel build --config release_build --config stable_channel --config oss_linux base:mozc_version_txt
           source <(grep -E '^(MAJOR|MINOR|BUILD_OSS|REVISION)\s*=' bazel-bin/base/mozc_version.txt)
           cd ..
           MOZC_TAG_2=$(printf "v%s.%s.%s.%s" "$MAJOR" "$MINOR" "$BUILD_OSS" "$REVISION")
@@ -113,7 +116,7 @@ jobs:
           git checkout main
 
           echo "Fcitx5 patches updated."
-          git clone --filter=tree:0 --no-single-branch https://github.com/fcitx/mozc.git fcitx-mozc
+          git clone --filter=tree:0 --no-single-branch https://github.com/$UPSTREAM_REPO.git fcitx-mozc
           cd fcitx-mozc
           git diff origin/master..origin/fcitx --text --binary -- ':!scripts/icons/*' ':!.github/*' ':!.*' > ../debian/patches/0001-Support-fcitx.patch
           git diff origin/master..origin/fcitx --text --binary -- 'scripts/icons/*' > ../debian/patches/0002-fcitx5-icon.patch
@@ -123,6 +126,8 @@ jobs:
 
           git push origin main --force
 
+          # master branch(google)
+          #MOZC_COMMIT_2=$(git log -1 --pretty=%H upstream/master)
           TAG=commit-$MOZC_COMMIT
           git tag $TAG
           git push origin $TAG --force
