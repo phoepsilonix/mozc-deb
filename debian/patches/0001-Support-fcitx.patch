@@ -294,10 +294,12 @@ index 0000000..978dc8e
 +mv unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in{.new,}
 diff --git a/src/BUILD.fcitx.bazel b/src/BUILD.fcitx.bazel
 new file mode 100644
-index 0000000..86c9958
+index 0000000..20dd8a5
 --- /dev/null
 +++ b/src/BUILD.fcitx.bazel
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,29 @@
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
++
 +package(
 +    default_visibility = ["//visibility:public"],
 +)
