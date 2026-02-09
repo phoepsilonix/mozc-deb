@@ -182,22 +182,30 @@ jobs:
           fi
           if [[ "$TAG" =~ ^commit- ]]; then
             cd source
-            # fcitx and master branch commit check
-            sudo git remote add upstream https://github.com/fcitx/mozc.git
-            sudo git fetch --filter=tree:0 upstream master
-            # Google Mozc last commit
-            MERGE_COMMIT=$(sudo git merge-base ${TAG#commit-} upstream/master)
-            COMMIT=$(sudo git log -1 --pretty=%h $MERGE_COMMIT)
+            # commit
+            COMMIT="${TAG#commit-}"
+            SHORT_COMMIT=$(git log -1 --pretty=%h $COMMIT)
+
             sudo git checkout $COMMIT
             echo $TAG
+            echo $SHORT_COMMIT
             cd ..
             #sudo git tag $TAG -d
             #sudo git push origin $TAG -d
             cd source
-            tag=$(sudo git describe --tags --always ${COMMIT})
+            # tagの取得
+            # 例
+            # v2.30.5618.102-5904-g800742d
+            # v3.33.6079.2-17-g76cb1ce
+            # この場合17とg8000742dを使用する。
+            # コミットはfcitxの最終コミットを意味する。SHORT_COMMITを用いる。
+            # BUILD_OSSのベースのコミットからgoogleのmasterブランチで何コミット進んでいるかを示す数が、この場合は17。
+            # 5904はfcitxブランチのコミットの数が含まれるため用いない。
+            tag=$(sudo git describe --always --tag --long ${COMMIT} origin/master --exclude="fcitx*" --match="v*"|grep -v $SHORT_COMMIT)
             base_tag="${tag%%-*}"
             if [[ "$tag" =~ "-" ]];then
-              after_tag="${tag#*-}"
+              tmp=${tag#*-}; num=${tmp%%-*}
+              after_tag="r$num-g$SHORT_COMMIT"
               echo $after_tag
               TAG=${base_tag}"-${{ matrix.os }}-"${after_tag}
               TAG2=${base_tag}"-${{ matrix.os }}-with-jp-dict-"${after_tag}
