@@ -2,7 +2,7 @@ diff --git a/debian/patches/0001-Support-fcitx.patch b/debian/patches/0001-Suppo
 index 91b934e..97097e5 100644
 --- a/debian/patches/0001-Support-fcitx.patch
 +++ b/debian/patches/0001-Support-fcitx.patch
-@@ -6753,14 +6753,14 @@ index 0000000..06df2a9
+@@ -6755,14 +6755,14 @@ index 0000000..06df2a9
  +  toolMenu_.addAction(&aboutAction_);
  +
  +  toolAction_.setMenu(&toolMenu_);
