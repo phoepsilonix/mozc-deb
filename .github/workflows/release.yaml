@@ -161,6 +161,8 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           sudo git config --global push.gpgSign if-asked
           #cd source
@@ -222,10 +224,10 @@ jobs:
             sudo git tag $TAG2 -d||true
             sudo git push origin $TAG -d ||true
             sudo git push origin $TAG2 -d ||true
-            sudo git tag $TAG
-            sudo git tag $TAG2
-            sudo git push origin $TAG
-            sudo git push origin $TAG2
+            sudo git tag $TAG -f
+            sudo git tag $TAG2 -f
+            sudo git push origin $TAG -f
+            sudo git push origin $TAG2 -f
             echo "tag_name=" $TAG
             echo "tag_name_2=" $TAG2
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
@@ -244,8 +246,8 @@ jobs:
             sudo git tag $TAG2 -d ||true
             sudo git push origin $TAG -d ||true
             sudo git push origin $TAG2 -d ||true
-            sudo git tag $TAG
-            sudo git tag $TAG2
+            sudo git tag $TAG -f
+            sudo git tag $TAG2 -f
             sudo git push origin $TAG
             sudo git push origin $TAG2
             cd source
@@ -269,10 +271,10 @@ jobs:
             sudo git tag $TAG2 -d||true
             sudo git push origin $TAG -d ||true
             sudo git push origin $TAG2 -d ||true
-            sudo git tag $TAG
-            sudo git tag $TAG2
-            sudo git push origin $TAG
-            sudo git push origin $TAG2
+            sudo git tag $TAG -f
+            sudo git tag $TAG2 -f
+            sudo git push origin $TAG -f
+            sudo git push origin $TAG2 -f
             cd source
             COMMIT=$(sudo git log -1 --pretty=%H $base_tag$after_tag)
             echo $COMMIT
@@ -342,13 +344,13 @@ jobs:
             bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
             bazel-${{ steps.startup.outputs.container_name }}-
 
-      - name: debian-12 and ubuntu-23.04 patch
-        shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
-            apt-get install patch
-            patch --verbose -p1 -i debian-12.patch
-          fi
+      #- name: debian-12 and ubuntu-23.04 patch
+      #  shell: bash
+      #  run: |
+      #    if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
+      #      apt-get install patch
+      #      patch --verbose -p1 -i debian-12.patch
+      #    fi
 
       - name: Build(normal)
         shell: bash
@@ -367,6 +369,12 @@ jobs:
           sudo sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
           . /github/workspace/.bashrc
           sudo chown -R ${NON_ROOT}:${NON_ROOT} .
+          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
+            apt-get install -y patch
+            #cp debian/patches/0001-Support-fcitx.patch debian/patches/0001-Support-fcitx.patch.orig
+            patch --verbose -p1 -i ../debian-12.patch
+            #diff -u debian/patches/0001-Support-fcitx.patch.orig  debian/patches/0001-Support-fcitx.patch
+          fi
           sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release
@@ -525,6 +533,10 @@ jobs:
 
       - name: Delete tag if job failed
         if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           TAG=${GITHUB_REF##*/}
           if [[ $TAG == "main" ]];then
@@ -563,6 +575,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           git fetch --tags
           OLD_RELEASES=$(git tag --points-at HEAD^)
