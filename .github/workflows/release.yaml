@@ -111,7 +111,7 @@ jobs:
       - name: check
         run: |
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
-          sudo git config --global --add safe.directory $GITHUB_WORKSPACE
+          sudo git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Setup non-root user
         shell: bash
         run: |
@@ -306,7 +306,7 @@ jobs:
           fi
           sudo apt-get update
           sudo apt-get build-dep -y mozc
-          sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot p7zip-full
+          sudo apt-get install -y build-essential dpkg-dev make qt6ct qt6-base-dev libfcitx5-qt6-dev curl unzip fakeroot p7zip-full quilt
           #if [[ "${{ matrix.os }}" == "Rhino" ]]; then
           sudo apt-get install -y python3-six
           #fi
@@ -344,13 +344,23 @@ jobs:
             bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
             bazel-${{ steps.startup.outputs.container_name }}-
 
-      #- name: debian-12 and ubuntu-23.04 patch
-      #  shell: bash
-      #  run: |
-      #    if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
-      #      apt-get install patch
-      #      patch --verbose -p1 -i debian-12.patch
-      #    fi
+      - name: Ensure clean source tree
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # ソースツリーを完全にクリーンに
+          git clean -fdx
+          git reset --hard HEAD
+          cd source
+          git clean -fdx
+          git reset --hard master
+
+      - name: debian-12 and ubuntu-23.04 patch
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
+            apt-get install patch
+            patch --verbose -p1 -i debian-12.patch
+          fi
 
       - name: Build(normal)
         shell: bash
@@ -362,19 +372,30 @@ jobs:
           sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           sudo chown -R ${NON_ROOT}:${NON_ROOT} /github/workspace/.cache
           cd source
+          sudo -u ${NON_ROOT} git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sudo -u ${NON_ROOT} git branch || true
+          sudo -u ${NON_ROOT} git remote -v ||true
           echo $PWD
           ls -la
-          sudo sed 's/bazel clean/bazel --version/' debian/rules -i
-          sudo sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
-          sudo sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
-          . /github/workspace/.bashrc
+          # remove patched file
+          #sudo rm -rf .pc
+          #sudo rm -rf scripts
+          #sudo rm -rf src/BUILD.fcitx.bazel
+          #sudo rm -rf src/unix/fcitx/
+          #sudo rm -rf src/unix/fcitx5/
+
           sudo chown -R ${NON_ROOT}:${NON_ROOT} .
-          if [[ "${{ matrix.os }}" == "debian-12" || "${{ matrix.os }}" == "ubuntu-23.04" ]]; then
-            apt-get install -y patch
-            #cp debian/patches/0001-Support-fcitx.patch debian/patches/0001-Support-fcitx.patch.orig
-            patch --verbose -p1 -i ../debian-12.patch
-            #diff -u debian/patches/0001-Support-fcitx.patch.orig  debian/patches/0001-Support-fcitx.patch
-          fi
+          sudo -u ${NON_ROOT} cp -a ../debian ./
+          sudo ls -l debian/patches/
+          sudo cat debian/patches/series
+          #sudo -u ${NON_ROOT} dpkg-source --before-build .
+          #sudo -u ${NON_ROOT} QUILT_PATCHES=debian/patches quilt push -a ||true
+
+          . /github/workspace/.bashrc
+          sudo -u ${NON_ROOT} sed 's/bazel clean/bazel --version/' debian/rules -i
+          sudo -u ${NON_ROOT} sed "s/^\(LDFLAGS:=.*\)/\1 -fuse-ld=mold/" debian/rules -i
+          sudo -u ${NON_ROOT} sed -e '/register_toolchains("@androidndk\/\/:all")/d' -i src/MODULE.bazel
+          sudo chown -R ${NON_ROOT}:${NON_ROOT} .
           sudo -u ${NON_ROOT} dpkg-buildpackage -rfakeroot -b --no-sign
           cd ..
           sudo -u ${NON_ROOT} mkdir -p release
