@@ -461,15 +461,15 @@ jobs:
           echo '2. Convert SudachiDict to Mozc System Dictionary format. It may take some time...'
           cat small_lex.csv core_lex.csv notcore_lex.csv > all.csv
           cp ${srcdir}/src/data/dictionary_oss/id.def ./
-          dict-to-mozc -s -i ./id.def -f all.csv > all-dict.txt
+          dict-to-mozc -D 1 -s -i ./id.def -f all.csv > all-dict.txt
           echo '3. Convert Mecab-unidic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
           7z x mecab-unidic-user-dict-seed.20200910.csv.xz
-          dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
+          dict-to-mozc -D 1 -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv >> all-dict.txt
           echo '4. Convert Mecab-ipadic-neologd to Mozc System Dictionary format. It may take some time...'
           curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
           7z x mecab-user-dict-seed.20200910.csv.xz
-          dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
+          dict-to-mozc -D 1 -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv >> all-dict.txt
           echo '5. Duplicate data will be removed.'
           # 読み、表記による重複チェック。件数を抑制するために、品詞IDを無視し、読みと表記のみで重複チェック。
           awk 'BEGIN{FS="\t";OFS="\t"}{if (!a[$1,$5]++) {print $0}}' all-dict.txt|sort > finish-dict-pre.txt
