@@ -254,6 +254,8 @@ jobs:
             cd source
             COMMIT=$(git log -1 --pretty=%H $base_tag)
             echo $COMMIT
+            PARENTS_COMMIT=$(git merge-base $COMMIT master)
+            sudo git checkout $PARENTS_COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
@@ -278,6 +280,8 @@ jobs:
             cd source
             COMMIT=$(sudo git log -1 --pretty=%H $base_tag$after_tag)
             echo $COMMIT
+            PARENTS_COMMIT=$(git merge-base $COMMIT master)
+            sudo git checkout $PARENTS_COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(sudo git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
