@@ -181,7 +181,8 @@ jobs:
             COMMIT="${TAG#commit-}"
             SHORT_COMMIT=$(git log -1 --pretty=%h $COMMIT)
 
-            sudo git checkout $COMMIT
+            PARENTS_COMMIT=$(git merge-base $COMMIT master)
+            sudo git checkout $PARENTS_COMMIT
             echo $TAG
             echo $SHORT_COMMIT
             cd ..
@@ -253,7 +254,6 @@ jobs:
             cd source
             COMMIT=$(git log -1 --pretty=%H $base_tag)
             echo $COMMIT
-            git checkout $COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
@@ -278,7 +278,6 @@ jobs:
             cd source
             COMMIT=$(sudo git log -1 --pretty=%H $base_tag$after_tag)
             echo $COMMIT
-            sudo git checkout $COMMIT
             echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
             echo "tag_name_2=${TAG2}" >> $GITHUB_OUTPUT
             echo "tag_commit=$(sudo git log -1 --pretty=%H ${COMMIT})" >> $GITHUB_OUTPUT
@@ -344,15 +343,19 @@ jobs:
             bazel-${{ steps.startup.outputs.container_name }}-${{ steps.variables.outputs.base_tag }}-
             bazel-${{ steps.startup.outputs.container_name }}-
 
-      - name: Ensure clean source tree
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      #- name: Ensure clean source tree
+      #  run: |
+      #    git config --global --add safe.directory "$GITHUB_WORKSPACE"
           # ソースツリーを完全にクリーンに
-          git clean -fdx
-          git reset --hard HEAD
-          cd source
-          git clean -fdx
-          git reset --hard master
+      #    git clean -fdx
+      #    git reset --hard HEAD
+          
+          # google/mozcソース
+      #    cd source
+      #    git clean -fdx
+          # tag生成でfcitxブランチのcommitを利用するので、googleのmasterブランチに戻す。
+          # source以下を元に戻さないと、debian/patchesのパッチがあたらなくなる。
+      #    git reset --hard master
 
       - name: debian-12 and ubuntu-23.04 patch
         shell: bash
