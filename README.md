@@ -41,7 +41,7 @@ sudo apt-get install -y build-essential dpkg-dev make git qt6ct qt6-base-dev lib
 git checkout ubuntu-mantic
 ```
 
-### Ubuntu:noble(24.04) and linuxmint-22
+### Ubuntu:noble(24.04) and linuxmint-22,23
 ```sh
 apt-get update
 apt-get install -y sudo apt-utils wget
