@@ -10,30 +10,6 @@ index 0000000..599c6eb
 +script.
 +
 +There is no guranantee that these scripts work for everyone and everywhere.
-diff --git a/scripts/build b/scripts/build
-new file mode 100755
-index 0000000..b21022f
---- /dev/null
-+++ b/scripts/build
-@@ -0,0 +1,6 @@
-+#!/bin/sh
-+
-+TARGETS="server/server.gyp:mozc_server gui/gui.gyp:mozc_tool unix/fcitx/fcitx.gyp:fcitx-mozc"
-+_bldtype="${_bldtype:-Debug}"
-+
-+python build_mozc.py build ${TARGETS} -c ${_bldtype}
-diff --git a/scripts/build_fcitx5 b/scripts/build_fcitx5
-new file mode 100755
-index 0000000..829e5c6
---- /dev/null
-+++ b/scripts/build_fcitx5
-@@ -0,0 +1,6 @@
-+#!/bin/sh
-+
-+_BUILD_TARGETS="${_BUILD_TARGETS:-server/server.gyp:mozc_server gui/gui.gyp:mozc_tool unix/fcitx5/fcitx5.gyp:fcitx5-mozc}"
-+_bldtype="${_bldtype:-Debug}"
-+
-+python build_mozc.py build ${_BUILD_TARGETS} -c ${_bldtype}
 diff --git a/scripts/build_fcitx5_bazel b/scripts/build_fcitx5_bazel
 new file mode 100755
 index 0000000..f7946af
@@ -64,14 +40,6 @@ index 0000000..1b574d5
 @@ -0,0 +1,2 @@
 +#!/bin/sh
 +find unix/fcitx5  -name '*.h' -o -name '*.cc'  | xargs clang-format -style=Google -i
-diff --git a/scripts/configure b/scripts/configure
-new file mode 100755
-index 0000000..1775d81
---- /dev/null
-+++ b/scripts/configure
-@@ -0,0 +1,2 @@
-+#!/bin/sh
-+python build_mozc.py gyp "$@"
 diff --git a/scripts/get_mozc_version b/scripts/get_mozc_version
 new file mode 100755
 index 0000000..bb71ac0
@@ -355,19 +323,6 @@ index 0c1866b..a8bae14 100644
  # Qt for Linux
  pkg_config_repository(
      name = "qt_linux",
-diff --git a/src/build_mozc.py b/src/build_mozc.py
-index 6e17812..3efd3af 100755
---- a/src/build_mozc.py
-+++ b/src/build_mozc.py
-@@ -164,6 +164,8 @@ def GetGypFileNames(options):
-     gyp_file_names.extend(glob.glob('%s/win32/*/*.gyp' % OSS_SRC_DIR))
-   elif options.target_platform == 'Linux':
-     gyp_file_names.extend(glob.glob('%s/unix/emacs/*.gyp' % OSS_SRC_DIR))
-+    gyp_file_names.extend(glob.glob('%s/unix/fcitx/*.gyp' % OSS_SRC_DIR))
-+    gyp_file_names.extend(glob.glob('%s/unix/fcitx5/*.gyp' % OSS_SRC_DIR))
-   gyp_file_names.sort()
-   return gyp_file_names
- 
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
 index 090eae4..8da0728 100644
 --- a/src/session/BUILD.bazel
@@ -794,122 +749,6 @@ index 0000000..65d0e11
 +SubConfig=
 +IMRegisterMethod=ConfigFile
 +LoadLocal=True
-diff --git a/src/unix/fcitx/fcitx.gyp b/src/unix/fcitx/fcitx.gyp
-new file mode 100644
-index 0000000..7fedaa0
---- /dev/null
-+++ b/src/unix/fcitx/fcitx.gyp
-@@ -0,0 +1,110 @@
-+#
-+# Copyright (c) 2010-2012 fcitx Project http://code.google.com/p/fcitx/
-+#
-+# All rights reserved.
-+#
-+# Redistribution and use in source and binary forms, with or without
-+# modification, are permitted provided that the following conditions
-+# are met:
-+# 1. Redistributions of source code must retain the above copyright
-+#    notice, this list of conditions and the following disclaimer.
-+# 2. Redistributions in binary form must reproduce the above copyright
-+#    notice, this list of conditions and the following disclaimer in the
-+#    documentation and/or other materials provided with the distribution.
-+# 3. Neither the name of authors nor the names of its contributors
-+#    may be used to endorse or promote products derived from this software
-+#    without specific prior written permission.
-+#
-+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND
-+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE
-+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-+# SUCH DAMAGE.
-+#
-+
-+{
-+  'variables': {
-+    'use_fcitx%': 'YES',
-+    'relative_dir': 'unix/fcitx',
-+    'gen_out_dir': '<(SHARED_INTERMEDIATE_DIR)/<(relative_dir)',
-+    'pkg_config_libs': [
-+      'fcitx',
-+      'fcitx-config',
-+      'fcitx-utils',
-+    ],
-+    'fcitx_dep_include_dirs': [
-+    ],
-+    'fcitx_dependencies': [
-+        '../../base/base.gyp:base',
-+        '../../client/client.gyp:client',
-+        '../../ipc/ipc.gyp:ipc',
-+        '../../protocol/protocol.gyp:commands_proto',
-+    ],
-+  },
-+  'conditions': [['use_fcitx=="YES"', {
-+  'targets': [
-+    {
-+      'target_name': 'gen_fcitx_mozc_i18n',
-+      'type': 'none',
-+      'actions': [
-+        {
-+          'action_name': 'gen_fcitx_mozc_i18n',
-+          'inputs': [
-+            './gen_fcitx_mozc_i18n.sh'
-+          ],
-+          'outputs': [
-+            '<(gen_out_dir)/po/zh_CN.mo',
-+            '<(gen_out_dir)/po/zh_TW.mo',
-+            '<(gen_out_dir)/po/ja.mo',
-+            '<(gen_out_dir)/po/de.mo',
-+          ],
-+          'action': [
-+            'sh',
-+            './gen_fcitx_mozc_i18n.sh',
-+            '<(gen_out_dir)/po',
-+          ],
-+        }],
-+    },
-+    {
-+      'target_name': 'fcitx-mozc',
-+      'product_prefix': '',
-+      'type': 'loadable_module',
-+      'sources': [
-+        'fcitx_mozc.cc',
-+        'fcitx_key_translator.cc',
-+        'fcitx_key_event_handler.cc',
-+        'mozc_connection.cc',
-+        'mozc_response_parser.cc',
-+        'surrounding_text_util.cc',
-+        'eim.cc',
-+      ],
-+      'dependencies': [
-+        '<@(fcitx_dependencies)',
-+        'gen_fcitx_mozc_i18n',
-+      ],
-+      'cflags': [
-+        '<!@(pkg-config --cflags <@(pkg_config_libs))',
-+      ],
-+      'include_dirs': [
-+        '<@(fcitx_dep_include_dirs)',
-+      ],
-+      'defines': [
-+        'LOCALEDIR="<!@(fcitx4-config --prefix)/share/locale/"',
-+      ],
-+    },
-+  ],
-+  }, {
-+  'targets': [
-+    {
-+      'target_name': 'no_fcitx_dummy',
-+      'type': 'none',
-+    }
-+  ]}
-+  ]],
-+}
 diff --git a/src/unix/fcitx/fcitx_key_event_handler.cc b/src/unix/fcitx/fcitx_key_event_handler.cc
 new file mode 100644
 index 0000000..2b07f5c
@@ -4841,130 +4680,6 @@ index 0000000..e705349
 +#!/bin/bash
 +
 +gen_pot cxx:desktop:appdata fcitx5-mozc po .
-diff --git a/src/unix/fcitx5/fcitx5.gyp b/src/unix/fcitx5/fcitx5.gyp
-new file mode 100644
-index 0000000..28ce73f
---- /dev/null
-+++ b/src/unix/fcitx5/fcitx5.gyp
-@@ -0,0 +1,118 @@
-+#
-+# Copyright (c) 2010-2017 fcitx Project http://github.com/fcitx/
-+#
-+# All rights reserved.
-+#
-+# Redistribution and use in source and binary forms, with or without
-+# modification, are permitted provided that the following conditions
-+# are met:
-+# 1. Redistributions of source code must retain the above copyright
-+#    notice, this list of conditions and the following disclaimer.
-+# 2. Redistributions in binary form must reproduce the above copyright
-+#    notice, this list of conditions and the following disclaimer in the
-+#    documentation and/or other materials provided with the distribution.
-+# 3. Neither the name of authors nor the names of its contributors
-+#    may be used to endorse or promote products derived from this software
-+#    without specific prior written permission.
-+#
-+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND
-+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE
-+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-+# SUCH DAMAGE.
-+#
-+
-+{
-+  'variables': {
-+    'use_fcitx5%': 'YES',
-+    'relative_dir': 'unix/fcitx5',
-+    'gen_out_dir': '<(SHARED_INTERMEDIATE_DIR)/<(relative_dir)',
-+    'fcitx_dependencies': [
-+        '../../base/base.gyp:base',
-+        '../../client/client.gyp:client',
-+        '../../ipc/ipc.gyp:ipc',
-+        '../../protocol/protocol.gyp:commands_proto',
-+    ],
-+  },
-+  'conditions': [['use_fcitx5=="YES"', {
-+  'targets': [
-+    {
-+      # Meta target to set up build environment for fcitx5. Required 'cflags'
-+      # and 'link_settings' will be automatically injected into any target
-+      # which directly or indirectly depends on this target.
-+      'target_name': 'fcitx5_build_environment',
-+      'type': 'none',
-+      'variables': {
-+        'target_libs': [
-+          'Fcitx5Core',
-+          'Fcitx5Config',
-+          'Fcitx5Utils',
-+          'Fcitx5Module',
-+        ],
-+      },
-+      'all_dependent_settings': {
-+        'cflags': [
-+          '<!@(pkg-config --cflags <@(target_libs))',
-+        ],
-+        'link_settings': {
-+          'libraries': [
-+            '<!@(pkg-config --libs-only-l <@(target_libs))',
-+          ],
-+          'ldflags': [
-+            '<!@(pkg-config --libs-only-L <@(target_libs))',
-+          ],
-+        },
-+      },
-+    },
-+    {
-+      'target_name': 'fcitx5-mozc',
-+      'product_prefix': '',
-+      'type': 'loadable_module',
-+      'sources': [
-+        'fcitx_key_translator.cc',
-+        'fcitx_key_event_handler.cc',
-+        'surrounding_text_util.cc',
-+        'mozc_ipc_client.cc',
-+        'mozc_response_parser.cc',
-+        'mozc_engine.cc',
-+        'mozc_engine_factory.cc',
-+        'mozc_state.cc',
-+        'mozc_client_pool.cc',
-+      ],
-+      'dependencies': [
-+        '<@(fcitx_dependencies)',
-+        'fcitx5_build_environment',
-+      ],
-+      'cflags_cc': [
-+        '-std=c++17',
-+      ],
-+      'cflags_cc!': [
-+        '-std=gnu++0x'
-+      ],
-+      'cflags!': [
-+        '-fno-exceptions',
-+      ],
-+      'ldflags': [
-+        '-Wl,--no-undefined',
-+        '-Wl,--as-needed',
-+      ],
-+      'defines': [
-+        'FCITX_GETTEXT_DOMAIN="fcitx5-mozc"',
-+      ],
-+    },
-+  ],
-+  }, {
-+  'targets': [
-+    {
-+      'target_name': 'no_fcitx5_dummy',
-+      'type': 'none',
-+    }
-+  ]}
-+  ]],
-+}
 diff --git a/src/unix/fcitx5/fcitx_key_event_handler.cc b/src/unix/fcitx5/fcitx_key_event_handler.cc
 new file mode 100644
 index 0000000..f03f175
