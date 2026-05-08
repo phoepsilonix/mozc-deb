@@ -162,7 +162,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          #WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           sudo git config --global push.gpgSign if-asked
           #cd source
@@ -565,7 +565,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          #WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           TAG=${GITHUB_REF##*/}
           if [[ $TAG == "main" ]];then
@@ -604,7 +604,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          #WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
           git fetch --tags
           OLD_RELEASES=$(git tag --points-at HEAD^)
