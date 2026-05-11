@@ -6596,7 +6596,7 @@ index 0000000..54606c7
 +}  // namespace fcitx
 diff --git a/src/unix/fcitx5/mozc_engine.h b/src/unix/fcitx5/mozc_engine.h
 new file mode 100644
-index 0000000..f3a7c49
+index 0000000..c931ba4
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.h
 @@ -0,0 +1,180 @@
@@ -6683,9 +6683,9 @@ index 0000000..f3a7c49
 +    OptionWithAnnotation<CompositionMode, CompositionModeI18NAnnotation>
 +        initialMode{this, "InitialMode", _("Initial Mode"),
 +                    mozc::commands::HIRAGANA};
-+    Option<SharedStatePolicy> sharedStatePolicy{
-+        this, "InputState", _("Shared Input State"),
-+        SharedStatePolicy::FollowGlobalConfig};
++    OptionWithAnnotation<SharedStatePolicy, SharedStatePolicyI18NAnnotation>
++        sharedStatePolicy{this, "InputState", _("Shared Input State"),
++                          SharedStatePolicy::FollowGlobalConfig};
 +    Option<bool> verticalList{this, "Vertical", _("Vertical candidate list"),
 +                              true};
 +    OptionWithAnnotation<ExpandMode, ExpandModeI18NAnnotation> expandMode{
