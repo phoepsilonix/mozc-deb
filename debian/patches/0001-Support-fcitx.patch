@@ -5880,10 +5880,10 @@ index 0000000..9299698
 +#endif
 diff --git a/src/unix/fcitx5/mozc_direct_client.cc b/src/unix/fcitx5/mozc_direct_client.cc
 new file mode 100644
-index 0000000..acc691a
+index 0000000..eefa398
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_direct_client.cc
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,279 @@
 +#include "unix/fcitx5/mozc_direct_client.h"
 +
 +#include <Fcitx5/Utils/fcitx-utils/macros.h>
@@ -5897,7 +5897,6 @@ index 0000000..acc691a
 +
 +#include "absl/log/check.h"
 +#include "absl/log/log.h"
-+#include "base/singleton.h"
 +#include "config/config_handler.h"
 +#include "data_manager/oss/oss_data_manager.h"
 +#include "engine/engine.h"
