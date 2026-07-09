@@ -152,7 +152,7 @@ jobs:
           sudo git checkout master
           sudo git submodule update --init
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.PRIVATE_REPO_SSH_KEY }}
 
