@@ -17,16 +17,17 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [debian-12, ubuntu-24.04, ubuntu-25.04] #,Rhino]
+        os: [debian-12, ubuntu-25.04, ubuntu-26.04] #,Rhino]
         include:
           - os: debian-12
             container: debian:bookworm
           - os: debian-13
             container: debian:trixie
-          - os: ubuntu-24.04
-            container: ubuntu:noble
           - os: ubuntu-25.04
             container: ubuntu:plucky
+          - os: ubuntu-26.04
+            container: ubuntu:resolute
+
           #- os: Rhino
             #container: ghcr.io/rhino-linux/docker:latest
           # DEFAULT_USER is rhino at Rhino, root at debian and ubuntu.
