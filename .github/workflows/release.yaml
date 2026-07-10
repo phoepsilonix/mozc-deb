@@ -307,6 +307,10 @@ jobs:
           else
             sudo sed 's/Types: deb *$/Types: deb deb-src/' -i /etc/apt/sources.list.d/ubuntu.sources || true
             sudo sed 's/^.*deb-src /deb-src /' -i /etc/apt/sources.list || true
+            echo "========================================"
+            cat /etc/apt/sources.list.d/ubuntu.sources || true
+            echo "========================================"
+            cat /etc/apt/sources.list || true
           fi
           sudo apt-get update
           sudo apt-get build-dep -y mozc
