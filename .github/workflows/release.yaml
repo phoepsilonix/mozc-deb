@@ -367,6 +367,14 @@ jobs:
           # source以下を元に戻さないと、debian/patchesのパッチがあたらなくなる。
       #    git reset --hard master
 
+      - name: ubuntu-26.04 patch
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-26.04" ]]; then
+            apt-get install patch
+            patch --verbose -p1 -i resolute.patch
+          fi
+
       - name: debian-12 and ubuntu-23.04 patch
         shell: bash
         run: |
