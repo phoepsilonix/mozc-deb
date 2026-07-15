@@ -296,10 +296,10 @@ index 0000000..20dd8a5
 +    ],
 +)
 diff --git a/src/MODULE.bazel b/src/MODULE.bazel
-index e0b2d02..af6153f 100644
+index ef179e0..536f7af 100644
 --- a/src/MODULE.bazel
 +++ b/src/MODULE.bazel
-@@ -205,6 +205,23 @@ pkg_config_repository(
+@@ -206,6 +206,23 @@ pkg_config_repository(
      ],
  )
  
