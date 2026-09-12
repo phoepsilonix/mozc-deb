@@ -6248,7 +6248,7 @@ index 0000000..82884ee
 +#endif
 diff --git a/src/unix/fcitx5/mozc_engine.cc b/src/unix/fcitx5/mozc_engine.cc
 new file mode 100644
-index 0000000..54606c7
+index 0000000..8bf1f44
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_engine.cc
 @@ -0,0 +1,341 @@
@@ -6436,7 +6436,7 @@ index 0000000..54606c7
 +  instance_->userInterfaceManager().registerAction("mozc-tool-config",
 +                                                   &configToolAction_);
 +  configToolAction_.setShortText(_("Configuration Tool"));
-+  configToolAction_.setIcon("fcitx_mozc_tool");
++  configToolAction_.setIcon("fcitx_mozc_properties");
 +  configToolAction_.connect<SimpleAction::Activated>([](InputContext*) {
 +    mozc::Process::SpawnMozcProcess("mozc_tool", "--mode=config_dialog");
 +  });
@@ -7565,10 +7565,10 @@ index 0000000..42f0c66
 +#endif  // MOZC_UNIX_FCITX_MOZC_RESPONSE_PARSER_H_
 diff --git a/src/unix/fcitx5/mozc_state.cc b/src/unix/fcitx5/mozc_state.cc
 new file mode 100644
-index 0000000..198eb34
+index 0000000..6bae8cc
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.cc
-@@ -0,0 +1,475 @@
+@@ -0,0 +1,474 @@
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -7881,8 +7881,7 @@ index 0000000..198eb34
 +           : mozc::commands::SessionCommand::CONVERT_NEXT_PAGE;
 +  mozc::commands::Output raw_response;
 +  if (TrySendCommand(command, &raw_response, &error)) {
-+    engine_->parser()->ParseResponse(raw_response, ic_);
-+    return true;
++    return ParseResponse(raw_response);
 +  }
 +  return false;
 +}
