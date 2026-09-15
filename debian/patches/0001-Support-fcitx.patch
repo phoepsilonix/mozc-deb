@@ -6980,10 +6980,10 @@ index 0000000..88ce29f
 +#endif
 diff --git a/src/unix/fcitx5/mozc_response_parser.cc b/src/unix/fcitx5/mozc_response_parser.cc
 new file mode 100644
-index 0000000..189e6c5
+index 0000000..566d1b0
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_response_parser.cc
-@@ -0,0 +1,498 @@
+@@ -0,0 +1,506 @@
 +// Copyright 2010-2012, Google Inc.
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
@@ -7061,14 +7061,21 @@ index 0000000..189e6c5
 +  return response.preedit().cursor();
 +}
 +
-+std::string CreateDescriptionString(const std::string& description) {
-+  return " [" + description + "]";
++void AppendDescriptionString(std::string& comment,
++                             const std::string& description) {
++  if (!comment.empty()) {
++    comment += " ";
++  }
++  comment.append("[").append(description).append("]");
 +}
 +
 +class MozcCandidateWord final : public CandidateWord {
 + public:
-+  MozcCandidateWord(int id, std::string text, MozcEngine* engine)
-+      : CandidateWord(Text(std::move(text))), id_(id), engine_(engine) {}
++  MozcCandidateWord(int id, std::string text, std::string comment,
++                    MozcEngine* engine)
++      : CandidateWord(Text(std::move(text))), id_(id), engine_(engine) {
++    setComment(Text(std::move(comment)));
++  }
 +
 +  void select(InputContext* inputContext) const override {
 +    MozcState* mozc_state = engine_->mozcState(inputContext);
@@ -7136,6 +7143,7 @@ index 0000000..189e6c5
 +      const uint32_t index = candidate.index();
 +
 +      std::string value;
++      std::string comment;
 +      if (use_annotation && candidate.has_annotation() &&
 +          candidate.annotation().has_prefix()) {
 +        value = candidate.annotation().prefix();
@@ -7148,8 +7156,8 @@ index 0000000..189e6c5
 +      if (use_annotation && candidate.has_annotation() &&
 +          candidate.annotation().has_description()) {
 +        // Display descriptions ([HALF][KATAKANA], [GREEK], [Black square],
-+        // etc).
-+        value += CreateDescriptionString(candidate.annotation().description());
++        // etc.) as candidate comments.
++        AppendDescriptionString(comment, candidate.annotation().description());
 +      }
 +
 +      const bool is_current =
@@ -7175,7 +7183,7 @@ index 0000000..189e6c5
 +            std::string msg = _("Press %s to show usages.");
 +            msg = stringutils::replaceAll(msg, "%s",
 +                                          engine_->config().expand->toString());
-+            value += CreateDescriptionString(msg);
++            AppendDescriptionString(comment, msg);
 +          }
 +        }
 +      }
@@ -7193,8 +7201,8 @@ index 0000000..189e6c5
 +        id = candidate.id();
 +        DCHECK_NE(kBadCandidateId, id) << "Unexpected id is passed.";
 +      }
-+      candidateWords_.emplace_back(
-+          std::make_unique<MozcCandidateWord>(id, value, engine));
++      candidateWords_.emplace_back(std::make_unique<MozcCandidateWord>(
++          id, std::move(value), std::move(comment), engine));
 +    }
 +  }
 +
@@ -7568,10 +7576,10 @@ index 0000000..42f0c66
 +#endif  // MOZC_UNIX_FCITX_MOZC_RESPONSE_PARSER_H_
 diff --git a/src/unix/fcitx5/mozc_state.cc b/src/unix/fcitx5/mozc_state.cc
 new file mode 100644
-index 0000000..6bae8cc
+index 0000000..9d937b9
 --- /dev/null
 +++ b/src/unix/fcitx5/mozc_state.cc
-@@ -0,0 +1,474 @@
+@@ -0,0 +1,479 @@
 +// Copyright 2012~2013, Weng Xuetian <wengxt@gmail.com>
 +// All rights reserved.
 +//
@@ -7786,8 +7794,13 @@ index 0000000..6bae8cc
 +
 +    if (normalized_key.check(Key(FcitxKey_Escape))) {
 +      displayUsage_ = false;
-+      ProcessKeyEvent(FcitxKey_VoidSymbol, 0, KeyState::NoState, layout_is_jp,
-+                      false);
++      std::string error;
++      mozc::commands::Output raw_response;
++      if (TrySendCommand(mozc::commands::SessionCommand::NONE, &raw_response,
++                         &error)) {
++        return ParseResponse(raw_response);
++      }
++      displayUsage_ = true;
 +    }
 +    return true;
 +  }
