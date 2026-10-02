@@ -324,7 +324,7 @@ index eb74e53..e2041ea 100644
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 2da5b8d..9ce6cc4 100644
+index a0d39cd..a9b53d9 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -155,6 +155,7 @@ mozc_cc_library(
@@ -335,7 +335,7 @@ index 2da5b8d..9ce6cc4 100644
      ],
      deps = [
          ":keymap",
-@@ -350,6 +351,7 @@ mozc_cc_library(
+@@ -349,6 +350,7 @@ mozc_cc_library(
      hdrs = ["key_info_util.h"],
      visibility = [
          "//client:__pkg__",
