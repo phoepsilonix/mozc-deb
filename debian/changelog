@@ -1,3 +1,10 @@
+mozc (3.35.6354.2+dfsg-2.2build1.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * bazel build with github.com/google/mozc.git and patches of fcitx5
+
+ -- Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>  Fri, 16 Oct 2026 22:51:35 +0900
+
 mozc (3.34.6345.2+dfsg-2.2build1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
