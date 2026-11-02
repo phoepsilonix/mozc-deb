@@ -324,10 +324,10 @@ index eb74e53..e2041ea 100644
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index b176326..31671e2 100644
+index 3b384c0..78e675a 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
-@@ -157,6 +157,7 @@ mozc_cc_library(
+@@ -158,6 +158,7 @@ mozc_cc_library(
      visibility = [
          "//android/jni:__pkg__",
          "//ios:__pkg__",
@@ -335,7 +335,7 @@ index b176326..31671e2 100644
      ],
      deps = [
          ":keymap",
-@@ -353,6 +354,7 @@ mozc_cc_library(
+@@ -354,6 +355,7 @@ mozc_cc_library(
      hdrs = ["key_info_util.h"],
      visibility = [
          "//client:__pkg__",
