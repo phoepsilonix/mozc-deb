@@ -324,7 +324,7 @@ index 87c3bc3..7895e7a 100644
  pkg_config_repository(
      name = "qt_linux",
 diff --git a/src/session/BUILD.bazel b/src/session/BUILD.bazel
-index 48eb187..0afcb3f 100644
+index 33297ff..50c417d 100644
 --- a/src/session/BUILD.bazel
 +++ b/src/session/BUILD.bazel
 @@ -158,6 +158,7 @@ mozc_cc_library(
